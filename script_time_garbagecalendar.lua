@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200209-1800"
+ver="20200209-2300"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Check the timing when to get a notification for each Garbagetype in the garbagetype_cfg table
@@ -19,8 +19,12 @@ websitemodule = "???"
 
 -- mydebug print
 function dprint(text, always)
-   if testdataload or mydebug or (always or 0)==1 then
-      print("@GarbageCalendar("..websitemodule.."): "..text)
+   if testdataload or mydebug or (always or 0)>=1 then
+      if (always or 0)==2 then
+         print(text)  -- print without suffix when laways == 2
+      else
+         print("@GarbageCalendar("..websitemodule.."): "..text)
+      end
    end
    file = io.open(datafilepath.."garbagecalendar_run_"..websitemodule..".log", "a")
    file:write("@GarbageCalendar("..websitemodule.."): "..text.."\n")
@@ -288,7 +292,7 @@ function Perform_Data_check()
             end
             -- first match for each Type we save the date to capture the first next dates
             if garbagetype_cfg[web_garbagetype] == nil then
-               dprint (' Error: Garbagetype not defined in the "garbagetype_cfg" table for found GarbageType : ' .. web_garbagetype.."  desc:"..web_garbagedesc,1)
+--~                dprint (' Warning: Garbagetype not defined in the "garbagetype_cfg" table: ' .. web_garbagetype.."  desc:"..web_garbagedesc,1)
                if web_garbagedesc == "???" then web_garbagedesc = web_garbagetype end
                missingrecords = missingrecords .. '   ["' .. web_garbagetype..'"]'..string.rep(" ", 32-string.len(web_garbagetype))..' ={hour=19,min=02,daysbefore=1,reminder=0,text="'..web_garbagetype..'"},\n'
                garbagetype_cfg[web_garbagetype] = {hour=0,min=0,daysbefore=0,reminder=0,text="dummy"}
@@ -323,8 +327,9 @@ function Perform_Data_check()
    end
    dprint("-End   ---------------------------------------------------------------------------------------------------------")
    if missingrecords ~= "" then
-      dprint('#### -- start -- Add these records to you garbagecalendarconfig.lua file to variable garbagetype_cfg and adapt the scgedule and text :',1)
-      print(missingrecords)
+      dprint('#### Warning: These records are are missing in your garbagecalendarconfig.lua file!',1)
+      dprint('#### -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
+      dprint(missingrecords,2)
       dprint('#### -- end ----------------------------')
    end
    if (cnt==0) then
