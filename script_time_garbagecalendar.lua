@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200210-1300"
+ver="20200210-1330"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Check the timing when to get a notification for each Garbagetype in the garbagetype_cfg table
@@ -18,12 +18,12 @@ ver="20200210-1300"
 websitemodule = "???"
 
 -- mydebug print
-function dprint(text, always)
+function dprint(text, always, prefix)
    if testdataload or mydebug or (always or 0)>=1 then
-      if (always or 0)==2 then
+      if (prefix or 1)==0 then
          print(text)  -- print without suffix when laways == 2
       else
-         print("@GarbageCalendar("..websitemodule.."): "..text)
+         print("@GarbageCal("..websitemodule.."): "..text)
       end
    end
    file = io.open(datafilepath.."garbagecalendar_run_"..websitemodule..".log", "a")
@@ -303,7 +303,7 @@ function Perform_Data_check()
                -- check whether the first nextdate for this garbagetype is already found to get only one next date per GarbageType
                if ShowSinglePerType or (garbagetype_cfg[web_garbagetype].nextdate == nil and txtcnt < ShowNextEvents) then
                   -- get the long description from the JSON data
-                  dprint("==> GarbageDate:"..tostring (web_garbagedate) .. "  GarbageType:"..tostring(web_garbagetype).. '  Notification Config_Time='..tostring(garbagetype_cfg[web_garbagetype].hour)..':'..tostring(garbagetype_cfg[web_garbagetype].min)..'   Config_Notify_DaysBefore='..tostring(garbagetype_cfg[web_garbagetype].daysbefore)..'   Calculated_Days_Differerence='..tostring(daysdiffdev))
+                  dprint("==> GarbageDate:"..tostring (web_garbagedate) .. " GarbageType:"..tostring(web_garbagetype).. '  Notify Time='..tostring(garbagetype_cfg[web_garbagetype].hour)..':'..tostring(garbagetype_cfg[web_garbagetype].min)..'   Notify_DaysBefore='..tostring(garbagetype_cfg[web_garbagetype].daysbefore)..'   Calculated_Days_Differerence='..tostring(daysdiffdev),0,0)
                  -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
                   if daysdiffdev == nil then
                      dprint ('    !!! Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
@@ -327,7 +327,7 @@ function Perform_Data_check()
    if missingrecords ~= "" then
       dprint('#### Warning: These records are are missing in your garbagecalendarconfig.lua file!',1)
       dprint('#### -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
-      dprint(missingrecords,2)
+      dprint(missingrecords,1,0)
       dprint('#### -- end ----------------------------')
    end
    if (cnt==0) then
