@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200209-2300"
+ver="20200210-1300"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Check the timing when to get a notification for each Garbagetype in the garbagetype_cfg table
@@ -72,11 +72,10 @@ end
 if pcall(garbagecalendarconfig) then
    dprint('Loaded ' .. scriptpath..'garbagecalendar/garbagecalendarconfig.lua.' )
 else
-   dprint('#### start garbagecalendar script v'.. ver)
-   dprint('Error: failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"',1)
-   dprint('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.',1 )
-   dprint('       Also check the path in variable "scriptpath= "  is correctly set.',1 )
-   os.exit() -- stop execution
+   print('#### start garbagecalendar script v'.. ver)
+   print('Error: failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"')
+   print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
+   print('       Also check the path in variable "scriptpath= "  is correctly set.',1 )
    return
 end
 
@@ -93,7 +92,6 @@ if pcall(tablefuncs) then
 else
    dprint('Error: failed loading tablefuncs.lua from : ' .. scriptpath..'garbagecalendar/.',1)
    dprint('Error: Please check the path in variable "scriptpath= "  in your setup and try again.',1 )
-   os.exit() -- stop execution
    return
 end
 ----------------------------------------------------------------------------------------------------------------
@@ -139,13 +137,13 @@ end
 if (not isdir(datafilepath)) then
    dprint('Error: invalid path for datafilepath : ' .. datafilepath..'.',1)
    dprint('Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.',1 )
-   os.exit() -- stop execution
+   return
 end
 
 if (not exists(scriptpath .. "garbagecalendar/"..websitemodule..".lua")) then
    dprint('Error: module not found: ' .. scriptpath .. "garbagecalendar/"..websitemodule..'.lua',1)
    dprint('Error: Please check the path&name in variables "scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.',1 )
-   os.exit() -- stop execution
+   return
 end
 ----------------------------------------------------------------------------------------------------------------
 -- General conversion tables
@@ -361,10 +359,11 @@ function Perform_Rights_check(filename)
             dprint('Access fixed to the data file.',1)
          else
             dprint('Still no access. Please check the settings for '..filename.. ' and then try again.',1)
-            os.exit()
+            return false
          end
       end
    end
+   return true
 end
 
 -- End Functions ===============================================================================================
@@ -380,16 +379,16 @@ end
 commandArray = {}
 timenow = os.date("*t")
 -- ensure the access is set correctly for data
-Perform_Rights_check(datafilepath.."garbagecalendar.data")
-Perform_Rights_check(datafilepath.."garbagecalendar_run_"..websitemodule..".log")
-Perform_Rights_check(datafilepath.."garbagecalendar_web_"..websitemodule..".log")
+if not Perform_Rights_check(datafilepath.."garbagecalendar.data") then return end
+if not Perform_Rights_check(datafilepath.."garbagecalendar_run_"..websitemodule..".log") then return end
+if not Perform_Rights_check(datafilepath.."garbagecalendar_web_"..websitemodule..".log") then return end
 
 -- check for notification times and run update only when we are at one of these defined times
 dprint('Start checking garbagetype_cfg table:')
 local needupdate = false
 if garbagetype_cfg == nil then
    dprint('Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.',1)
-   os.exit()
+   return
 end
 for tbl_garbagetype,get in pairs(garbagetype_cfg) do
    if garbagetype_cfg[tbl_garbagetype].reminder == nil then
