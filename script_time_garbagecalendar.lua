@@ -1,15 +1,17 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200210-1330"
+ver="20200210-1620"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
--- Check the timing when to get a notification for each Garbagetype in the garbagetype_cfg table
--- Check forumtopic:       https://www.domoticz.com/forum/viewtopic.php?f=61&t=17963
--- Check source updates:   https://github.com/jvanderzande/mijngarbagewijzer
+-- Update all your persomnal settings in garbagecalendar/garbagecalendarconfig.lua
+--
+-- Wiki for details: https://github.com/jvanderzande/GarbageCalendar/wiki
+-- source updates:   https://github.com/jvanderzande/garbagecalendar
+-- forumtopic:       https://www.domoticz.com/forum/viewtopic.php?f=61&t=31295
 --
 -- ##################################################################################################################################################################
----##  update the settings in /garbagecalendar/garbagecalendarconfig.lua !!!!
+-- ##  update the settings in /garbagecalendar/garbagecalendarconfig.lua !!!!
 -- ##################################################################################################################################################################
 
 --===================================================================================================================
@@ -145,10 +147,7 @@ if (not exists(scriptpath .. "garbagecalendar/"..websitemodule..".lua")) then
    dprint('Error: Please check the path&name in variables "scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.',1 )
    return
 end
-----------------------------------------------------------------------------------------------------------------
--- General conversion tables
-local nMON={"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
-----------------------------------------------------------------------------------------------------------------
+
 -- round function
 function Round(num, idp)
    return tonumber(string.format("%." ..(idp or 0).. "f", num))
@@ -194,7 +193,8 @@ function getdaysdiff(i_garbagetype_date, stextformat)
    local wday=daysoftheweek[os.date("*t", garbageTime).wday]
    stextformat = stextformat:gsub('wd',wday)
    stextformat = stextformat:gsub('dd',garbageday)
-   stextformat = stextformat:gsub('mmm',nMON[tonumber(garbagemonth)])
+   stextformat = stextformat:gsub('mmmm',LongMonth[tonumber(garbagemonth)])
+   stextformat = stextformat:gsub('mmm',ShortMonth[tonumber(garbagemonth)])
    stextformat = stextformat:gsub('mm',garbagemonth)
    stextformat = stextformat:gsub('yyyy',garbageyear)
    stextformat = stextformat:gsub('yy',garbageyear:sub(3,4))
@@ -275,7 +275,7 @@ function Perform_Data_check()
       --- when file doesn't exist
       dprint(" Unable to load the data. please check your setup and logfile :"..logfile)
    else
-      dprint("- start looping through the received data from the websaite stored in "..datafilepath.."garbagecalendar.data  -------------------------")
+      dprint("- Start looping through data from the website: "..datafilepath.."garbagecalendar.data")
       for i = 1, #garbagedata do
          if garbagedata[i].garbagetype ~= nil then
             web_garbagetype = garbagedata[i].garbagetype
@@ -323,7 +323,7 @@ function Perform_Data_check()
          end
       end
    end
-   dprint("-End   ---------------------------------------------------------------------------------------------------------")
+   dprint("- End  ----------------- ")
    if missingrecords ~= "" then
       dprint('#### Warning: These records are are missing in your garbagecalendarconfig.lua file!',1)
       dprint('#### -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
@@ -371,10 +371,21 @@ end
 if daysoftheweek == nil then
    daysoftheweek={"Zon","Maa","Din","Woe","Don","Vri","Zat"}
 end
+----------------------------------------------------------------------------------------------------------------
+if ShortMonth == nil then
+   ShortMonth={"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
+end
+----------------------------------------------------------------------------------------------------------------
+if LongMonth == nil then
+   LongMonth={"januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"}
+end
+
+----------------------------------------------------------------------------------------------------------------
 -- checkif testload is requested
 if testdataload or false then
    GetWebDataInBackground("now")
 end
+
 -- Start of logic ==============================================================================================
 commandArray = {}
 timenow = os.date("*t")

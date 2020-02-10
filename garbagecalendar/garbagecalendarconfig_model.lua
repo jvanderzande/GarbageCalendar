@@ -36,10 +36,11 @@ domoticzjsonpath = '/home/pi/domoticz/scripts/lua'      -- specify the path to d
 ------------------------------------------------------------------------------------------------------------------------------------
 -- ### define format for text device
    -- date options:
-   --    wd  = weekday in 3 characters   eg Zon;Maa;Din
-   --    dd  = day in 2 digits   eg 31
-   --    mm  = month in 2 digits eg 01
-   --    mmm = month abbreviation in 3 characters eg : jan
+   --    wd   = weekday in 3 characters   eg Zon;Maa;Din
+   --    dd   = day in 2 digits   eg 31
+   --    mm   = month in 2 digits eg 01
+   --    mmm  = month abbreviation in 3 characters eg : jan
+   --    mmmm = month eg: januari
    --    yy   = year in 2 digits eg 19
    --    yyyy = year in 4 digits eg 2019
    -- Garbage type description options
@@ -98,10 +99,14 @@ garbagetype_cfg = {
 
 -------------------------------------------------------------------------
 -- Language options Dutch
--- weekdays:
-daysoftheweek={"Zon","Maa","Din","Woe","Don","Vri","Zat"}
+-- Date/day info:
+daysoftheweek={"zon","maa","din","woe","don","vri","zat"}
+ShortMonth={"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
+LongMonth={"januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"}
 -------------------------------------------------------------------------
 -- Language options English
--- weekdays:
---~ daysoftheweek={"sun","mon","tue","wed","thu","fri","sat"}
+-- Date/day info:
+--~ daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
+--~ ShortMonth={"Jan","Feb","Mar","Apr","Mei","Jun","Jul","Aug","Sep","Okt","Nov","Dec"}
+--~ LongMonth={"January","February","March","April","May","June","July","August","September","October","November","December"}
 
