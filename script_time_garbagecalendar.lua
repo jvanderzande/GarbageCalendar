@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200211-1430"
+ver="20200211-1500"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your persomnal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -330,6 +330,10 @@ function Perform_Data_check()
          end
       end
    end
+	if txtcnt < 1 then
+		dprint("### Warning: No valid records found in the datafile: " .. datafile,1)
+		dprint("###          Please check the garbagecalendar log files for issues : " .. weblogfile .. " and " .. runlogfile,1)
+	end
    dprint("- End  ----------------- ")
    if missingrecords ~= "" then
       dprint('#### Warning: These records are are missing in your garbagecalendarconfig.lua file!',1)
