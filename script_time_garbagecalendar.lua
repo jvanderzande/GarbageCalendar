@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200211-1500"
+ver="20200211-2130"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your persomnal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -57,7 +57,7 @@ function garbagecalendarconfig()
    -- check if debugging is required
    testdataload = testdataload or false
    mydebug = mydebug or false
-   ShowSinglePerType = mydebug or true
+   ShowSinglePerType = ShowSinglePerType or false
    -- initialise the variables
    domoticzjsonpath=(domoticzjsonpath.."/"):gsub('//','/')
    datafilepath=(datafilepath.."/"):gsub('//','/')
@@ -308,7 +308,7 @@ function Perform_Data_check()
                local stextformat = textformat
                stextformat, daysdiffdev = getdaysdiff(web_garbagedate, stextformat)
                -- check whether the first nextdate for this garbagetype is already found to get only one next date per GarbageType
-               if ShowSinglePerType or (garbagetype_cfg[web_garbagetype].nextdate == nil and txtcnt < ShowNextEvents) then
+               if ((not ShowSinglePerType) or (garbagetype_cfg[web_garbagetype].nextdate == nil) and txtcnt < ShowNextEvents) then
                   -- get the long description from the JSON data
                   dprint("==> GarbageDate:"..tostring (web_garbagedate) .. " GarbageType:"..tostring(web_garbagetype).. '  Notify Time='..tostring(garbagetype_cfg[web_garbagetype].hour)..':'..tostring(garbagetype_cfg[web_garbagetype].min)..'   Notify_DaysBefore='..tostring(garbagetype_cfg[web_garbagetype].daysbefore)..'   Calculated_Days_Differerence='..tostring(daysdiffdev),0,0)
                  -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
