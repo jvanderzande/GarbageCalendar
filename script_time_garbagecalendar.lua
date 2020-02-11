@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200210-1620"
+ver="20200211-1430"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your persomnal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -17,7 +17,14 @@ ver="20200210-1620"
 --===================================================================================================================
 -- start logic - no changes below this line
 --===================================================================================================================
+-- Define gobal variable
 websitemodule = "???"
+domoticzjsonpath=""
+datafilepath=""
+scriptpath=""
+weblogfile = ""
+runlogfile = ""
+datafile = ""
 
 -- mydebug print
 function dprint(text, always, prefix)
@@ -51,11 +58,15 @@ function garbagecalendarconfig()
    testdataload = testdataload or false
    mydebug = mydebug or false
    ShowSinglePerType = mydebug or true
-   -- emptyprevious run logfile
+   -- initialise the variables
    domoticzjsonpath=(domoticzjsonpath.."/"):gsub('//','/')
    datafilepath=(datafilepath.."/"):gsub('//','/')
    scriptpath=(scriptpath.."/"):gsub('//','/')
-   file = io.open(datafilepath.."garbagecalendar_run_"..websitemodule..".log", "w")
+   runlogfile = datafilepath.."garbagecalendar_run_"..websitemodule..".log"
+   weblogfile = datafilepath.."garbagecalendar_web_"..websitemodule..".log"
+   datafile = datafilepath.."garbagecalendar_"..websitemodule..".data"
+   -- empty previous run runlogfile
+   file = io.open(runlogfile, "w")
    file:close()
    dprint('#### start garbagecalendar script v'.. ver)
    if testdataload then
@@ -156,8 +167,6 @@ end
 ----------------------------------------------------------------------------------------------------------------
 -- run dataupdate
 function GetWebDataInBackground(whenrun)
-   logfile = datafilepath.."garbagecalendar_web_"..websitemodule..".log"
-   datafile = datafilepath.."garbagecalendar.data"
    --# reshell this file in the background to perform update of the data
    local command = 'lua '..scriptpath .. "garbagecalendar/" .. websitemodule .. '.lua'
    command = command .. ' "' .. domoticzjsonpath ..'"'
@@ -165,15 +174,15 @@ function GetWebDataInBackground(whenrun)
    command = command .. ' "' .. Housenr .. '"'
    command = command .. ' "' .. Housenrsuf .. '"'
    command = command .. ' "' .. datafile .. '"'
-   command = command .. ' "' .. logfile .. '"'
+   command = command .. ' "' .. weblogfile .. '"'
    command = command .. ' "' .. (Hostname or "") .. '"' -- optional param
    command = command .. ' "' .. (Street or "") .. '"'   -- optional param
    if ((whenrun or "") == "now") then
       dprint('start foreground webupdate for module '..websitemodule..' of file '..datafile)
-      os.execute(command .. ' > '.. logfile..' 2>&1 ')
+      os.execute(command .. ' > '.. weblogfile..' 2>&1 ')
    else
       dprint('start background webupdate for module '..websitemodule..' of file '..datafile)
-      os.execute(command .. ' > '.. logfile..' 2>&1 &')
+      os.execute(command .. ' > '.. weblogfile..' 2>&1 &')
    end
    dprint(command,1)
 end
@@ -262,8 +271,6 @@ function Perform_Data_check()
    -- function to process ThisYear and Lastyear JSON data
    --
    dprint('Start update for text device:',1)
-   local datafile = datafilepath.."garbagecalendar.data"
-   logfile = datafilepath.."garbagecalendar.log"
    garbagedata,perr = table.load( datafile )
    if perr ~= 0 then
       --- when file doesn't exist
@@ -273,9 +280,9 @@ function Perform_Data_check()
    garbagedata,perr = table.load( datafile )
    if perr ~= 0 then
       --- when file doesn't exist
-      dprint(" Unable to load the data. please check your setup and logfile :"..logfile)
+      dprint(" Unable to load the data. please check your setup and runlogfile :"..runlogfile)
    else
-      dprint("- Start looping through data from the website: "..datafilepath.."garbagecalendar.data")
+      dprint("- Start looping through data from the website: "..datafile)
       for i = 1, #garbagedata do
          if garbagedata[i].garbagetype ~= nil then
             web_garbagetype = garbagedata[i].garbagetype
