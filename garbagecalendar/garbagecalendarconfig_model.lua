@@ -36,11 +36,11 @@ domoticzjsonpath = '/home/pi/domoticz/scripts/lua'      -- specify the path to d
 ------------------------------------------------------------------------------------------------------------------------------------
 -- ### define format for text device
    -- date options:
-   --    wd   = weekday in 3 characters   eg Zon;Maa;Din
+   --    wd   = weekday in 3 characters as defined in the daysoftheweek table below. eg Zon;Maa;Din
    --    dd   = day in 2 digits   eg 31
    --    mm   = month in 2 digits eg 01
-   --    mmm  = month abbreviation in 3 characters eg : jan
-   --    mmmm = month eg: januari
+   --    mmm  = month abbreviation in 3 characters as defined in the ShortMonth table below. eg : jan
+   --    mmmm = month  as defined in the LongMonth table below. eg: januari
    --    yy   = year in 2 digits eg 19
    --    yyyy = year in 4 digits eg 2019
    -- Garbage type description options
@@ -49,7 +49,7 @@ domoticzjsonpath = '/home/pi/domoticz/scripts/lua'      -- specify the path to d
    --    tdesc = Use the description available in the table text field
 textformat = "tdesc: wd dd mmm"
 -- ### define  what to show in the domoticz text device
-   -- false => show multiple occurrences of a garbagetype
+   -- false => show multiple occurrences of a garbagetype (default)
    -- true  => show one the next occurance for a unique garbagetype
 ShowSinglePerType = false
 
@@ -109,4 +109,3 @@ LongMonth={"januari","februari","maart","april","mei","juni","juli","augustus","
 --~ daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
 --~ ShortMonth={"Jan","Feb","Mar","Apr","Mei","Jun","Jul","Aug","Sep","Okt","Nov","Dec"}
 --~ LongMonth={"January","February","March","April","May","June","July","August","September","October","November","December"}
-
