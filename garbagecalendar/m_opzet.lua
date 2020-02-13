@@ -29,7 +29,7 @@ end
 -- get date, return a standard format and calculate the difference in days
 function getdate(i_garbagetype_date, stextformat)
    local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
-   local MON={jan=1,feb=2,maa=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
+   local MON={jan=1,feb=2,mrt=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
    local garbageyear =timenow.year
    local garbageday  =timenow.day
    local garbagemonth=timenow.month
