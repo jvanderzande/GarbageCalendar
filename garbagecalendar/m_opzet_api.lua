@@ -110,9 +110,15 @@ function Perform_Update()
    local Web_Data
    -- Get the information for the specified address specifically the bagId for the subsequent calls
    Web_Data=perform_webquery('https://'..Hostname..'/rest/adressen/'..Zipcode..'-'..Housenr)
+   if Web_Data == "" then
+      return
+   end
    dprint('---- web data Bagid ----------------------------------------------------------------------')
    dprint(Web_Data)
    dprint('---- end web data ------------------------------------------------------------------------')
+   if Web_Data == "" then
+      return
+   end
    if ( Web_Data:sub(1,2) == "[]" ) then
       print("Error: Check your Zipcode and Housenr as we get an [] response.")
       return
