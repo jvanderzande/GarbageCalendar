@@ -50,7 +50,7 @@ domoticzjsonpath = '/home/pi/domoticz/scripts/lua'      -- specify the path to d
 textformat = "tdesc: wd dd mmm"
 -- ### define  what to show in the domoticz text device
    -- false => show multiple occurrences of a garbagetype (default)
-   -- true  => show one the next occurance for a unique garbagetype
+   -- true  => show one the next occurrence for a unique garbagetype
 ShowSinglePerType = false
 
 ------------------------------------------------------------------------------------------------------------------------------------
