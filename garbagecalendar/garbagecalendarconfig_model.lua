@@ -7,8 +7,9 @@ ShowNextEvents = 3                 -- indicate the next x events to show in the 
 Zipcode = ''                       -- Your zipcode
 Housenr = ''                       -- Your housnr
 Housenrsuf = ''                    -- Your housnr suffix                    (Optional: a/b/c  etc)
-Hostname = ''                      -- Specify the hostname of your website. Only needed for: m_opzet ; m_opzet_api ;
 Street=''                          -- Street name                           Only needed for: m_ophaalkalender-be
+Hostname = ''                      -- Specify the hostname of your website. Only needed for: m_opzet ; m_opzet_api ;
+                                   -- OR Specify the companycode for the m_ximmio.lua module. See m_ximmio.lua on how to find this code.
 
 -- choose one of these modules
 --websitemodule = "m_deafvalapp"
@@ -18,6 +19,7 @@ websitemodule = "m_mijnafvalwijzer"
 --websitemodule = "m_opzet"
 --websitemodule = "m_opzet_api"
 --websitemodule = "m_westland"
+--websitemodule = "m_ximmio"           --
 --websitemodule = "m_zuidlimburg"
 
 -- Switch on mydebug in case of issues and initially and check the domoticz log for any issues or missing
