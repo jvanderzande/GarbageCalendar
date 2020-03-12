@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200211-2130"
+ver="20200312-1000"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -222,10 +222,11 @@ end
 ----------------------------------------------------------------------------------------------------------------
 --
 function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
-   if garbagetype_cfg[s_garbagetype] ~= nil
+   if (garbagetype_cfg[s_garbagetype] ~= nil
    and (timenow.hour==garbagetype_cfg[s_garbagetype].hour or timenow.hour==garbagetype_cfg[s_garbagetype].hour+garbagetype_cfg[s_garbagetype].reminder)
    and timenow.min==garbagetype_cfg[s_garbagetype].min
-   and i_daysdifference == garbagetype_cfg[s_garbagetype].daysbefore then
+   and i_daysdifference == garbagetype_cfg[s_garbagetype].daysbefore)
+   or (testnotification or false) then
       local dag = ""
       if garbagetype_cfg[s_garbagetype].daysbefore == 0 then
          dag = notificationtoday or "vandaag"
@@ -235,35 +236,50 @@ function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
          dag = notificationlonger or 'over @DAYS@ dagen'
          dag = dag:gsub('@DAYS@',tostring(garbagetype_cfg[s_garbagetype].daysbefore))
       end
-      notificationtitle = notificationtitle:gsub('@DAY@',dag)
-      notificationtitle = notificationtitle:gsub('@GARBAGETYPE@',s_garbagetype)
-      notificationtitle = notificationtitle:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
-      notificationtitle = notificationtitle:gsub('@GARBAGEDATE@',s_garbagetype_date)
-      notificationtext = notificationtext:gsub('@DAY@',dag)
-      notificationtext = notificationtext:gsub('@GARBAGETYPE@',s_garbagetype)
-      notificationtext = notificationtext:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
-      notificationtext = notificationtext:gsub('@GARBAGEDATE@',s_garbagetype_date)
+      local inotificationdate  = notificationdate or 'yyyy-mm-dd'
+      garbageyear,garbagemonth,garbageday=s_garbagetype_date:match("(%d-)-(%d-)-(%d-)$")
+      local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
+      local wday=daysoftheweek[os.date("*t", garbageTime).wday]
+      local lwday=Longdaysoftheweek[os.date("*t", garbageTime).wday]
+      inotificationdate = inotificationdate:gsub('wdd',lwday)
+      inotificationdate = inotificationdate:gsub('wd',wday)
+      inotificationdate = inotificationdate:gsub('dd',garbageday)
+      inotificationdate = inotificationdate:gsub('mmmm',LongMonth[tonumber(garbagemonth)])
+      inotificationdate = inotificationdate:gsub('mmm',ShortMonth[tonumber(garbagemonth)])
+      inotificationdate = inotificationdate:gsub('mm',garbagemonth)
+      inotificationdate = inotificationdate:gsub('yyyy',garbageyear)
+      inotificationdate = inotificationdate:gsub('yy',garbageyear:sub(3,4))
+      inotificationtitle = notificationtitle or 'GarbageCalendar: @DAY@ de @GARBAGETEXT@ aan de weg zetten!'
+      inotificationtitle = inotificationtitle:gsub('@DAY@',dag)
+      inotificationtitle = inotificationtitle:gsub('@GARBAGETYPE@',s_garbagetype)
+      inotificationtitle = inotificationtitle:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
+      inotificationtitle = inotificationtitle:gsub('@GARBAGEDATE@',inotificationdate)
+      inotificationtext = notificationtext or '@GARBAGETEXT@ wordt @DAY@ opgehaald!'
+      inotificationtext = inotificationtext:gsub('@DAY@',dag)
+      inotificationtext = inotificationtext:gsub('@GARBAGETYPE@',s_garbagetype)
+      inotificationtext = inotificationtext:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
+      inotificationtext = inotificationtext:gsub('@GARBAGEDATE@',inotificationdate)
       if type(NotificationEmailAdress) == 'table' then
          for x,emailaddress in pairs(NotificationEmailAdress) do
             if emailaddress ~= "" then
-               commandArray[x] = {['SendEmail'] = notificationtitle .. '#' .. notificationtext .. '#' .. emailaddress}
-               dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..notificationtitle .. '#' .. notificationtext .. '#' .. emailaddress.."|", 1)
+               commandArray[x] = {['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress}
+               dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress.."|", 1)
             end
          end
       else
          if NotificationEmailAdress ~= "" then
-            commandArray['SendEmail'] = notificationtitle .. '#' .. notificationtext .. '#' .. NotificationEmailAdress
-            dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..notificationtitle .. '#' .. notificationtext .. '#' .. NotificationEmailAdress.."|", 1)
+            commandArray['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress
+            dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress.."|", 1)
          end
       end
 
       if Notificationsystem ~= "" then
-         commandArray['SendNotification']=notificationtitle .. '#' .. notificationtext .. '####'..Notificationsystem
-         dprint ('---->Notification send for '.. s_garbagetype.. " |"..notificationtitle .. '#' .. notificationtext .. '####'..Notificationsystem, 1)
+         commandArray['SendNotification']=inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem
+         dprint ('---->Notification send for '.. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem, 1)
       end
 
       if Notificationscript ~= "" then
-         Notificationscript = Notificationscript:gsub('@TEXT@',notificationtext)
+         Notificationscript = Notificationscript:gsub('@TEXT@',inotificationtext)
          os.execute( Notificationscript..' &')
          dprint ('---->Notification script started: '.. Notificationscript, 1)
       end
@@ -387,18 +403,10 @@ end
 
 -- End Functions ===============================================================================================
 -- check defaults set
-if daysoftheweek == nil then
-   daysoftheweek={"Zon","Maa","Din","Woe","Don","Vri","Zat"}
-end
-----------------------------------------------------------------------------------------------------------------
-if ShortMonth == nil then
-   ShortMonth={"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
-end
-----------------------------------------------------------------------------------------------------------------
-if LongMonth == nil then
-   LongMonth={"januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"}
-end
-
+daysoftheweek = daysoftheweek or {"Zon","Maa","Din","Woe","Don","Vri","Zat"}
+Longdaysoftheweek = Longdaysoftheweek or {"zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"}
+ShortMonth = ShortMonth or {"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
+LongMonth = LongMonth or {"januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"}
 ----------------------------------------------------------------------------------------------------------------
 -- checkif testload is requested
 if testdataload or false then

@@ -38,7 +38,8 @@ domoticzjsonpath = '/home/pi/domoticz/scripts/lua'      -- specify the path to d
 ------------------------------------------------------------------------------------------------------------------------------------
 -- ### define format for text device
    -- date options:
-   --    wd   = weekday in 3 characters as defined in the daysoftheweek table below. eg Zon;Maa;Din
+   --    wd   = weekday in 3 characters as defined in the daysoftheweek table below. eg zon;maa;din
+   --    wdd  = weekday as defined in the Longdaysoftheweek table below. eg zondag;maandag;dinsdag
    --    dd   = day in 2 digits   eg 31
    --    mm   = month in 2 digits eg 01
    --    mmm  = month abbreviation in 3 characters as defined in the ShortMonth table below. eg : jan
@@ -60,6 +61,7 @@ ShowSinglePerType = false
 NotificationEmailAdress = {'',''}  -- Specify multiple Email Addresses for the notifications. Leave empty to skip email notification
 Notificationsystem = ''            -- Specify notification system eg "telegram/pushover/gcm/http/kodi/lms/nma/prowl/pushalot/pushbullet/pushsafer" leave empty to skip
 Notificationscript = ''            -- Specify personal notification script/command eg:  lua sendmessage.lua "@TEXT@"  (where @TEXT@ will be replaced by the notification text.)
+
 -- Define how the title and bodytext should look
 -- @DAY@         ==> Will be replaced by notificationtoday; notificationtomorrow; notificationlonger depending on the days difference.
 -- @GARBAGEDATE@ ==> Will be replaced by the pickup date found on the schedule data
@@ -70,12 +72,15 @@ notificationtext     = '@GARBAGETEXT@ wordt @DAY@ opgehaald!'
 notificationtoday    = 'vandaag'
 notificationtomorrow = 'morgen'
 notificationlonger   = 'over @DAYS@ dagen'
+notificationdate     = 'dd mmm yyyy'   -- @GARBAGEDATE@ format -> Options are the same as available for textformat date options
+
 --### English example
 --~ notificationtitle    = 'GarbageCalendar: @GARBAGETEXT@ will be picked up in @DAY@!'
 --~ notificationtext     = 'Put the @GARBAGETEXT@ out as it will be picked up @DAY@.!'
 --~ notificationtoday    = 'today'
 --~ notificationtomorrow = 'tomorrow'
 --~ notificationlonger   = 'in @DAYS@ days'
+--~ notificationdate     = 'wd dd mmmm yyyy'      -- Options are the same as available for textformat date options
 
 ------------------------------------------------------------------------------------------------------------------------------------
 -- ### define a line for each garbage type returned by the webrequest.
@@ -103,11 +108,13 @@ garbagetype_cfg = {
 -- Language options Dutch
 -- Date/day info:
 daysoftheweek={"zon","maa","din","woe","don","vri","zat"}
+Longdaysoftheweek={"zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"}
 ShortMonth={"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
 LongMonth={"januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"}
 -------------------------------------------------------------------------
 -- Language options English
 -- Date/day info:
 --~ daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
+--~ Longdaysoftheweek={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"}
 --~ ShortMonth={"Jan","Feb","Mar","Apr","Mei","Jun","Jul","Aug","Sep","Okt","Nov","Dec"}
 --~ LongMonth={"January","February","March","April","May","June","July","August","September","October","November","December"}
