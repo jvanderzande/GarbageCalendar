@@ -4,7 +4,7 @@
 ver="20200211-2130"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
--- Update all your persomnal settings in garbagecalendar/garbagecalendarconfig.lua
+-- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
 --
 -- Wiki for details: https://github.com/jvanderzande/GarbageCalendar/wiki
 -- source updates:   https://github.com/jvanderzande/garbagecalendar
@@ -25,19 +25,25 @@ scriptpath=""
 weblogfile = ""
 runlogfile = ""
 datafile = ""
+needupdate = false
 
 -- mydebug print
 function dprint(text, always, prefix)
    if testdataload or mydebug or (always or 0)>=1 then
       if (prefix or 1)==0 then
-         print(text)  -- print without suffix when laways == 2
+         print(text)  -- print without suffix when always == 2
       else
          print("@GarbageCal("..websitemodule.."): "..text)
       end
    end
-   file = io.open(datafilepath.."garbagecalendar_run_"..websitemodule..".log", "a")
+   file = io.open(runlogfile, "a")
    file:write("@GarbageCalendar("..websitemodule.."): "..text.."\n")
    file:close()
+   if (needupdate) then
+      file = io.open(string.gsub(runlogfile, "_run_", "_run_update_"), "a")
+      file:write("@GarbageCalendar("..websitemodule.."): "..text.."\n")
+      file:close()
+   end
 end
 -- try getting current scriptpath to be able to get the /garbagecalendar/garbagecalendarconfig.lua loaded
 function script_path()
@@ -200,7 +206,9 @@ function getdaysdiff(i_garbagetype_date, stextformat)
    end
    local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
    local wday=daysoftheweek[os.date("*t", garbageTime).wday]
+   local lwday=Longdaysoftheweek[os.date("*t", garbageTime).wday]
    stextformat = stextformat:gsub('wd',wday)
+   stextformat = stextformat:gsub('wdd',lwday)
    stextformat = stextformat:gsub('dd',garbageday)
    stextformat = stextformat:gsub('mmmm',LongMonth[tonumber(garbagemonth)])
    stextformat = stextformat:gsub('mmm',ShortMonth[tonumber(garbagemonth)])
@@ -407,7 +415,6 @@ if not Perform_Rights_check(datafilepath.."garbagecalendar_web_"..websitemodule.
 
 -- check for notification times and run update only when we are at one of these defined times
 dprint('Start checking garbagetype_cfg table:')
-local needupdate = false
 if garbagetype_cfg == nil then
    dprint('Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.',1)
    return
@@ -432,6 +439,9 @@ end
 if mydebug then needupdate = true end
 -- get information from website, update device and send notification when required
 if needupdate then
+   -- empty previous run_update logfile
+   file = io.open(string.gsub(runlogfile, "_run_", "_run_update_"), "w")
+   file:close()
    Perform_Data_check()
 else
    dprint("Scheduled time(s) not reached yet, so nothing to do!")
