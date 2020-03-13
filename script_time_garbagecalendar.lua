@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200313-2030"
+ver="20200313-2150"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -41,7 +41,7 @@ function dprint(text, always, prefix)
    if (prefix or 1)==0 then
       file:write(text.."\n")
    else
-      print("@GarbageCal("..websitemodule.."): "..text)
+      file:write("@GarbageCal("..websitemodule.."): "..text.."\n")
    end
    file:close()
 end
