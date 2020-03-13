@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200313-1040"
+ver="20200313-1215"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -26,6 +26,7 @@ weblogfile = ""
 runlogfile = ""
 datafile = ""
 needupdate = false
+timenow = os.date("*t")
 
 -- mydebug print
 function dprint(text, always, prefix)
@@ -39,11 +40,6 @@ function dprint(text, always, prefix)
    file = io.open(runlogfile, "a")
    file:write("@GarbageCalendar("..websitemodule.."): "..text.."\n")
    file:close()
-   if (needupdate) then
-      file = io.open(string.gsub(runlogfile, "_run_", "_run_update_"), "a")
-      file:write("@GarbageCalendar("..websitemodule.."): "..text.."\n")
-      file:close()
-   end
 end
 -- try getting current scriptpath to be able to get the /garbagecalendar/garbagecalendarconfig.lua loaded
 function script_path()
@@ -74,7 +70,7 @@ function garbagecalendarconfig()
    -- empty previous run runlogfile
    file = io.open(runlogfile, "w")
    file:close()
-   dprint('#### start garbagecalendar script v'.. ver)
+   dprint('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' Start garbagecalendar script v'.. ver)
    if testdataload then
       dprint('#### Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
       dprint('####    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
@@ -91,7 +87,7 @@ end
 if pcall(garbagecalendarconfig) then
    dprint('Loaded ' .. scriptpath..'garbagecalendar/garbagecalendarconfig.lua.' )
 else
-   print('#### start garbagecalendar script v'.. ver)
+   print('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' start garbagecalendar script v'.. ver)
    print('Error: failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"')
    print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
    print('       Also check the path in variable "scriptpath= "  is correctly set.',1 )
@@ -416,7 +412,6 @@ end
 
 -- Start of logic ==============================================================================================
 commandArray = {}
-timenow = os.date("*t")
 -- ensure the access is set correctly for data
 if not Perform_Rights_check(datafilepath.."garbagecalendar.data") then return end
 if not Perform_Rights_check(datafilepath.."garbagecalendar_run_"..websitemodule..".log") then return end
@@ -449,11 +444,17 @@ if mydebug then needupdate = true end
 -- get information from website, update device and send notification when required
 if needupdate then
    -- empty previous run_update logfile
-   file = io.open(string.gsub(runlogfile, "_run_", "_run_update_"), "w")
-   file:close()
    Perform_Data_check()
+   -- Save run log during update
+   ifile = io.open(runlogfile, "r")
+   ofile = io.open(string.gsub(runlogfile, "_run_", "_run_update_"), "w")
+   ofile:write(ifile:read("*all"))
+   ifile:close()
+   ofile:close()
 else
    dprint("Scheduled time(s) not reached yet, so nothing to do!")
 end
+timenow = os.date("*t")
+dprint('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' End garbagecalendar script v'.. ver)
 
 return commandArray
