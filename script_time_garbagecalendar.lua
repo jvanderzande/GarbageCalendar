@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200313-1215"
+ver="20200313-2030"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -38,7 +38,11 @@ function dprint(text, always, prefix)
       end
    end
    file = io.open(runlogfile, "a")
-   file:write("@GarbageCalendar("..websitemodule.."): "..text.."\n")
+   if (prefix or 1)==0 then
+      file:write(text.."\n")
+   else
+      print("@GarbageCal("..websitemodule.."): "..text)
+   end
    file:close()
 end
 -- try getting current scriptpath to be able to get the /garbagecalendar/garbagecalendarconfig.lua loaded
@@ -357,7 +361,7 @@ function Perform_Data_check()
 	end
    dprint("- End  ----------------- ")
    if missingrecords ~= "" then
-      dprint('#### Warning: These records are are missing in your garbagecalendarconfig.lua file!',1)
+      dprint('#### Warning: These records are missing in your garbagecalendarconfig.lua file!',1)
       dprint('#### -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
       dprint(missingrecords,1,0)
       dprint('#### -- end ----------------------------')
