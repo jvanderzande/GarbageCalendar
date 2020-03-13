@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200312-1000"
+ver="20200313-1040"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -227,14 +227,15 @@ function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
    and timenow.min==garbagetype_cfg[s_garbagetype].min
    and i_daysdifference == garbagetype_cfg[s_garbagetype].daysbefore)
    or (testnotification or false) then
+      testnotification = false  -- this will trigger a test notification for the first record
       local dag = ""
-      if garbagetype_cfg[s_garbagetype].daysbefore == 0 then
+      if i_daysdifference == 0 then
          dag = notificationtoday or "vandaag"
-      elseif garbagetype_cfg[s_garbagetype].daysbefore == 1 then
+      elseif i_daysdifference == 1 then
          dag = notificationtomorrow or "morgen"
       else
          dag = notificationlonger or 'over @DAYS@ dagen'
-         dag = dag:gsub('@DAYS@',tostring(garbagetype_cfg[s_garbagetype].daysbefore))
+         dag = dag:gsub('@DAYS@',tostring(i_daysdifference))
       end
       local inotificationdate  = notificationdate or 'yyyy-mm-dd'
       garbageyear,garbagemonth,garbageday=s_garbagetype_date:match("(%d-)-(%d-)-(%d-)$")
@@ -267,18 +268,18 @@ function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
             end
          end
       else
-         if NotificationEmailAdress ~= "" then
+         if (NotificationEmailAdress or "") ~= "" then
             commandArray['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress
             dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress.."|", 1)
          end
       end
 
-      if Notificationsystem ~= "" then
+      if (Notificationsystem or "") ~= "" then
          commandArray['SendNotification']=inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem
          dprint ('---->Notification send for '.. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem, 1)
       end
 
-      if Notificationscript ~= "" then
+      if (Notificationscript or "") ~= "" then
          Notificationscript = Notificationscript:gsub('@TEXT@',inotificationtext)
          os.execute( Notificationscript..' &')
          dprint ('---->Notification script started: '.. Notificationscript, 1)
