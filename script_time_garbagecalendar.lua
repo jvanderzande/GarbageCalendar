@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200313-2150"
+ver="20200314-1400"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -30,21 +30,18 @@ timenow = os.date("*t")
 
 -- mydebug print
 function dprint(text, always, prefix)
+   local ptext = ""
+   if (prefix or 1)==1 then
+      ptext = "@GarbageCal("..websitemodule.."): "
+   end
    if testdataload or mydebug or (always or 0)>=1 then
-      if (prefix or 1)==0 then
-         print(text)  -- print without suffix when always == 2
-      else
-         print("@GarbageCal("..websitemodule.."): "..text)
-      end
+      print(ptext..text)
    end
    file = io.open(runlogfile, "a")
-   if (prefix or 1)==0 then
-      file:write(text.."\n")
-   else
-      file:write("@GarbageCal("..websitemodule.."): "..text.."\n")
-   end
+   file:write(ptext..text.."\n")
    file:close()
 end
+
 -- try getting current scriptpath to be able to get the /garbagecalendar/garbagecalendarconfig.lua loaded
 function script_path()
    local str = debug.getinfo(2, "S").source:sub(2)
