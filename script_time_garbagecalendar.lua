@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200314-1400"
+ver="20200315-1215"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -278,6 +278,9 @@ function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
 
       if (Notificationscript or "") ~= "" then
          Notificationscript = Notificationscript:gsub('@TEXT@',inotificationtext)
+         Notificationscript = Notificationscript:gsub('@GARBAGETYPE@',s_garbagetype)
+         Notificationscript = Notificationscript:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
+         Notificationscript = Notificationscript:gsub('@GARBAGEDATE@',inotificationdate)
          os.execute( Notificationscript..' &')
          dprint ('---->Notification script started: '.. Notificationscript, 1)
       end

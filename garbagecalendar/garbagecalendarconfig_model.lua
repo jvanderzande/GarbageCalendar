@@ -61,9 +61,11 @@ ShowSinglePerType = false
 NotificationEmailAdress = {'',''}  -- Specify multiple Email Addresses for the notifications. Leave empty to skip email notification
 Notificationsystem = ''            -- Specify notification system eg "telegram/pushover/gcm/http/kodi/lms/nma/prowl/pushalot/pushbullet/pushsafer" leave empty to skip
 Notificationscript = ''            -- Specify personal notification script/command eg:  lua sendmessage.lua "@TEXT@"  (where @TEXT@ will be replaced by the notification text.)
+--                                                                                                                     It also supports: @GARBAGETYPE@; @GARBAGEDATE@; @GARBAGETEXT@
 
 -- Define how the title and bodytext should look
 -- @DAY@         ==> Will be replaced by notificationtoday; notificationtomorrow; notificationlonger depending on the days difference.
+-- @GARBAGETYPE@ ==> Will be replaced by the GarbageType definion from the WebSite
 -- @GARBAGEDATE@ ==> Will be replaced by the pickup date found on the schedule data
 -- @GARBAGETEXT@ ==> Will be replaced by the text from garbagetype_cfg[].text field
 --### Dutch example
