@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_deafvalapp.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200209-1800"
+ver="20200317-1600"
 websitemodule="m_deafvalapp"
 -- Link to WebSite:  https://huisvuilkalender.gemeentewestland.nl
 --
@@ -144,7 +144,7 @@ Street   = arg[8] or ""   -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 
-dprint("Start garbagekalerder module ".. websitemodule..' (v'..ver..')')
+dprint('#### '..os.date("%c")..' ### Start garbagekalerder module '.. websitemodule..' (v'..ver..')')
 if domoticzjsonpath == nil then
    dprint("!!! domoticzjsonpath not specified!")
 elseif Zipcode == nil then

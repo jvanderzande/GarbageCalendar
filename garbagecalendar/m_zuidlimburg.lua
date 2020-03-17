@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_zuidlimburg.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200209-1800"
+ver="20200317-1600"
 websitemodule="m_zuidlimburg"
 -- Link to WebSite:  https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc=AAAA99&nr=999&t
 --
@@ -143,7 +143,7 @@ Street   = arg[8] or ""   -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 
-dprint("Start garbagekalerder module ".. websitemodule..' (v'..ver..')')
+dprint('#### '..os.date("%c")..' ### Start garbagekalerder module '.. websitemodule..' (v'..ver..')')
 if domoticzjsonpath == nil then
    dprint("!!! domoticzjsonpath not specified! ...  script without paramaters?")
 elseif Zipcode == nil then

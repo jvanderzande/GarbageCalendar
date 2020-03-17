@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200213-2015"
+ver="20200317-1600"
 websitemodule="m_opzet_api"
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -185,7 +185,7 @@ Street   = arg[8] or ""   -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 
-dprint("Start garbagekalerder module ".. websitemodule..' (v'..ver..')')
+dprint('#### '..os.date("%c")..' ### Start garbagekalerder module '.. websitemodule..' (v'..ver..')')
 if domoticzjsonpath == nil then
    dprint("!!! domoticzjsonpath not specified!")
 elseif Zipcode == nil then

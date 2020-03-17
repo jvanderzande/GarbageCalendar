@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200315-1215"
+ver="20200317-1600"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -71,7 +71,7 @@ function garbagecalendarconfig()
    -- empty previous run runlogfile
    file = io.open(runlogfile, "w")
    file:close()
-   dprint('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' Start garbagecalendar script v'.. ver)
+   dprint('#### '..os.date("%c")..' ### Start garbagecalendar script v'.. ver)
    if testdataload then
       dprint('#### Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
       dprint('####    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
@@ -335,7 +335,7 @@ function Perform_Data_check()
                -- check whether the first nextdate for this garbagetype is already found to get only one next date per GarbageType
                if ((not ShowSinglePerType) or (garbagetype_cfg[web_garbagetype].nextdate == nil) and txtcnt < ShowNextEvents) then
                   -- get the long description from the JSON data
-                  dprint("==> GarbageDate:"..tostring (web_garbagedate) .. " GarbageType:"..tostring(web_garbagetype).. '  Notify Time='..tostring(garbagetype_cfg[web_garbagetype].hour)..':'..tostring(garbagetype_cfg[web_garbagetype].min)..'   Notify_DaysBefore='..tostring(garbagetype_cfg[web_garbagetype].daysbefore)..'   Calculated_Days_Differerence='..tostring(daysdiffdev),0,0)
+                  dprint("==> GarbageDate:"..tostring (web_garbagedate) .. " GarbageType:"..tostring(web_garbagetype).. '  Notify Time='..tostring(garbagetype_cfg[web_garbagetype].hour)..':'..tostring(garbagetype_cfg[web_garbagetype].min)..'   Notify_DaysBefore='..tostring(garbagetype_cfg[web_garbagetype].daysbefore)..'   reminder='..tostring(garbagetype_cfg[web_garbagetype].reminder)..'   Calculated_Days_Differerence='..tostring(daysdiffdev),0,0)
                  -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
                   if daysdiffdev == nil then
                      dprint ('    !!! Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)

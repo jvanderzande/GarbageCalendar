@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200301-1700"
+ver="20200317-1600"
 websitemodule="m_ximmio"
 -- API WebSite:  https://wasteapi.2go-mobile.com/api
 --
@@ -192,7 +192,7 @@ Street   = arg[8] or ""      -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 
-dprint("Start garbagekalerder module ".. websitemodule..' (v'..ver..')')
+dprint('#### '..os.date("%c")..' ### Start garbagekalerder module '.. websitemodule..' (v'..ver..')')
 if domoticzjsonpath == nil then
    dprint("!!! domoticzjsonpath not specified!")
 elseif Zipcode == nil then
