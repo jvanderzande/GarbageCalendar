@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200317-1600"
+ver="20200317-1900"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -219,70 +219,79 @@ end
 ----------------------------------------------------------------------------------------------------------------
 --
 function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
-   if (garbagetype_cfg[s_garbagetype] ~= nil
-   and (timenow.hour==garbagetype_cfg[s_garbagetype].hour or timenow.hour==garbagetype_cfg[s_garbagetype].hour+garbagetype_cfg[s_garbagetype].reminder)
-   and timenow.min==garbagetype_cfg[s_garbagetype].min
-   and i_daysdifference == garbagetype_cfg[s_garbagetype].daysbefore)
-   or (testnotification or false) then
-      testnotification = false  -- this will trigger a test notification for the first record
-      local dag = ""
-      if i_daysdifference == 0 then
-         dag = notificationtoday or "vandaag"
-      elseif i_daysdifference == 1 then
-         dag = notificationtomorrow or "morgen"
-      else
-         dag = notificationlonger or 'over @DAYS@ dagen'
-         dag = dag:gsub('@DAYS@',tostring(i_daysdifference))
-      end
-      local inotificationdate  = notificationdate or 'yyyy-mm-dd'
-      garbageyear,garbagemonth,garbageday=s_garbagetype_date:match("(%d-)-(%d-)-(%d-)$")
-      local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
-      local wday=daysoftheweek[os.date("*t", garbageTime).wday]
-      local lwday=Longdaysoftheweek[os.date("*t", garbageTime).wday]
-      inotificationdate = inotificationdate:gsub('wdd',lwday)
-      inotificationdate = inotificationdate:gsub('wd',wday)
-      inotificationdate = inotificationdate:gsub('dd',garbageday)
-      inotificationdate = inotificationdate:gsub('mmmm',LongMonth[tonumber(garbagemonth)])
-      inotificationdate = inotificationdate:gsub('mmm',ShortMonth[tonumber(garbagemonth)])
-      inotificationdate = inotificationdate:gsub('mm',garbagemonth)
-      inotificationdate = inotificationdate:gsub('yyyy',garbageyear)
-      inotificationdate = inotificationdate:gsub('yy',garbageyear:sub(3,4))
-      inotificationtitle = notificationtitle or 'GarbageCalendar: @DAY@ de @GARBAGETEXT@ aan de weg zetten!'
-      inotificationtitle = inotificationtitle:gsub('@DAY@',dag)
-      inotificationtitle = inotificationtitle:gsub('@GARBAGETYPE@',s_garbagetype)
-      inotificationtitle = inotificationtitle:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
-      inotificationtitle = inotificationtitle:gsub('@GARBAGEDATE@',inotificationdate)
-      inotificationtext = notificationtext or '@GARBAGETEXT@ wordt @DAY@ opgehaald!'
-      inotificationtext = inotificationtext:gsub('@DAY@',dag)
-      inotificationtext = inotificationtext:gsub('@GARBAGETYPE@',s_garbagetype)
-      inotificationtext = inotificationtext:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
-      inotificationtext = inotificationtext:gsub('@GARBAGEDATE@',inotificationdate)
-      if type(NotificationEmailAdress) == 'table' then
-         for x,emailaddress in pairs(NotificationEmailAdress) do
-            if emailaddress ~= "" then
-               commandArray[x] = {['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress}
-               dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress.."|", 1)
+   if (   garbagetype_cfg[s_garbagetype] ~= nil and timenow.min==garbagetype_cfg[s_garbagetype].min )
+   or ( testnotification or false ) then
+      if (
+            (  timenow.hour == garbagetype_cfg[s_garbagetype].hour                                               --First notification
+            or timenow.hour == garbagetype_cfg[s_garbagetype].hour+garbagetype_cfg[s_garbagetype].reminder       --same day reminder
+            )
+            and i_daysdifference == garbagetype_cfg[s_garbagetype].daysbefore
+         )
+      or (
+            timenow.hour == garbagetype_cfg[s_garbagetype].hour+garbagetype_cfg[s_garbagetype].reminder-24       --next day reminder
+            and i_daysdifference+1 == garbagetype_cfg[s_garbagetype].daysbefore
+         )
+      or ( testnotification or false ) then
+         testnotification = false  -- this will trigger a test notification for the first record
+         local dag = ""
+         if i_daysdifference == 0 then
+            dag = notificationtoday or "vandaag"
+         elseif i_daysdifference == 1 then
+            dag = notificationtomorrow or "morgen"
+         else
+            dag = notificationlonger or 'over @DAYS@ dagen'
+            dag = dag:gsub('@DAYS@',tostring(i_daysdifference))
+         end
+         local inotificationdate  = notificationdate or 'yyyy-mm-dd'
+         garbageyear,garbagemonth,garbageday=s_garbagetype_date:match("(%d-)-(%d-)-(%d-)$")
+         local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
+         local wday=daysoftheweek[os.date("*t", garbageTime).wday]
+         local lwday=Longdaysoftheweek[os.date("*t", garbageTime).wday]
+         inotificationdate = inotificationdate:gsub('wdd',lwday)
+         inotificationdate = inotificationdate:gsub('wd',wday)
+         inotificationdate = inotificationdate:gsub('dd',garbageday)
+         inotificationdate = inotificationdate:gsub('mmmm',LongMonth[tonumber(garbagemonth)])
+         inotificationdate = inotificationdate:gsub('mmm',ShortMonth[tonumber(garbagemonth)])
+         inotificationdate = inotificationdate:gsub('mm',garbagemonth)
+         inotificationdate = inotificationdate:gsub('yyyy',garbageyear)
+         inotificationdate = inotificationdate:gsub('yy',garbageyear:sub(3,4))
+         inotificationtitle = notificationtitle or 'GarbageCalendar: @DAY@ de @GARBAGETEXT@ aan de weg zetten!'
+         inotificationtitle = inotificationtitle:gsub('@DAY@',dag)
+         inotificationtitle = inotificationtitle:gsub('@GARBAGETYPE@',s_garbagetype)
+         inotificationtitle = inotificationtitle:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
+         inotificationtitle = inotificationtitle:gsub('@GARBAGEDATE@',inotificationdate)
+         inotificationtext = notificationtext or '@GARBAGETEXT@ wordt @DAY@ opgehaald!'
+         inotificationtext = inotificationtext:gsub('@DAY@',dag)
+         inotificationtext = inotificationtext:gsub('@GARBAGETYPE@',s_garbagetype)
+         inotificationtext = inotificationtext:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
+         inotificationtext = inotificationtext:gsub('@GARBAGEDATE@',inotificationdate)
+         if type(NotificationEmailAdress) == 'table' then
+            for x,emailaddress in pairs(NotificationEmailAdress) do
+               if emailaddress ~= "" then
+                  commandArray[x] = {['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress}
+                  dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress.."|", 1)
+               end
+            end
+         else
+            if (NotificationEmailAdress or "") ~= "" then
+               commandArray['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress
+               dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress.."|", 1)
             end
          end
-      else
-         if (NotificationEmailAdress or "") ~= "" then
-            commandArray['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress
-            dprint ('---->Notification Email send for ' .. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress.."|", 1)
+
+         if (Notificationsystem or "") ~= "" then
+            commandArray['SendNotification']=inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem
+            dprint ('---->Notification send for '.. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem, 1)
          end
-      end
 
-      if (Notificationsystem or "") ~= "" then
-         commandArray['SendNotification']=inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem
-         dprint ('---->Notification send for '.. s_garbagetype.. " |"..inotificationtitle .. '#' .. inotificationtext .. '####'..Notificationsystem, 1)
-      end
-
-      if (Notificationscript or "") ~= "" then
-         Notificationscript = Notificationscript:gsub('@TEXT@',inotificationtext)
-         Notificationscript = Notificationscript:gsub('@GARBAGETYPE@',s_garbagetype)
-         Notificationscript = Notificationscript:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
-         Notificationscript = Notificationscript:gsub('@GARBAGEDATE@',inotificationdate)
-         os.execute( Notificationscript..' &')
-         dprint ('---->Notification script started: '.. Notificationscript, 1)
+         if (Notificationscript or "") ~= "" then
+            Notificationscript = Notificationscript:gsub('@TEXT@',inotificationtext)
+            Notificationscript = Notificationscript:gsub('@GARBAGETYPE@',s_garbagetype)
+            Notificationscript = Notificationscript:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
+            Notificationscript = Notificationscript:gsub('@GARBAGEDATE@',inotificationdate)
+            os.execute( Notificationscript..' &')
+            dprint ('---->Notification script started: '.. Notificationscript, 1)
+         end
       end
    end
 end
@@ -310,7 +319,8 @@ function Perform_Data_check()
       dprint("- Start looping through data from the website: "..datafile)
       for i = 1, #garbagedata do
          if garbagedata[i].garbagetype ~= nil then
-            web_garbagetype = garbagedata[i].garbagetype
+            -- change all table entries to lower to make the script case insensitive
+            web_garbagetype = garbagedata[i].garbagetype:lower()
             web_garbagedate = garbagedata[i].garbagedate
             web_garbagedesc = (garbagedata[i].wdesc or "")
             if (web_garbagedesc == "") then
@@ -324,7 +334,7 @@ function Perform_Data_check()
             if garbagetype_cfg[web_garbagetype] == nil then
 --~                dprint (' Warning: Garbagetype not defined in the "garbagetype_cfg" table: ' .. web_garbagetype.."  desc:"..web_garbagedesc,1)
                if web_garbagedesc == "???" then web_garbagedesc = web_garbagetype end
-               missingrecords = missingrecords .. '   ["' .. web_garbagetype..'"]'..string.rep(" ", 32-string.len(web_garbagetype))..' ={hour=19,min=02,daysbefore=1,reminder=0,text="'..web_garbagetype..'"},\n'
+               missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower()..'"]'..string.rep(" ", 32-string.len(web_garbagetype))..' ={hour=19,min=02,daysbefore=1,reminder=0,text="'..web_garbagetype..'"},\n'
                garbagetype_cfg[web_garbagetype] = {hour=0,min=0,daysbefore=0,reminder=0,text="dummy"}
                garbagetype_cfg[web_garbagetype].text = web_garbagetype
             end
@@ -427,14 +437,35 @@ if garbagetype_cfg == nil then
    dprint('Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.',1)
    return
 end
-for tbl_garbagetype,get in pairs(garbagetype_cfg) do
-   if garbagetype_cfg[tbl_garbagetype].reminder == nil then
+-- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
+for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
+   if gtdata.hour == nil or gtdata.hour > 24 or gtdata.hour < 1  then
+      dprint("!!!! Check hour field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.hour)
+      garbagetype_cfg[tbl_garbagetype].hour = 0
+   end
+   if gtdata.min == nil or gtdata.min > 59 or gtdata.min < 0  then
+      dprint("!!!! Check min field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.min)
+      garbagetype_cfg[tbl_garbagetype].min = 0
+   end
+   if gtdata.reminder == nil or gtdata.reminder > 23  or gtdata.reminder < 0  then
+      dprint("!!!! Check reminder field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.reminder)
       garbagetype_cfg[tbl_garbagetype].reminder = 0
    end
-   dprint("-> NotificationTime:"..tostring(garbagetype_cfg[tbl_garbagetype].hour)..":"..tostring(garbagetype_cfg[tbl_garbagetype].min)..'  Garbagetype:'..tostring(tbl_garbagetype))
-   if (timenow.hour==garbagetype_cfg[tbl_garbagetype].hour
-   or  timenow.hour==garbagetype_cfg[tbl_garbagetype].hour+garbagetype_cfg[tbl_garbagetype].reminder)
-   and timenow.min==garbagetype_cfg[tbl_garbagetype].min then
+   if (tbl_garbagetype ~= tbl_garbagetype:lower()) then
+      dprint(tbl_garbagetype .. " change to "..tbl_garbagetype:lower())
+      garbagetype_cfg[tbl_garbagetype:lower()] = {hour=gtdata.hour,min=gtdata.min,daysbefore=gtdata.daysbefore,reminder=gtdata.reminder,text=gtdata.text}
+      garbagetype_cfg[tbl_garbagetype] = nil
+   end
+end
+-- loop through the table to check whether
+for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
+   dprint("-> NotificationTime:"..tostring(gtdata.hour)..":"..tostring(gtdata.min)..'  Garbagetype:'..tostring(tbl_garbagetype))
+   if (   timenow.hour == gtdata.hour
+      or  timenow.hour == gtdata.hour+gtdata.reminder    --reminder same day
+      or  timenow.hour == gtdata.hour+gtdata.reminder-24 --reminder next day
+      )
+   and timenow.min  == gtdata.min then
+      dprint("   NotificationTime is true ")
       if tbl_garbagetype == "reloaddata" then
          -- perform background data updates
          GetWebDataInBackground()
