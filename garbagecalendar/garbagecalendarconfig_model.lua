@@ -102,6 +102,8 @@ garbagetype_cfg = {
    ["gft"]                              ={hour=19,min=22,daysbefore=1,reminder=0,text="gft"},
    ["papier"]                           ={hour=19,min=22,daysbefore=1,reminder=0,text="papier"},
 -- Add any missing records above this line
+-- Do not remove the lines below, the hour;min values can be adapted when you want but,
+-- Do not changes the name "reloaddata" to something else as that is needed to start the background update process!
    ["reloaddata"]                       ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},
    ["dummy1"]                           ={hour=02,min=30,daysbefore=0,reminder=0,text="dummy to trigger testing"}}
 

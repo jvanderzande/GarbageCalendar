@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200317-1900"
+ver="20200401-1700"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -89,7 +89,7 @@ if pcall(garbagecalendarconfig) then
    dprint('Loaded ' .. scriptpath..'garbagecalendar/garbagecalendarconfig.lua.' )
 else
    print('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' start garbagecalendar script v'.. ver)
-   print('Error: failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"')
+   print('!!! Error: failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"')
    print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
    print('       Also check the path in variable "scriptpath= "  is correctly set.',1 )
    return
@@ -106,8 +106,8 @@ end
 if pcall(tablefuncs) then
    dprint('Loaded ' .. scriptpath..'garbagecalendar/tablefuncs.lua.' )
 else
-   dprint('Error: failed loading tablefuncs.lua from : ' .. scriptpath..'garbagecalendar/.',1)
-   dprint('Error: Please check the path in variable "scriptpath= "  in your setup and try again.',1 )
+   dprint('!!! Error: failed loading tablefuncs.lua from : ' .. scriptpath..'garbagecalendar/.',1)
+   dprint('!!! Error: Please check the path in variable "scriptpath= "  in your setup and try again.',1 )
    return
 end
 ----------------------------------------------------------------------------------------------------------------
@@ -151,14 +151,14 @@ function isdir(path)
    return exists(path.."/")
 end
 if (not isdir(datafilepath)) then
-   dprint('Error: invalid path for datafilepath : ' .. datafilepath..'.',1)
-   dprint('Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.',1 )
+   dprint('!!! Error: invalid path for datafilepath : ' .. datafilepath..'.',1)
+   dprint('!!! Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.',1 )
    return
 end
 
 if (not exists(scriptpath .. "garbagecalendar/"..websitemodule..".lua")) then
-   dprint('Error: module not found: ' .. scriptpath .. "garbagecalendar/"..websitemodule..'.lua',1)
-   dprint('Error: Please check the path&name in variables "scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.',1 )
+   dprint('!!! Error: module not found: ' .. scriptpath .. "garbagecalendar/"..websitemodule..'.lua',1)
+   dprint('!!! Error: Please check the path&name in variables "scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.',1 )
    return
 end
 
@@ -434,7 +434,14 @@ if not Perform_Rights_check(datafilepath.."garbagecalendar_web_"..websitemodule.
 -- check for notification times and run update only when we are at one of these defined times
 dprint('Start checking garbagetype_cfg table:')
 if garbagetype_cfg == nil then
-   dprint('Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.',1)
+   dprint('!!! Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.',1)
+   return
+end
+if garbagetype_cfg["reloaddata"] == nil or garbagetype_cfg["reloaddata"].hour == nil or garbagetype_cfg["reloaddata"].min == nil then
+   dprint('!!! Error: Web update will never be performed because the "reloaddata" entry missing in the "garbagetype_cfg" table in your garbagecalendarconfig.lua file! ',1)
+   dprint('           Check the original provided garbagecalendarconfig_model.lua for the correct format: ',1)
+   dprint('             -- Add any missing records above this line',1)
+   dprint('             ["reloaddata"] ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},',1)
    return
 end
 -- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
@@ -458,6 +465,7 @@ for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
    end
 end
 -- loop through the table to check whether
+rlefound = false
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
    dprint("-> NotificationTime:"..tostring(gtdata.hour)..":"..tostring(gtdata.min)..'  Garbagetype:'..tostring(tbl_garbagetype))
    if (   timenow.hour == gtdata.hour
