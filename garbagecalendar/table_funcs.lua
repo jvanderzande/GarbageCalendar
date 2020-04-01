@@ -36,7 +36,10 @@ do
 	function table.save( tbl,filename )
 		local charS,charE = "   ","\n"
 		local file,err = io.open( filename, "wb" )
-		if err then return err end
+		if err then
+         print('!!! Table.save error:'..err .. '. Data not updated in '..filename )
+         return err
+      end
 		if tbl == nil then
 			tbl = {}
 		end
@@ -112,12 +115,13 @@ do
 	function table.load( sfile )
 		local ftables,err = loadfile( sfile )
 		if err then
---~ 			print ( "!!! error loading persistent variables file as it doesn't exists:"..sfile)
+         print('!!! table.load error:'..err )
+         print('!!! unable to read Data from '..sfile )
 			return _,err
 		end
 		local tables = ftables()
 		if tables == nil then
-			print ( "! error loading file .. table empty "..sfile)
+         print('!!! table.load error:'..err .. ' -> error loading (empty?) file: '..sfile)
 			return _,err
 		end
 		for idx = 1,#tables do
