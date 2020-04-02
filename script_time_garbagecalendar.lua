@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200402-2200"
+ver="20200402-2230"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -219,7 +219,7 @@ end
 ----------------------------------------------------------------------------------------------------------------
 --
 function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
-   if (   garbagetype_cfg[s_garbagetype] ~= nil and timenow.min==garbagetype_cfg[s_garbagetype].min )
+   if (   garbagetype_cfg[s_garbagetype] ~= nil and timenow.min==garbagetype_cfg[s_garbagetype].min and garbagetype_cfg[s_garbagetype].status == "on" )
    or ( testnotification or false ) then
       if (
             (  timenow.hour == garbagetype_cfg[s_garbagetype].hour                                               --First notification
@@ -446,6 +446,12 @@ if garbagetype_cfg["reloaddata"] == nil or garbagetype_cfg["reloaddata"].hour ==
 end
 -- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
+   if gtdata.status == nil or gtdata.status:lower() ~= "on" or gtdata.status:lower() ~= "off"then
+      -- default status=on to perform each a notification for each GarbageType by default
+      gtdata.status = "on"
+   else
+      gtdata.status = gtdata.status:lower()
+   end
    if gtdata.hour == nil or gtdata.hour > 24 or gtdata.hour < 1  then
       dprint("!!!! Check hour field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.hour)
       garbagetype_cfg[tbl_garbagetype].hour = 0

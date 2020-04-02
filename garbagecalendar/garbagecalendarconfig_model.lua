@@ -93,6 +93,7 @@ notificationdate     = 'dd mmm yyyy'   -- @GARBAGEDATE@ format -> Options are th
    -- daysbefore ==> X means that the notification is send X day(s) before the day of the planned garbage collection
    -- reminder   ==> Will send a second reminder after x hours. 0=no reminder (needs to be in the same day!)
    -- text       ==> define the text for the notification and Text Device.
+   -- status     ==> optioneel status="off" when you want to disable the notification for this single line.
 -- The "reloaddata" entry is required to run the background process to update the data one time per day.
 -- The "dummy" entry can be used to force reading the data, update the Domoticz text device and see if there are any errors or missing garbadge types.
 
