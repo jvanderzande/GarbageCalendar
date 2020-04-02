@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200401-1700"
+ver="20200402-2200"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -438,11 +438,11 @@ if garbagetype_cfg == nil then
    return
 end
 if garbagetype_cfg["reloaddata"] == nil or garbagetype_cfg["reloaddata"].hour == nil or garbagetype_cfg["reloaddata"].min == nil then
-   dprint('!!! Error: Web update will never be performed because the "reloaddata" entry missing in the "garbagetype_cfg" table in your garbagecalendarconfig.lua file! ',1)
-   dprint('           Check the original provided garbagecalendarconfig_model.lua for the correct format: ',1)
-   dprint('             -- Add any missing records above this line',1)
-   dprint('             ["reloaddata"] ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},',1)
-   return
+   dprint('!!! Warning: Web update will be performed on a default time at 02:30AM, because the "reloaddata" entry missing in the "garbagetype_cfg" table in your garbagecalendarconfig.lua file! ')
+   dprint('           Check the original provided garbagecalendarconfig_model.lua for the correct format: ')
+   dprint('             -- Add any missing records above this line')
+   dprint('             ["reloaddata"] ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},')
+   garbagetype_cfg["reloaddata"] = {hour=2,min=30,daysbefore=0,reminder=0,text="default added"}
 end
 -- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
