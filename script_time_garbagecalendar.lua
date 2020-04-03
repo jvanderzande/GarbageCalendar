@@ -219,7 +219,7 @@ end
 ----------------------------------------------------------------------------------------------------------------
 --
 function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
-   if (   garbagetype_cfg[s_garbagetype] ~= nil and timenow.min==garbagetype_cfg[s_garbagetype].min and garbagetype_cfg[s_garbagetype].status == "on" )
+   if ( garbagetype_cfg[s_garbagetype] ~= nil and timenow.min==garbagetype_cfg[s_garbagetype].min and garbagetype_cfg[s_garbagetype].active == "on" )
    or ( testnotification or false ) then
       if (
             (  timenow.hour == garbagetype_cfg[s_garbagetype].hour                                               --First notification
@@ -371,7 +371,7 @@ function Perform_Data_check()
 	end
    dprint("- End  ----------------- ")
    if missingrecords ~= "" then
-      dprint('#### Warning: These records are missing in your garbagecalendarconfig.lua file!',1)
+      dprint('#### Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!',1)
       dprint('#### -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
       dprint(missingrecords,1,0)
       dprint('#### -- end ----------------------------')
@@ -446,11 +446,11 @@ if garbagetype_cfg["reloaddata"] == nil or garbagetype_cfg["reloaddata"].hour ==
 end
 -- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
-   if gtdata.status == nil or gtdata.status:lower() ~= "on" or gtdata.status:lower() ~= "off"then
-      -- default status=on to perform each a notification for each GarbageType by default
-      gtdata.status = "on"
+   if gtdata.active == nil or gtdata.active:lower() ~= "on" or gtdata.active:lower() ~= "off"then
+      -- default active=on to perform each a notification for each GarbageType by default
+      gtdata.active = "on"
    else
-      gtdata.status = gtdata.status:lower()
+      gtdata.active = gtdata.active:lower()
    end
    if gtdata.hour == nil or gtdata.hour > 24 or gtdata.hour < 1  then
       dprint("!!!! Check hour field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.hour)
@@ -471,7 +471,6 @@ for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
    end
 end
 -- loop through the table to check whether
-rlefound = false
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
    dprint("-> NotificationTime:"..tostring(gtdata.hour)..":"..tostring(gtdata.min)..'  Garbagetype:'..tostring(tbl_garbagetype))
    if (   timenow.hour == gtdata.hour

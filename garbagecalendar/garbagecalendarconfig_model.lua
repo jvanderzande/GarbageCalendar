@@ -93,7 +93,7 @@ notificationdate     = 'dd mmm yyyy'   -- @GARBAGEDATE@ format -> Options are th
    -- daysbefore ==> X means that the notification is send X day(s) before the day of the planned garbage collection
    -- reminder   ==> Will send a second reminder after x hours. 0=no reminder (needs to be in the same day!)
    -- text       ==> define the text for the notification and Text Device.
-   -- status     ==> optioneel status="off" when you want to disable the notification for this single line.
+   -- active     ==> (optional) default:active="on". active="off" when you want to disable the notification for this single line.
 -- The "reloaddata" entry is required to run the background process to update the data one time per day.
 -- The "dummy" entry can be used to force reading the data, update the Domoticz text device and see if there are any errors or missing garbadge types.
 
@@ -103,8 +103,7 @@ garbagetype_cfg = {
    ["gft"]                              ={hour=19,min=22,daysbefore=1,reminder=0,text="gft"},
    ["papier"]                           ={hour=19,min=22,daysbefore=1,reminder=0,text="papier"},
 -- Add any missing records above this line
--- Do not remove the lines below, the hour;min values can be adapted when you want but,
--- Do not changes the name "reloaddata" to something else as that is needed to start the background update process!
+--  "reloaddata" is used to start the background update process at this given time.
    ["reloaddata"]                       ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},
    ["dummy1"]                           ={hour=02,min=30,daysbefore=0,reminder=0,text="dummy to trigger testing"}}
 
