@@ -106,7 +106,7 @@ garbagetype_cfg = {
 -- Add any missing records above this line
 --  "reloaddata" is used to start the background update process at this given time.
    ["reloaddata"]                       ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},
-   ["dummy1"]                           ={hour=02,min=30,daysbefore=0,reminder=0,text="dummy to trigger testing"}}
+   ["dummy1"]                           ={hour=02,min=31,daysbefore=0,reminder=0,text="dummy to trigger testing"}}
 
 
 -------------------------------------------------------------------------

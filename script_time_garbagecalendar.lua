@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200402-2230"
+ver="20200404-1400"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -345,7 +345,7 @@ function Perform_Data_check()
                -- check whether the first nextdate for this garbagetype is already found to get only one next date per GarbageType
                if ((not ShowSinglePerType) or (garbagetype_cfg[web_garbagetype].nextdate == nil) and txtcnt < ShowNextEvents) then
                   -- get the long description from the JSON data
-                  dprint("==> GarbageDate:"..tostring (web_garbagedate) .. " GarbageType:"..tostring(web_garbagetype).. '  Notify Time='..tostring(garbagetype_cfg[web_garbagetype].hour)..':'..tostring(garbagetype_cfg[web_garbagetype].min)..'   Notify_DaysBefore='..tostring(garbagetype_cfg[web_garbagetype].daysbefore)..'   reminder='..tostring(garbagetype_cfg[web_garbagetype].reminder)..'   Calculated_Days_Differerence='..tostring(daysdiffdev),0,0)
+                  dprint("==> GarbageDate:" .. tostring (web_garbagedate) .. " GarbageType:" .. tostring(web_garbagetype) .. '  Notify: Active=' .. tostring(garbagetype_cfg[web_garbagetype].active) .. '  Time=' .. tostring(garbagetype_cfg[web_garbagetype].hour) .. ':' .. tostring(garbagetype_cfg[web_garbagetype].min) .. '   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev),0,0)
                  -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
                   if daysdiffdev == nil then
                      dprint ('    !!! Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
