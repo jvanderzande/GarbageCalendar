@@ -105,7 +105,7 @@ function Perform_Update()
 --~ [{"Value":"Gaverlanddam","Id":6644,"Brussels":false}]
    Web_Data=perform_webquery(' "https://www.ophaalkalender.be/Calendar/findstreets/?query='..Street..'&zipcode='..Zipcode..'"')
    if ( Web_Data:sub(1,2) == "[]" ) then
-      print("@OphaalKalender Error: Check your Zipcode and Housenr as we get an [] response.")
+      print("@OphaalKalender findstreets Error: Check your Zipcode and Street as we get an [] response.")
       return
    end
    dprint("adressid:"..Web_Data)
@@ -118,7 +118,7 @@ function Perform_Update()
    dprint("adressid:"..adressid)
    --
    -- get the Kalender information for this address(bagId) for the current year
-   Web_Data=perform_webquery(' "https://www.ophaalkalender.be/api/rides?id='..adressid..'&housenumber='..Housenr..'&zipcode='..Zipcode..'"')
+   Web_Data=perform_webquery(' "https://www.ophaalkalender.be/api/rides?id='..adressid..'&housenumber='..Housenr..Housenrsuf..'&zipcode='..Zipcode..'"')
    if ( Web_Data:sub(1,2) == "[]" ) then
       print("Error: Unable to retrieve the Kalender information for this address...  stopping execution.")
       print(Web_Data)
