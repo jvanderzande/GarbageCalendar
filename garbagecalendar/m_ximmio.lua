@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200417-1900"
+ver="20200317-1600"
 websitemodule="m_ximmio"
 -- API WebSite:  https://wasteapi.2go-mobile.com/api
 --
@@ -14,7 +14,7 @@ websitemodule="m_ximmio"
 --       companyCode: '53d8db94-7945-42fd-9742-9bbc71dbe4c1',
 --       configName: 'ALL'
 --       })
--- fill the found companyCode value in the hostname field in your garbagecalendarconfig.lua to make this module work!
+-- Copy the found value and paste it into the hostname field in your garbagecalendarconfig.lua to make this module work!
 -------------------------------------------------------
 -- get script directory
 function script_path()
