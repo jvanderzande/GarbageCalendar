@@ -121,7 +121,7 @@ do
 		end
 		local tables = ftables()
 		if tables == nil then
-         print('!!! table.load error:'..err .. ' -> error loading (empty?) file: '..sfile)
+         print('!!! table.load error:'..(err or '??') .. ' -> error loading (empty?) file: '..sfile)
 			return _,err
 		end
 		for idx = 1,#tables do
