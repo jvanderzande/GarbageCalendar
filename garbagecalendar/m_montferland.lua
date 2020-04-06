@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200331-1600"
+ver="20200405-2200"
 websitemodule="m_montferland"
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -67,11 +67,19 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
-   local sQuery   = 'curl "'..url..'" 2>nul'
+   local sQuery   = 'curl "'..url..'" 2>'..afwlogfile:gsub('_web_','_web_err_')
    dprint("sQuery="..sQuery)
    local handle=assert(io.popen(sQuery))
    local Web_Data = handle:read('*all')
    handle:close()
+   dprint('---- web data ----------------------------------------------------------------------------')
+   dprint(Web_Data)
+   dprint('---- web err ------------------------------------------------------------------------')
+   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
+   dprint("Web_Err="..ifile:read("*all"))
+   ifile:close()
+   dprint('---- end web data ------------------------------------------------------------------------')
+   os.remove(afwlogfile:gsub('_web_','_web_err_'))
    if ( Web_Data == "" ) then
       dprint("Error: Empty result from curl command")
       return ""
@@ -113,9 +121,6 @@ function Perform_Update()
    if Web_Data == "" then
       return
    end
-   dprint('---- web data AdministratieID ----------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- end web data ------------------------------------------------------------------------')
    if Web_Data == "" then
       return
    end
@@ -139,9 +144,6 @@ function Perform_Update()
 
    -- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
    Web_Data=perform_webquery('http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID='..AdministratieID..'&Username=GSD&Password=gsd$2014&ADR_ID='..AdresID..'&Jaar='..os.date("%Y")..'&Date='..os.date("%m/%d/%Y%%20%I:%M:%S%p")..'&Type=Topdagen')
-   dprint('---- web data ophaaldata -----------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- end web data ------------------------------------------------------------------------')
    if ( Web_Data:sub(1,2) == "[]" ) then
       print("Error: Unable to retrieve the Kalender information for this address...  stopping execution.")
       return

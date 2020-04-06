@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ophaalkalender-be
 ----------------------------------------------------------------------------------------------------------------
-ver="20200406-0945"
+ver="20200405-2200"
 websitemodule="m_ophaalkalender-be"
 -- Link to WebSite: https://huisvuilkalender.gemeentewestland.nl
 --
@@ -57,12 +57,19 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>nul'
+   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
    dprint("sQuery="..sQuery)
    local handle=assert(io.popen(sQuery))
    local Web_Data = handle:read('*all')
    handle:close()
-   dprint("Web_Data="..Web_Data)
+   dprint('---- web data ----------------------------------------------------------------------------')
+   dprint(Web_Data)
+   dprint('---- web err ------------------------------------------------------------------------')
+   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
+   dprint("Web_Err="..ifile:read("*all"))
+   ifile:close()
+   os.remove(afwlogfile:gsub('_web_','_web_err_'))
+   dprint('---- end web data ------------------------------------------------------------------------')
    if ( Web_Data == "" ) then
       dprint("Error: Empty result from curl command")
       return ""
@@ -176,4 +183,3 @@ else
    dprint("=> Write data to ".. afwdatafile)
    table.save( garbagedata, afwdatafile )
 end
-

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_zuidlimburg.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200317-1600"
+ver="20200405-2200"
 websitemodule="m_zuidlimburg"
 -- Link to WebSite:  https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc=AAAA99&nr=999&t
 --
@@ -65,11 +65,18 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>nul'
+   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
    dprint("sQuery="..sQuery)
    local handle=assert(io.popen(sQuery))
    local Web_Data = handle:read('*all')
    handle:close()
+   dprint('---- web data ----------------------------------------------------------------------------')
+   dprint(Web_Data)
+   dprint('---- web err ------------------------------------------------------------------------')
+   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
+   dprint("Web_Err="..ifile:read("*all"))
+   ifile:close()
+   os.remove(afwlogfile:gsub('_web_','_web_err_'))
    if ( Web_Data == "" ) then
       dprint("Error: Empty result from curl command")
       return ""
@@ -96,9 +103,6 @@ function Perform_Update()
    local i = 0
    -- loop through returned result
    i = 0
-   dprint('---- web data raw ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- end web data raw ------------------------------------------------------------------------')
    -- Retrieve part with the dates for pickup
    Web_Data=Web_Data:match('.-<div id="Afvalkalender1_pnlAfvalKalender">(.-)</div>')
    dprint('---- web data Afvalkalender section ----------------------------------------------------------')
@@ -162,4 +166,3 @@ else
    dprint("=> Write data to ".. afwdatafile)
    table.save( garbagedata, afwdatafile )
 end
-

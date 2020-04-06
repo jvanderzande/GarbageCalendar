@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_westland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200317-1600"
+ver="20200405-2200"
 websitemodule="m_westland"
 -- Link to WebSite: https://huisvuilkalender.gemeentewestland.nl
 --
@@ -53,11 +53,19 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>nul'
+   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
    dprint("sQuery="..sQuery)
    local handle=assert(io.popen(sQuery))
    local Web_Data = handle:read('*all')
    handle:close()
+   dprint('---- web data ----------------------------------------------------------------------------')
+   dprint(Web_Data)
+   dprint('---- web err ------------------------------------------------------------------------')
+   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
+   dprint("Web_Err="..ifile:read("*all"))
+   ifile:close()
+   os.remove(afwlogfile:gsub('_web_','_web_err_'))
+   dprint('---- end web data ------------------------------------------------------------------------')
    if ( Web_Data == "" ) then
       dprint("Error: Empty result from curl command")
       return ""
@@ -85,9 +93,6 @@ function Perform_Update()
    local pickuptimes = {}
    -- loop through returned result
    i = 0
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- end web data ------------------------------------------------------------------------')
    dprint('- start looping through received data ----------------------------------------------------')
    for web_garbagetype,web_garbagedate in string.gmatch(Web_Data, '.-soort.(.-)%sclearfix.-text dag.-\\">(.-)<\\/span') do
       i = i + 1
@@ -164,4 +169,3 @@ else
    dprint("=> Write data to ".. afwdatafile)
    table.save( garbagedata, afwdatafile )
 end
-

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200317-1600"
+ver="20200405-2200"
 websitemodule="m_opzet_api"
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -57,11 +57,19 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
-   local sQuery   = 'curl "'..url..'" 2>nul'
+   local sQuery   = 'curl "'..url..'" 2>'..afwlogfile:gsub('_web_','_web_err_')
    dprint("sQuery="..sQuery)
    local handle=assert(io.popen(sQuery))
    local Web_Data = handle:read('*all')
    handle:close()
+   dprint('---- web data ----------------------------------------------------------------------------')
+   dprint(Web_Data)
+   dprint('---- web err ------------------------------------------------------------------------')
+   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
+   dprint("Web_Err="..ifile:read("*all"))
+   ifile:close()
+   dprint('---- end web data ------------------------------------------------------------------------')
+   os.remove(afwlogfile:gsub('_web_','_web_err_'))
    if ( Web_Data == "" ) then
       dprint("Error: Empty result from curl command")
       return ""
@@ -113,9 +121,6 @@ function Perform_Update()
    if Web_Data == "" then
       return
    end
-   dprint('---- web data Bagid ----------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- end web data ------------------------------------------------------------------------')
    if Web_Data == "" then
       return
    end
@@ -142,9 +147,6 @@ function Perform_Update()
    dprint("bagId:"..bagId)
    -- get the Afvalstromen information for all possible garbagetypeid's for this address(bagId)
    Web_Data=perform_webquery('https://'..Hostname..'/rest/adressen/'..bagId..'/afvalstromen')
-   dprint('---- web data garbagestromen ---------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- end web data ------------------------------------------------------------------------')
    if ( Web_Data:sub(1,2) == "[]" ) then
       print("Error: Unable to retrieve Afvalstromen information...  stopping execution.")
       return
