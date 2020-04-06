@@ -26,6 +26,16 @@ function Round(num, idp)
 end
 
 -------------------------------------------------------
+-- url_encode function
+function url_encode(str)
+  if (str) then
+	str = string.gsub (str, "([^%w %-%_%.%~])",
+	  function (c) return string.format ("%%%02X", string.byte(c)) end)
+	str = string.gsub (str, " ", "+")
+  end
+  return str
+end
+-------------------------------------------------------
 -- try to load JSON library
 function loaddefaultjson()
    if unexpected_condition then error() end
@@ -99,7 +109,7 @@ function Perform_Update()
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
    -- Get the information for the specified address: AdresID and AdministratieID  (required for the subsequent call)
-   Web_Data=perform_webquery('http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password=gsd$2014&Postcode='..Zipcode..'&Huisnummer='..Housenr..'&Toevoeging='..Housenrsuf)
+   Web_Data=perform_webquery('http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password='..url_encode('gsd$2014')..'&Postcode='..Zipcode..'&Huisnummer='..Housenr..'&Toevoeging='..Housenrsuf)
    if Web_Data == "" then
       return
    end
