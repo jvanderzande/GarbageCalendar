@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200404-1400"
+ver="20200406-2030"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -85,14 +85,16 @@ function garbagecalendarconfig()
    dprint('datafilepath: ' .. datafilepath)
    dprint('scriptpath: ' .. scriptpath)
 end
-if pcall(garbagecalendarconfig) then
-   dprint('Loaded ' .. scriptpath..'garbagecalendar/garbagecalendarconfig.lua.' )
-else
+local status, err = pcall(garbagecalendarconfig)
+if err then
    print('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' start garbagecalendar script v'.. ver)
-   print('!!! Error: failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"')
+   print('!!! failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"')
    print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
-   print('       Also check the path in variable "scriptpath= "  is correctly set.',1 )
+   print('       Also check the path in variable "scriptpath= "  is correctly set.')
+   print('!!! LUA Error: '..err)
    return
+else
+   dprint('Loaded ' .. scriptpath..'garbagecalendar/garbagecalendarconfig.lua.' )
 end
 
 -------------------------------------------------------
@@ -103,12 +105,14 @@ function tablefuncs()
    package.path = scriptpath..'garbagecalendar/?.lua;' .. package.path
    require "table_funcs"
 end
-if pcall(tablefuncs) then
-   dprint('Loaded ' .. scriptpath..'garbagecalendar/tablefuncs.lua.' )
-else
+local status, err = pcall(tablefuncs)
+if err then
    dprint('!!! Error: failed loading tablefuncs.lua from : ' .. scriptpath..'garbagecalendar/.',1)
    dprint('!!! Error: Please check the path in variable "scriptpath= "  in your setup and try again.',1 )
+   print('!!! LUA Error: '..err)
    return
+else
+   dprint('Loaded ' .. scriptpath..'garbagecalendar/tablefuncs.lua.' )
 end
 ----------------------------------------------------------------------------------------------------------------
 -- Function to check if we can access a file
