@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ophaalkalender-be
 ----------------------------------------------------------------------------------------------------------------
-ver="20200317-1600"
+ver="20200406-0945"
 websitemodule="m_ophaalkalender-be"
 -- Link to WebSite: https://huisvuilkalender.gemeentewestland.nl
 --
@@ -110,7 +110,7 @@ function Perform_Update()
    end
    dprint("adressid:"..Web_Data)
    adressdata = JSON:decode(Web_Data)
-   adressid = adressdata[1].Id
+   adressid = adressdata[1].Id or ""
    if adressid == nil or adressid == "" then
       print("Error: No adressid retrieved...  stopping execution.")
       return
