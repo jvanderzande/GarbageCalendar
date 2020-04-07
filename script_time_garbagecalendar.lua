@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1100"
+ver="20200407-1325"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -70,7 +70,11 @@ function garbagecalendarconfig()
    datafile = datafilepath.."garbagecalendar_"..websitemodule..".data"
    -- empty previous run runlogfile
    file = io.open(runlogfile, "w")
-   file:close()
+   if file == nil then
+      print('!!! Error opening runlogfile ' .. runlogfile)
+   else
+      file:close()
+   end
    dprintlog('#### '..os.date("%c")..' ### Start garbagecalendar script v'.. ver)
    if testdataload then
       dprintlog('#### Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
@@ -114,11 +118,7 @@ if err then
 else
    dprintlog('Loaded ' .. scriptpath..'garbagecalendar/generalfuncs.lua.' )
 end
---- Check if a directory exists in this path
-function isdir(path)
-   -- "/" works on both Unix and Windows
-   return exists(path.."/")
-end
+-- check whether provide paths are valid
 if (not isdir(datafilepath)) then
    dprintlog('!!! Error: invalid path for datafilepath : ' .. datafilepath..'.',1)
    dprintlog('!!! Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.',1 )
@@ -296,7 +296,6 @@ function Perform_Data_check()
             end
             -- first match for each Type we save the date to capture the first next dates
             if garbagetype_cfg[web_garbagetype] == nil then
---~                dprintlog(' Warning: Garbagetype not defined in the "garbagetype_cfg" table: ' .. web_garbagetype.."  desc:"..web_garbagedesc,1)
                if web_garbagedesc == "???" then web_garbagedesc = web_garbagetype end
                missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower()..'"]'..string.rep(" ", 32-string.len(web_garbagetype))..' ={hour=19,min=02,daysbefore=1,reminder=0,text="'..web_garbagetype..'"},\n'
                garbagetype_cfg[web_garbagetype] = {hour=0,min=0,daysbefore=0,reminder=0,text="dummy"}
