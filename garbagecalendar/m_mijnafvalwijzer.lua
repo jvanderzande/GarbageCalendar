@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_mijnafvalwijzer"
--- Link to WebSite:        http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode=1234ab&street=&huisnummer=1&toevoeging=
+-- Link to WebSite: http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode=1234ab&street=&huisnummer=1&toevoeging=
 --
 -------------------------------------------------------
 -- get script directory
@@ -12,28 +12,7 @@ function script_path()
 end
 spath=script_path()
 
-dofile (script_path() .. "table_funcs.lua") --
-
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
-
--------------------------------------------------------
--- try to load JSON library
-function loaddefaultjson()
-   if unexpected_condition then error() end
-   -- add defined Domoticz path to the search path
-   package.path = domoticzjsonpath..'?.lua;' .. package.path
-   JSON = require "JSON"     -- use generic JSON.lua
-end
+dofile (script_path() .. "generalfuncs.lua") --
 
 --------------------------------------------------------------------------
 -- get date, return a standard format and calculate the difference in days
@@ -54,28 +33,6 @@ function getdate(i_garbagetype_date, stextformat)
    dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
    -- return standard date (yyyy-mm-dd) and diffdays
    return stextformat, diffdays
-end
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
-function perform_webquery(url)
-   local sQuery   = 'curl "'..url..'" 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   dprint('---- end web data ------------------------------------------------------------------------')
-   if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
 end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
@@ -110,7 +67,7 @@ function Perform_Update()
    --
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
-   Web_Data=perform_webquery('https://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode='..Zipcode..'&street=&huisnummer='..Housenr..'&toevoeging='..Housenrsuf)
+   Web_Data=perform_webquery('"https://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode='..Zipcode..'&street=&huisnummer='..Housenr..'&toevoeging='..Housenrsuf..'"')
    if ( Web_Data == "" ) then
       dprint("Error: Empty result from curl command. Please check whether curl.exe is installed.")
       return

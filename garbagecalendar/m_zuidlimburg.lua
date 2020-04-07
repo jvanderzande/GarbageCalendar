@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_zuidlimburg.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_zuidlimburg"
 -- Link to WebSite:  https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc=AAAA99&nr=999&t
 --
@@ -10,7 +10,7 @@ websitemodule="m_zuidlimburg"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-dofile (script_path() .. "table_funcs.lua") --
+dofile (script_path() .. "generalfuncs.lua") --
 
 -------------------------------------------------------
 -- dprint function to format log records

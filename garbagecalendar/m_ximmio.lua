@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_ximmio"
 -- API WebSite:  https://wasteapi.2go-mobile.com/api
 --
@@ -21,7 +21,7 @@ function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
 spath=script_path()
-dofile (script_path() .. "table_funcs.lua") --
+dofile (script_path() .. "generalfuncs.lua") --
 
 -------------------------------------------------------
 -- dprint function to format log records

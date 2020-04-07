@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_westland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_westland"
 -- Link to WebSite: https://huisvuilkalender.gemeentewestland.nl
 --
@@ -10,19 +10,7 @@ websitemodule="m_westland"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-dofile (script_path() .. "table_funcs.lua") --
-
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
+dofile (script_path() .. "generalfuncs.lua") --
 
 --------------------------------------------------------------------------
 -- get date, return a standard format and calculate the difference in days
@@ -49,28 +37,6 @@ function getdate(i_garbagetype_date, stextformat)
    dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
    -- return standard date (yyyy-mm-dd) and diffdays
    return stextformat, diffdays
-end
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
-function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   dprint('---- end web data ------------------------------------------------------------------------')
-   if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
 end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it

@@ -1,3 +1,107 @@
+-- ######################################################
+-- functions library used by the garbagecalendar modules
+-- ######################################################
+-- version 20200407-1100
+-------------------------------------------------------
+-- dprint function to format log records
+function dprint(text)
+   print("@"..(websitemodule or "?")..":"..(text or "?"))
+end
+
+-------------------------------------------------------
+-- try to load JSON library
+function loaddefaultjson()
+   if unexpected_condition then error() end
+   -- add defined Domoticz path to the search path
+   package.path = domoticzjsonpath..'?.lua;' .. package.path
+   JSON = require "JSON"     -- use generic JSON.lua
+end
+
+-------------------------------------------------------
+-- round function
+function Round(num, idp)
+   return tonumber(string.format("%." ..(idp or 0).. "f", num))
+end
+
+-------------------------------------------------------
+-- url_encode function
+function url_encode(str)
+  if (str) then
+	str = string.gsub (str, "([^%w %-%_%.%~])",
+	  function (c) return string.format ("%%%02X", string.byte(c)) end)
+	str = string.gsub (str, " ", "+")
+  end
+  return str
+end
+
+--------------------------------------------------------------------------
+-- Do the actual webquery, retrieving data from the website
+function perform_webquery(url)
+   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
+   dprint("sQuery="..sQuery)
+   local handle=assert(io.popen(sQuery))
+   local Web_Data = handle:read('*all')
+   handle:close()
+   dprint('---- web data ----------------------------------------------------------------------------')
+   dprint(Web_Data)
+   dprint('---- web err ------------------------------------------------------------------------')
+   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
+   dprint("Web_Err="..ifile:read("*all"))
+   ifile:close()
+   os.remove(afwlogfile:gsub('_web_','_web_err_'))
+   dprint('---- end web data ------------------------------------------------------------------------')
+   if ( Web_Data == "" ) then
+      dprint("Error: Empty result from curl command")
+      return ""
+   end
+   return Web_Data
+end
+
+----------------------------------------------------------------------------------------------------------------
+-- Function to check if we can access a file
+function haveaccess(file)
+--~    print ("---------------------")
+--~    print (file)
+   local ok, err, code = io.open(file, "r")
+--~    print (ok)
+--~    print (err)
+--~    print (code)
+   if not ok then
+      if code == 13 then
+         -- Permission denied, but it exists
+         return false
+      end
+   end
+--~    print ("---------------------")
+   if ok ~= nil then
+      ok:close()
+      return true
+   else
+      return false
+   end
+end
+
+----------------------------------------------------------------------------------------------------------------
+-- Function to check if directory exists
+function exists(file)
+   local ok, err, code = os.rename(file, file)
+   if not ok then
+      if code == 13 then
+         -- Permission denied, but it exists
+         return true
+      end
+   end
+   return ok, err
+end
+
+-------------------------------------------------------
+--- Check if a directory exists in this path
+function isdir(path)
+   -- "/" works on both Unix and Windows
+   return exists(path.."/")
+end
+
+-------------------------------------------------------------------------------
 --[[
 	Save Table to File
 	Load Table from File

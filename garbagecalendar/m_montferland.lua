@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_montferland"
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -11,38 +11,7 @@ function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
 spath=script_path()
-dofile (script_path() .. "table_funcs.lua") --
-
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
-
--------------------------------------------------------
--- url_encode function
-function url_encode(str)
-  if (str) then
-	str = string.gsub (str, "([^%w %-%_%.%~])",
-	  function (c) return string.format ("%%%02X", string.byte(c)) end)
-	str = string.gsub (str, " ", "+")
-  end
-  return str
-end
--------------------------------------------------------
--- try to load JSON library
-function loaddefaultjson()
-   if unexpected_condition then error() end
-   -- add defined Domoticz path to the search path
-   package.path = domoticzjsonpath..'?.lua;' .. package.path
-   JSON = require "JSON"     -- use generic JSON.lua
-end
+dofile (script_path() .. "generalfuncs.lua") --
 
 --------------------------------------------------------------------------
 -- get date, return a standard format and calculate the difference in days
@@ -63,28 +32,6 @@ function getdate(i_garbagetype_date, stextformat)
    dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
    -- return standard date (yyyy-mm-dd) and diffdays
    return stextformat, diffdays
-end
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
-function perform_webquery(url)
-   local sQuery   = 'curl "'..url..'" 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   dprint('---- end web data ------------------------------------------------------------------------')
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
 end
 --------------------------------------------------------------------------
 -- Perform the actual update process for the given address
@@ -117,7 +64,7 @@ function Perform_Update()
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
    -- Get the information for the specified address: AdresID and AdministratieID  (required for the subsequent call)
-   Web_Data=perform_webquery('http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password='..url_encode('gsd$2014')..'&Postcode='..Zipcode..'&Huisnummer='..Housenr..'&Toevoeging='..Housenrsuf)
+   Web_Data=perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password='..url_encode('gsd$2014')..'&Postcode='..Zipcode..'&Huisnummer='..Housenr..'&Toevoeging='..Housenrsuf..'"')
    if Web_Data == "" then
       return
    end
@@ -143,7 +90,7 @@ function Perform_Update()
    dprint(" AdresID:"..AdresID.."  AdministratieID:"..AdministratieID)
 
    -- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
-   Web_Data=perform_webquery('http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID='..AdministratieID..'&Username=GSD&Password=gsd$2014&ADR_ID='..AdresID..'&Jaar='..os.date("%Y")..'&Date='..os.date("%m/%d/%Y%%20%I:%M:%S%p")..'&Type=Topdagen')
+   Web_Data=perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID='..AdministratieID..'&Username=GSD&Password=gsd$2014&ADR_ID='..AdresID..'&Jaar='..os.date("%Y")..'&Date='..os.date("%m/%d/%Y%%20%I:%M:%S%p")..'&Type=Topdagen"')
    if ( Web_Data:sub(1,2) == "[]" ) then
       print("Error: Unable to retrieve the Kalender information for this address...  stopping execution.")
       return

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_opzet_api"
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -11,28 +11,7 @@ function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
 spath=script_path()
-dofile (script_path() .. "table_funcs.lua") --
-
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
-
--------------------------------------------------------
--- try to load JSON library
-function loaddefaultjson()
-   if unexpected_condition then error() end
-   -- add defined Domoticz path to the search path
-   package.path = domoticzjsonpath..'?.lua;' .. package.path
-   JSON = require "JSON"     -- use generic JSON.lua
-end
+dofile (script_path() .. "generalfuncs.lua") --
 
 --------------------------------------------------------------------------
 -- get date, return a standard format and calculate the difference in days

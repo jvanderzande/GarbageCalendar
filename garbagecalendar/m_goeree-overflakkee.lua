@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_goeree_overflakkee.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_goeree_overflakkee"
 -- Link to WebSite: https://webadapter.watsoftware.nl/
 --
@@ -11,28 +11,7 @@ function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
 spath=script_path()
-dofile (script_path() .. "table_funcs.lua") --
-
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
-
--------------------------------------------------------
--- try to load JSON library
-function loaddefaultjson()
-   if unexpected_condition then error() end
-   -- add defined Domoticz path to the search path
-   package.path = domoticzjsonpath..'?.lua;' .. package.path
-   JSON = require "JSON"     -- use generic JSON.lua
-end
+dofile (script_path() .. "generalfuncs.lua") --
 
 --------------------------------------------------------------------------
 -- get date, return a standard format and calculate the difference in days
@@ -60,28 +39,6 @@ function getdate(i_garbagetype_date, stextformat)
    dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
    -- return standard date (yyyy-mm-dd) and diffdays
    return stextformat, diffdays
-end
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
-function perform_webquery(url)
-   local sQuery   = 'curl "'..url..'" 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   dprint('---- end web data ------------------------------------------------------------------------')
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
 end
 --------------------------------------------------------------------------
 -- Perform the actual update process for the given address
@@ -117,7 +74,7 @@ function Perform_Update()
    end
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
-   Web_Data=perform_webquery('https://webadapter.watsoftware.nl/widget.aspx?version=3.7&action=3000001&xml=%3Cpostcode%3E'..Zipcode..'%3C/postcode%3E%3Chuisnummer%3E'..Housenr..Housenrsuf..'%3C/huisnummer%3E%3Cguid%3EBCE23C06-E248-4300-B97F-E308A451C6B4%3C/guid%3E')
+   Web_Data=perform_webquery('"https://webadapter.watsoftware.nl/widget.aspx?version=3.7&action=3000001&xml=%3Cpostcode%3E'..Zipcode..'%3C/postcode%3E%3Chuisnummer%3E'..Housenr..Housenrsuf..'%3C/huisnummer%3E%3Cguid%3EBCE23C06-E248-4300-B97F-E308A451C6B4%3C/guid%3E"')
    Web_Data=Web_Data:sub(1, -2)  -- strip ending ")"
    Web_Data=Web_Data:sub(2)      -- strip start  "("
    if ( Web_Data:sub(1,2) == "[]" ) then
