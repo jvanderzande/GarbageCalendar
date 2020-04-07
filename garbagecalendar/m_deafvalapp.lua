@@ -3,7 +3,7 @@
 ----------------------------------------------------------------------------------------------------------------
 ver="20200405-2200"
 websitemodule="m_deafvalapp"
--- Link to WebSite:  https://huisvuilkalender.gemeentewestland.nl
+-- Link to WebSite:  http://dataservice.deafvalapp.nl
 --
 -------------------------------------------------------
 -- get script directory
