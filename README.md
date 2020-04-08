@@ -11,4 +11,6 @@ The main changes are:
 
 Detailed [<i>Setup instructions</i>](../../wiki/Setup) can be found in the [<i>WiKi</i>](../../wiki).
 
-garbagecalendar is a free and open source application written in lua and distributed under the [GNU General Public License](LICENSE).
+**PullRequest for Fixes/Changes/Addtions must be made against the development branch so it can be tested first. Thanks :-)**
+
+GarbageCalendar is a free and open source application written in lua and distributed under the [GNU General Public License](LICENSE).
