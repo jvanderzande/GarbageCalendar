@@ -23,45 +23,6 @@ end
 function Round(num, idp)
    return tonumber(string.format("%." ..(idp or 0).. "f", num))
 end
-
---------------------------------------------------------------------------
--- get date, return a standard format and calculate the difference in days
-function getdate(i_garbagetype_date, stextformat)
-   local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
-   local MON={januari=1,februari=2,maart=3,april=4,mei=5,juni=6,juli=7,augustus=8,september=9,oktober=10,november=11,december=12}
-   local garbageyear =timenow.year
-   local garbageday  =timenow.day
-   local garbagemonth=timenow.month
-   -- check if date in variable i_garbagetype_date contains "vandaag" in stead of a valid date -> use today's date
-   if i_garbagetype_date == "vandaag" then
-      -- use the set todays info
-   else
-      -- get day,month,year from the i_garbagetype_date
-      garbageday, s_garbagemonth=i_garbagetype_date:match("(%d+) (%a-) %d+")
-      if (garbageday == nil or s_garbagemonth == nil) then
-         print ('Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-         return
-      end
-      garbagemonth = MON[s_garbagemonth]
-      if garbagemonth == nil then
-         print ('Error: No valid month found for abbreviation: ' .. s_garbagemonth..' adapt the line: "local MON={" to correct it.')
-         return 0
-      end
-   end
-   if (garbageday == nil or garbagemonth == nil or garbageyear == nil) then
-      dprint ('Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-      return
-   end
-   local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
-   local diffdays  = Round(os.difftime(garbageTime, curTime)/86400,0) -- 1 day = 86400 seconds
-   stextformat = stextformat:gsub('dd',garbageday)
-   stextformat = stextformat:gsub('mm',garbagemonth)
-   stextformat = stextformat:gsub('yyyy',garbageyear)
-   stextformat = stextformat:gsub('yy',tostring(garbageyear):sub(3,4))
-   dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
-   -- return standard date (yyyy-mm-dd) and diffdays
-   return stextformat, diffdays
-end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
@@ -78,7 +39,7 @@ function perform_webquery(url)
    ifile:close()
    os.remove(afwlogfile:gsub('_web_','_web_err_'))
    if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
+      dprint("### Error: Empty result from curl command")
       return ""
    end
    return Web_Data
@@ -90,10 +51,10 @@ function Perform_Update()
    local Web_Data
    Web_Data=perform_webquery(' "https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc='..Zipcode..'&nr='..Housenr..Housenrsuf..'&t"')
    if Web_Data == "" then
-      dprint("Error: Web_Data is empty.")
+      dprint("### Error: Web_Data is empty.")
       return
    elseif string.find(Web_Data,'{"error":true}') ~= nil then
-      dprint("Error: check Zipcode   Web_Data:" .. Web_Data)
+      dprint("### Error: check Zipcode   Web_Data:" .. Web_Data)
       return
    end
    -- Read from the data table, and extract duration and distance in value. Divide distance by 1000 and duration_in_traffic by 60
@@ -120,7 +81,7 @@ function Perform_Update()
          -- first match for each Type we save the date to capture the first next dates
          dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
          -- check whether the first nextdate for this garbagetype is already found
-         dateformat, daysdiffdev = getdate(web_garbagedate, "yyyy-mm-dd")
+         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"(%w-) (%w-) (%w+)",{"dd","mmm","yyyy"})
          -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
          if ( daysdiffdev >= 0 ) then
             garbagedata[#garbagedata+1] = {}
@@ -146,6 +107,8 @@ Hostname = arg[7] or ""   -- Not needed
 Street   = arg[8] or ""   -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
+-- required when you use format mmm in the call to GetDateFromInput()
+InputMonth={jan=1,feb=2,maa=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
 
 dprint('#### '..os.date("%c")..' ### Start garbagekalerder module '.. websitemodule..' (v'..ver..')')
 if domoticzjsonpath == nil then

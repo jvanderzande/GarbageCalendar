@@ -12,32 +12,6 @@ function script_path()
 end
 dofile (script_path() .. "generalfuncs.lua") --
 
---------------------------------------------------------------------------
--- get date, return a standard format and calculate the difference in days
-function getdate(i_garbagetype_date, stextformat)
-   local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
-   local MON={jan=1,feb=2,maa=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
-   -- get say/month year from the i_garbagetype_date
-   garbageday,s_garbagemonth,garbageyear=i_garbagetype_date:match("%a- (%d+) (%a+) (%d+)")
-   if (garbageday == nil or s_garbagemonth == nil or garbageyear == nil) then
-      print ('Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-      return
-   end
-   local garbagemonth = MON[s_garbagemonth:sub(1,3)]
-   if (garbagemonth == nil) then
-      print ('Error: No valid month found in i_garbagetype_date: ' .. i_garbagetype_date)
-      return
-   end
-   local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
-   local diffdays  = Round(os.difftime(garbageTime, curTime)/86400,0) -- 1 day = 86400 seconds
-   stextformat = stextformat:gsub('dd',garbageday)
-   stextformat = stextformat:gsub('mm',garbagemonth)
-   stextformat = stextformat:gsub('yyyy',garbageyear)
-   stextformat = stextformat:gsub('yy',tostring(garbageyear):sub(3,4))
-   dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
-   -- return standard date (yyyy-mm-dd) and diffdays
-   return stextformat, diffdays
-end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
@@ -45,10 +19,10 @@ function Perform_Update()
    local Web_Data
    Web_Data=perform_webquery(' -k "https://huisvuilkalender.gemeentewestland.nl/huisvuilkalender/Huisvuilkalender/get-huisvuilkalender-ajax" -H "Origin: https://huisvuilkalender.gemeentewestland.nl" -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" -H "Accept: application/json, text/javascript, */*; q=0.01" -H "Referer: https://huisvuilkalender.gemeentewestland.nl/huisvuilkalender?dummy=0.9778403611955824" -H "X-Requested-With: XMLHttpRequest" -H "Connection: keep-alive" --data "postcode=' .. Zipcode .. '&query="')
    if Web_Data == "" then
-      dprint("Error: Web_Data is empty.")
+      dprint("### Error: Web_Data is empty.")
       return
    elseif string.find(Web_Data,'{"error":true}') ~= nil then
-      dprint("Error: check Zipcode   Web_Data:" .. Web_Data)
+      dprint("### Error: check Zipcode   Web_Data:" .. Web_Data)
       return
    end
    -- Read from the data table, and extract duration and distance in value. Divide distance by 1000 and duration_in_traffic by 60
@@ -63,11 +37,11 @@ function Perform_Update()
    for web_garbagetype,web_garbagedate in string.gmatch(Web_Data, '.-soort.(.-)%sclearfix.-text dag.-\\">(.-)<\\/span') do
       i = i + 1
       if (web_garbagetype == nil) then
-         dprint ('Error: "web_garbagetype" not found in Web_Data ... Stopping process' )
+         dprint ('### Error: "web_garbagetype" not found in Web_Data ... Stopping process' )
          break
       end
       if (web_garbagedate == nil) then
-         dprint ('Error: "text dag" not found in Web_Data for ' .. web_garbagetype)
+         dprint ('### Error: "text dag" not found in Web_Data for ' .. web_garbagetype)
          break
       end
       -- first match for each Type we save the date to capture the first next dates
@@ -75,9 +49,11 @@ function Perform_Update()
       dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
       local dateformat = "????????"
       -- Get days diff
-      dateformat, daysdiffdev = getdate(web_garbagedate, "yyyy-mm-dd")
+      dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"%w- (%w+) (%w+) (%w+)",{"dd","mmm","yyyy"})
+
       if daysdiffdev == nil then
-         dprint ('Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
+         daysdiffdev = -99
+         dprint ('### Error: Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
       end
       if ( daysdiffdev >= 0 ) then
          pickuptimes[#pickuptimes+1] = {}
@@ -115,6 +91,8 @@ Hostname = arg[7] or ""   -- Not needed
 Street   = arg[8] or ""   -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
+-- required when you use format mmm in the call to GetDateFromInput()
+InputMonth={jan=1,feb=2,maa=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
 
 dprint('#### '..os.date("%c")..' ### Start garbagekalerder module '.. websitemodule..' (v'..ver..')')
 if domoticzjsonpath == nil then

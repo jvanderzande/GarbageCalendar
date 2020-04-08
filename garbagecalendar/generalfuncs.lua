@@ -101,6 +101,73 @@ function isdir(path)
    return exists(path.."/")
 end
 
+--------------------------------------------------------------------------
+-- get date, return a standard format and calculate the difference in days
+-- it expects these inputs:
+--                    --inputdate--       , regex date elements   , Elemens sequence
+--~ GetDateFromInput("13-01-2020"         ,"(%w-)-(%w-)-(%w-)$"   ,{"dd","mm","yyyy"})
+--~ GetDateFromInput("Zaterdag 11 april"  ,"%w (%w-) (%w-)$"      ,{"dd","mmmm"})
+--~ GetDateFromInput("2020-01-02"         ,"(%w-)-(%w-)-(%w-)$"   ,{"yyyy","mm","dd"})
+--~ GetDateFromInput("2020-04-08T00:00:00","(%w-)-(%w-)-(%w-)T"   ,{"yyyy","mm","dd"})
+--~ GetDateFromInput("7 januari 2020"     ,"(%w-) (%w-) (%w+)"    ,{"dd","mm","yyyy"})
+function GetDateFromInput(i_garbagetype_date, iregex, idatev)
+   local timenow = os.date("*t")
+   local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
+   local garbageday="??"
+   local garbagemonth="??"
+   local garbageyear=timenow.year
+   -- Define InputMonth table in the Module itself, this is just in case it isn't defined yet as default
+   local InputMonth = InputMonth or {jan=1,feb=2,maa=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
+   -- get information from the input garbagedate using the provided regex
+   local d = {}
+   if i_garbagetype_date == nil then
+      print ('  #### Error: inputdate i_garbagetype_date is nil')
+      return 0,-99
+   end
+   if iregex == nil then
+      print ('  #### Error: iregex is nil')
+      return 0,-99
+   end
+   if idatev == nil then
+      print ('  #### Error: idatev is nil')
+      return 0,-99
+   end
+   d[1],d[2],d[3],d[4]=i_garbagetype_date:match(iregex)
+   -- loop through the provided table to find the right date information and formats
+   local podate = ""
+   for dindex, dfield in pairs(idatev) do
+      podate = podate .. dfield .. "->"..d[dindex]..";"
+      if dfield == "dd" then
+         garbageday = tonumber(d[dindex])
+      elseif dfield == "mm" then
+         garbagemonth = tonumber(d[dindex])
+      elseif dfield == "mmm" then
+         print(d[dindex])
+         garbagemonth = InputMonth[d[dindex]:sub(1,3)]
+      elseif dfield == "mmmm" then
+         garbagemonth = InputMonth[d[dindex]:sub(1,3)]
+      elseif dfield == "yy" then
+         garbageyear = tonumber(tostring(timenow.year):sub(1,2)..d[dindex])
+      elseif dfield == "yyyy" then
+         garbageyear = tonumber(d[dindex])
+      end
+   end
+   -- found this output with the provide info
+   dprint("    input: date="..(i_garbagetype_date or "nil").."   iregex="..(iregex or "nil").."   podate="..(podate or "nil"))
+   if garbageday == nil or garbagemonth == nil or garbageyear == nil
+   or garbageday == "??" or garbagemonth == "??" or garbageyear == "??" then
+      print ('  #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
+      print("  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
+      return 0,-99
+   end
+   local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
+   local diffdays  = Round(os.difftime(garbageTime, curTime)/86400,0) -- 1 day = 86400 seconds
+   local oDate = garbageyear.."-"..garbagemonth.."-"..garbageday
+   dprint("    output: date="..oDate.."  -> diff:".. diffdays.. "  (garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday)..")")   --
+   -- return standard date (yyyy-mm-dd) and diffdays
+   return oDate, diffdays
+end
+
 -------------------------------------------------------------------------------
 --[[
 	Save Table to File

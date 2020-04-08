@@ -28,6 +28,7 @@ datafile = ""
 needupdate = false
 timenow = os.date("*t")
 
+---====================================================================================================
 -- mydebug print
 function dprintlog(text, always, prefix)
    local ptext = ""
@@ -42,7 +43,9 @@ function dprintlog(text, always, prefix)
    file:close()
 end
 
--- try getting current scriptpath to be able to get the /garbagecalendar/garbagecalendarconfig.lua loaded
+---====================================================================================================
+-- try getting current scriptpath requied to get the ./garbagecalendar/garbagecalendarconfig.lua loaded
+-- this will be overridden by the garbagecalendarconfig.lua settings, but initially needed.
 function script_path()
    local str = debug.getinfo(2, "S").source:sub(2)
    return str:match("(.*[/\\])")
@@ -50,7 +53,7 @@ end
 scriptpath=script_path() or "./"
 --ensure the all path variables ends with /
 scriptpath=(scriptpath.."/"):gsub('//','/')
--------------------------------------------------------
+---====================================================================================================
 -- Load garbagecalendarconfig.lua
 function garbagecalendarconfig()
    if unexpected_condition then error() end
@@ -71,7 +74,7 @@ function garbagecalendarconfig()
    -- empty previous run runlogfile
    file = io.open(runlogfile, "w")
    if file == nil then
-      print('!!! Error opening runlogfile ' .. runlogfile)
+      print('!!! Error opening runlogfile '..runlogfile)
    else
       file:close()
    end
@@ -89,6 +92,7 @@ function garbagecalendarconfig()
    dprintlog('datafilepath: ' .. datafilepath)
    dprintlog('scriptpath: ' .. scriptpath)
 end
+-- check if that worked correctly
 local status, err = pcall(garbagecalendarconfig)
 if err then
    print('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' start garbagecalendar script v'.. ver)
@@ -101,7 +105,7 @@ else
    dprintlog('Loaded ' .. scriptpath..'garbagecalendar/garbagecalendarconfig.lua.' )
 end
 
--------------------------------------------------------
+---====================================================================================================
 -- Load generalfuncs.lua
 function generalfuncs()
    if unexpected_condition then error() end
@@ -109,6 +113,7 @@ function generalfuncs()
    package.path = scriptpath..'garbagecalendar/?.lua;' .. package.path
    require "generalfuncs"
 end
+-- check if that worked correctly
 local status, err = pcall(generalfuncs)
 if err then
    dprintlog('!!! Error: failed loading generalfuncs.lua from : ' .. scriptpath..'garbagecalendar/.',1)
@@ -118,6 +123,8 @@ if err then
 else
    dprintlog('Loaded ' .. scriptpath..'garbagecalendar/generalfuncs.lua.' )
 end
+
+---====================================================================================================
 -- check whether provide paths are valid
 if (not isdir(datafilepath)) then
    dprintlog('!!! Error: invalid path for datafilepath : ' .. datafilepath..'.',1)
@@ -131,7 +138,7 @@ if (not exists(scriptpath .. "garbagecalendar/"..websitemodule..".lua")) then
    return
 end
 
-----------------------------------------------------------------------------------------------------------------
+---====================================================================================================
 -- run dataupdate
 function GetWebDataInBackground(whenrun)
    --# reshell this file in the background to perform update of the data
@@ -155,7 +162,7 @@ function GetWebDataInBackground(whenrun)
 end
 
 
-----------------------------------------------------------------------------------------------------------------
+---====================================================================================================
 -- get days between today and provided date
 function getdaysdiff(i_garbagetype_date, stextformat)
    local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
@@ -272,7 +279,7 @@ function Perform_Data_check()
    garbagedata,perr = table.load( datafile )
    if perr ~= 0 then
       --- when file doesn't exist
-      dprintlog("Warning: Datafile not found:"..datafile.." . Start webupdate now.")
+      dprintlog("### Warning: Datafile not found:"..datafile.." . Start webupdate now.")
       GetWebDataInBackground("now")
    end
    garbagedata,perr = table.load( datafile )
@@ -334,10 +341,10 @@ function Perform_Data_check()
 	end
    dprintlog("- End  ----------------- ")
    if missingrecords ~= "" then
-      dprintlog('#### Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!',1)
-      dprintlog('#### -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
+      dprintlog('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!',1)
+      dprintlog('#!# -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
       dprintlog(missingrecords,1,0)
-      dprintlog('#### -- end ----------------------------')
+      dprintlog('#!# -- end ----------------------------')
    end
    if (cnt==0) then
       dprintlog(' Error: No valid data found in returned webdata.  skipping the rest of the logic.',1)
@@ -401,7 +408,7 @@ if garbagetype_cfg == nil then
    return
 end
 if garbagetype_cfg["reloaddata"] == nil or garbagetype_cfg["reloaddata"].hour == nil or garbagetype_cfg["reloaddata"].min == nil then
-   dprintlog('!!! Warning: Web update will be performed on a default time at 02:30AM, because the "reloaddata" entry missing in the "garbagetype_cfg" table in your garbagecalendarconfig.lua file! ')
+   dprintlog('### Warning: Web update will be performed on a default time at 02:30AM, because the "reloaddata" entry missing in the "garbagetype_cfg" table in your garbagecalendarconfig.lua file! ')
    dprintlog('           Check the original provided garbagecalendarconfig_model.lua for the correct format: ')
    dprintlog('             -- Add any missing records above this line')
    dprintlog('             ["reloaddata"] ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},')
