@@ -1,9 +1,15 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ophaalkalender-be
+-- Remarks:
+--   This website still uses tls 1.0 and Demian Buster has set the minssl to tls 1.2 so will fail.
+--   To fix:
+--       Set /etc/ssl/openssl.cnf to MinProtocol = TLSv1.0
+--       * reboot
+--       And It should work
 ----------------------------------------------------------------------------------------------------------------
 ver="20200405-2200"
 websitemodule="m_ophaalkalender-be"
--- Link to WebSite: https://huisvuilkalender.gemeentewestland.nl
+-- Link to https://www.ophaalkalender.be
 --
 -------------------------------------------------------
 -- get script directory
