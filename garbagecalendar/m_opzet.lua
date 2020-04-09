@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_opzet"
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -11,80 +11,8 @@ function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
 spath=script_path()
-dofile (script_path() .. "table_funcs.lua") --
+dofile (script_path() .. "generalfuncs.lua") --
 
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
-
---------------------------------------------------------------------------
--- get date, return a standard format and calculate the difference in days
-function getdate(i_garbagetype_date, stextformat)
-   local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
-   local MON={jan=1,feb=2,mrt=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
-   local garbageyear =timenow.year
-   local garbageday  =timenow.day
-   local garbagemonth=timenow.month
-   -- check if date in variable i_garbagetype_date contains "vandaag" in stead of a valid date -> use today's date
-   if i_garbagetype_date == "vandaag" then
-      -- use the set todays info
-   else
-      -- get day,month,year from the i_garbagetype_date
-      garbageday, s_garbagemonth=i_garbagetype_date:match("%a- (%d-) (%a+)$")
-      if (garbageday == nil or s_garbagemonth == nil) then
-         print ('Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-         return
-      end
-      garbagemonth = MON[s_garbagemonth]
-      if garbagemonth == nil then
-         print ('Error: No valid month found for abbreviation: ' .. s_garbagemonth..' adapt the line: "local MON={" to correct it.')
-         return 0
-      end
-   end
-   if (garbageday == nil or garbagemonth == nil or garbageyear == nil) then
-      dprint ('Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-      return
-   end
-   local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
-   local diffdays  = Round(os.difftime(garbageTime, curTime)/86400,0) -- 1 day = 86400 seconds
-   stextformat = stextformat:gsub('dd',garbageday)
-   stextformat = stextformat:gsub('mm',garbagemonth)
-   stextformat = stextformat:gsub('yyyy',garbageyear)
-   stextformat = stextformat:gsub('yy',tostring(garbageyear):sub(3,4))
-   dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
-   -- return standard date (yyyy-mm-dd) and diffdays
-   return stextformat, diffdays
-end
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
-function perform_webquery(url)
-   local sQuery   = 'curl "'..url..'" 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   dprint('---- end web data ------------------------------------------------------------------------')
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
-end
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
    local txt=""
@@ -124,7 +52,7 @@ function Perform_Update()
       if web_garbagetype~= nil and web_garbagedate ~= nil then
          -- first match for each Type we save the date to capture the first next dates
          --dprint(web_garbagetype,web_garbagedate)
-         dateformat, daysdiffdev = getdate(web_garbagedate, "yyyy-mm-dd")
+         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"%w- (%w-) (%w-)$",{"dd","mmm"})
          -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
          if ( daysdiffdev >= 0 ) then
             pickuptimes[#pickuptimes+1] = {}

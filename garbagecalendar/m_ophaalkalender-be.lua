@@ -7,7 +7,7 @@
 --       * reboot
 --       And It should work
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_ophaalkalender-be"
 -- Link to https://www.ophaalkalender.be
 --
@@ -16,72 +16,8 @@ websitemodule="m_ophaalkalender-be"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-dofile (script_path() .. "table_funcs.lua") --
+dofile (script_path() .. "generalfuncs.lua") --
 
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
-
--------------------------------------------------------
--- try to load JSON library
-function loaddefaultjson()
-   if unexpected_condition then error() end
-   -- add defined Domoticz path to the search path
-   package.path = domoticzjsonpath..'?.lua;' .. package.path
-   JSON = require "JSON"     -- use generic JSON.lua
-end
-
---------------------------------------------------------------------------
--- get date, return a standard format and calculate the difference in days
-function getdate(i_garbagetype_date, stextformat)
-   local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
-   local MON={jan=1,feb=2,maa=3,apr=4,mei=5,jun=6,jul=7,aug=8,sep=9,okt=10,nov=11,dec=12}
-   -- get say/month year from the i_garbagetype_date
-   garbageyear,garbagemonth,garbageday=i_garbagetype_date:match("(%d-)-(%d-)-(%d-)T.*$")
-   if (garbageday == nil or garbagemonth == nil or garbageyear == nil) then
-      print ('Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-      return
-   end
-   local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
-   local diffdays  = Round(os.difftime(garbageTime, curTime)/86400,0) -- 1 day = 86400 seconds
-   stextformat = stextformat:gsub('dd',garbageday)
-   stextformat = stextformat:gsub('mm',garbagemonth)
-   stextformat = stextformat:gsub('yyyy',garbageyear)
-   stextformat = stextformat:gsub('yy',tostring(garbageyear):sub(3,4))
-   dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
-   -- return standard date (yyyy-mm-dd) and diffdays
-   return stextformat, diffdays
-end
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
-function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   dprint('---- end web data ------------------------------------------------------------------------')
-   if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
-end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
@@ -98,7 +34,7 @@ function Perform_Update()
             dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
             local dateformat = "????????"
             -- Get days diff
-            dateformat, daysdiffdev = getdate(web_garbagedate, "yyyy-mm-dd")
+            dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"(%w-)-(%w-)-(%w-)T",{"yyyy","mm","dd"})
             if daysdiffdev == nil then
                dprint ('Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
             end
@@ -118,14 +54,14 @@ function Perform_Update()
 --~ [{"Value":"Gaverlanddam","Id":6644,"Brussels":false}]
    Web_Data=perform_webquery(' "https://www.ophaalkalender.be/Calendar/findstreets/?query='..Street..'&zipcode='..Zipcode..'"')
    if ( Web_Data:sub(1,2) == "[]" ) then
-      print("@OphaalKalender findstreets Error: Check your Zipcode and Street as we get an [] response.")
+      dprint("### Error: findstreets Check for your Zipcode and Street as we get an [] response.")
       return
    end
    dprint("adressid:"..Web_Data)
    adressdata = JSON:decode(Web_Data)
    adressid = adressdata[1].Id or ""
    if adressid == nil or adressid == "" then
-      print("Error: No adressid retrieved...  stopping execution.")
+      dprint("### Error: No adressid retrieved...  stopping execution.")
       return
    end
    dprint("adressid:"..adressid)
@@ -133,14 +69,13 @@ function Perform_Update()
    -- get the Kalender information for this address(bagId) for the current year
    Web_Data=perform_webquery(' "https://www.ophaalkalender.be/api/rides?id='..adressid..'&housenumber='..Housenr..Housenrsuf..'&zipcode='..Zipcode..'"')
    if ( Web_Data:sub(1,2) == "[]" ) then
-      print("Error: Unable to retrieve the Kalender information for this address...  stopping execution.")
-      print(Web_Data)
+      dprint("### Error: Unable to retrieve the Kalender information for this address...  stopping execution.")
       return
    end
    Web_Data = JSON:decode(Web_Data)
    -- get the ophaaldagen tabel for the coming scheduled pickups
    if type(Web_Data) ~= "table" then
-      print("Error: Empty Kalender for "..cYear..".  stopping execution.")
+      dprint("### Error: Empty Kalender for "..cYear..".  stopping execution.")
       return
    end
    processdata(Web_Data)
@@ -180,8 +115,8 @@ else
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.' )
    else
-      dprint('Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath..'.')
-      dprint('Error: Please check your setup and try again.' )
+      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath..'.')
+      dprint('### Error: Please check your setup and try again.' )
       os.exit() -- stop execution
    end
    dprint("!!! perform background update to ".. afwdatafile .. " for Zipcode " .. Zipcode .. " - "..Housenr..Housenrsuf .. "  (optional) Hostname:"..Hostname)

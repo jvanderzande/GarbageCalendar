@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200405-2200"
+ver="20200407-1100"
 websitemodule="m_ximmio"
 -- API WebSite:  https://wasteapi.2go-mobile.com/api
 --
@@ -21,7 +21,7 @@ function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
 spath=script_path()
-dofile (script_path() .. "table_funcs.lua") --
+dofile (script_path() .. "generalfuncs.lua") --
 
 -------------------------------------------------------
 -- dprint function to format log records
@@ -45,27 +45,6 @@ function loaddefaultjson()
 end
 
 --------------------------------------------------------------------------
--- get date, return a standard format and calculate the difference in days
-function getdate(i_garbagetype_date, stextformat)
-   local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
-   -- get day,month,year from the i_garbagetype_date
---~    2020-03-13T00:00:00
-   garbageyear,garbagemonth,garbageday=i_garbagetype_date:match("(%d-)-(%d-)-(%d-)T")
-   if (garbageday == nil or garbagemonth == nil or garbageyear == nil) then
-      print ('Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-      return
-   end
-   local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
-   local diffdays  = Round(os.difftime(garbageTime, curTime)/86400,0) -- 1 day = 86400 seconds
-   stextformat = stextformat:gsub('dd',garbageday)
-   stextformat = stextformat:gsub('mm',garbagemonth)
-   stextformat = stextformat:gsub('yyyy',garbageyear)
-   stextformat = stextformat:gsub('yy',tostring(garbageyear):sub(3,4))
-   dprint("...-> diff:".. diffdays.. "  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
-   -- return standard date (yyyy-mm-dd) and diffdays
-   return stextformat, diffdays
-end
---------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
    local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
@@ -81,7 +60,7 @@ function perform_webquery(url)
    ifile:close()
    os.remove(afwlogfile:gsub('_web_','_web_err_'))
    if ( Web_Data == "" ) then
-      dprint("Error: Empty result from curl command")
+      dprint("### Error: Empty result from curl command")
       return ""
    end
    return Web_Data
@@ -103,7 +82,8 @@ function Perform_Update()
             for i = 1, #garbagedate do
                record = garbagedate[i]
                -- Get days diff
-               dateformat, daysdiffdev = getdate(garbagedate[i], "yyyy-mm-dd")
+               dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (garbagedate[i]))
+               dateformat, daysdiffdev = GetDateFromInput(garbagedate[i],"(%w-)-(%w-)-(%w-)T",{"yyyy","mm","dd"})
                if daysdiffdev == nil then
                   dprint ('Invalid date from web for : ' .. web_garbagetype..'   date:'..garbagedate[i])
                else
@@ -140,14 +120,14 @@ function Perform_Update()
       return
    end
    if ( Web_Data:sub(1,2) == "[]" ) then
-      print("Error: Check your Zipcode and Housenr as we get an [] response.")
+      dprint("### Error: Check your Zipcode and Housenr as we get an [] response.")
       return
    end
    adressdata = JSON:decode(Web_Data)
     -- Decode JSON table and find the appropriate address when there are multiple options when toevoeging is used like 10a
    UniqueId = adressdata['dataList'][1]['UniqueId']
    if UniqueId == nil or UniqueId == "" then
-      print("Error: No UniqueId retrieved...  stopping execution.")
+      dprint("### Error: No UniqueId retrieved...  stopping execution.")
       return
    end
    dprint("UniqueId:"..UniqueId)
@@ -156,18 +136,18 @@ function Perform_Update()
    endDate=os.date("%Y-%m-%d",os.time()+28*24*60*60)
    Web_Data=perform_webquery('--data "companyCode='..companyCode..'&uniqueAddressID='..UniqueId..'&startDate='..startDate.."&endDate="..endDate..'" "https://wasteapi.2go-mobile.com/api/GetCalendar"')
    if ( Web_Data:sub(1,2) == "[]" ) then
-      print("Error: Unable to retrieve Afvalstromen information...  stopping execution.")
+      dprint("### Error: Unable to retrieve Afvalstromen information...  stopping execution.")
       return
    end
    jdata = JSON:decode(Web_Data)
    -- get the Datalist tabel for the coming scheduled pickups
    if type(jdata) ~= "table" then
-      print("Error: Empty Kalender found stopping execution.")
+      dprint("### Error: Empty Kalender found stopping execution.")
       return
    end
    jdata = jdata["dataList"]   -- get the Datalist tabel for the coming scheduled pickups
    if type(jdata) ~= "table" then
-      print("Error: Empty Kalender found stopping execution.")
+      print("### Error: Empty Kalender found stopping execution.")
       return
    end
    -- process the data
@@ -210,8 +190,8 @@ else
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.' )
    else
-      dprint('Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath..'.')
-      dprint('Error: Please check your setup and try again.' )
+      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath..'.')
+      dprint('### Error: Please check your setup and try again.' )
       os.exit() -- stop execution
    end
    dprint("!!! perform background update to ".. afwdatafile .. " for Zipcode " .. Zipcode .. " - "..Housenr..Housenrsuf .. " companyCode:"..companyCode)

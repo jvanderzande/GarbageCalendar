@@ -112,6 +112,7 @@ garbagetype_cfg = {
 -------------------------------------------------------------------------
 -- Language options Dutch
 -- Date/day info:
+-- used by getdate for formats "mmm" & "mm"
 daysoftheweek={"zon","maa","din","woe","don","vri","zat"}
 Longdaysoftheweek={"zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"}
 ShortMonth={"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
@@ -121,5 +122,5 @@ LongMonth={"januari","februari","maart","april","mei","juni","juli","augustus","
 -- Date/day info:
 --~ daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
 --~ Longdaysoftheweek={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"}
---~ ShortMonth={"Jan","Feb","Mar","Apr","Mei","Jun","Jul","Aug","Sep","Okt","Nov","Dec"}
+--~ ShortMonth={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
 --~ LongMonth={"January","February","March","April","May","June","July","August","September","October","November","December"}
