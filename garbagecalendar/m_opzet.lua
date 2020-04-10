@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1100"
+ver="20200410-1300"
 websitemodule="m_opzet"
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -103,6 +103,8 @@ elseif Housenr == nil then
    dprint("!!! Housenr not specified!")
 elseif Housenrsuf == nil then
    dprint("!!! Housenrsuf not specified!")
+elseif Hostname == "" then
+   dprint("!!! Hostname not specified!")
 elseif afwdatafile == nil then
    dprint("!!! afwdatafile not specified!")
 elseif afwlogfile == nil then

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_westland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1100"
+ver="20200410-1300"
 websitemodule="m_westland"
 -- Link to WebSite: https://huisvuilkalender.gemeentewestland.nl
 --
@@ -83,7 +83,7 @@ timenow = os.date("*t")
 -- get paramters from the commandline
 domoticzjsonpath=arg[1]
 Zipcode = arg[2]
-Housenr = arg[3]
+Housenr = arg[3] or ""
 Housenrsuf = arg[4]
 afwdatafile = arg[5]
 afwlogfile = arg[6]
@@ -99,10 +99,6 @@ if domoticzjsonpath == nil then
    dprint("!!! domoticzjsonpath not specified!")
 elseif Zipcode == nil then
    dprint("!!! Zipcode not specified!")
-elseif Housenr == nil then
-   dprint("!!! Housenr not specified!")
-elseif Housenrsuf == nil then
-   dprint("!!! Housenrsuf not specified!")
 elseif afwdatafile == nil then
    dprint("!!! afwdatafile not specified!")
 elseif afwlogfile == nil then
