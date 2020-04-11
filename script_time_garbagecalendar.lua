@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1325"
+ver="20200411-1900"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -175,8 +175,8 @@ function getdaysdiff(i_garbagetype_date, stextformat)
    local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
    local wday=daysoftheweek[os.date("*t", garbageTime).wday]
    local lwday=Longdaysoftheweek[os.date("*t", garbageTime).wday]
-   stextformat = stextformat:gsub('wd',wday)
    stextformat = stextformat:gsub('wdd',lwday)
+   stextformat = stextformat:gsub('wd',wday)
    stextformat = stextformat:gsub('dd',garbageday)
    stextformat = stextformat:gsub('mmmm',LongMonth[tonumber(garbagemonth)])
    stextformat = stextformat:gsub('mmm',ShortMonth[tonumber(garbagemonth)])
@@ -287,7 +287,7 @@ function Perform_Data_check()
       --- when file doesn't exist
       dprintlog(" Unable to load the data. please check your setup and runlogfile :"..runlogfile)
    else
-      dprintlog("- Start looping through data from the website: "..datafile)
+      dprintlog("- Start looping through data from the website to find the first "..ShowNextEvents.." event to show: "..datafile)
       for i = 1, #garbagedata do
          if garbagedata[i].garbagetype ~= nil then
             -- change all table entries to lower to make the script case insensitive
@@ -314,16 +314,20 @@ function Perform_Data_check()
                stextformat, daysdiffdev = getdaysdiff(web_garbagedate, stextformat)
                -- check whether the first nextdate for this garbagetype is already found to get only one next date per GarbageType
                if ((not ShowSinglePerType) or (garbagetype_cfg[web_garbagetype].nextdate == nil) and txtcnt < ShowNextEvents) then
-                  -- get the long description from the JSON data
-                  dprintlog("==> GarbageDate:" .. tostring (web_garbagedate) .. " GarbageType:" .. tostring(web_garbagetype) .. '  Notify: Active=' .. tostring(garbagetype_cfg[web_garbagetype].active) .. '  Time=' .. tostring(garbagetype_cfg[web_garbagetype].hour) .. ':' .. tostring(garbagetype_cfg[web_garbagetype].min) .. '   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev),0,0)
-                 -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
+                  -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
                   if daysdiffdev == nil then
                      dprintlog('    !!! Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
                   elseif daysdiffdev >= 0 then
                      -- Set the nextdate for this garbagetype
                      garbagetype_cfg[web_garbagetype].nextdate = web_garbagedate
-                     -- fill the text with the next defined number of events
-                     notification(web_garbagetype,web_garbagedate,daysdiffdev)  -- check notification for new found info
+                     -- get the long description from the JSON data
+                     if garbagetype_cfg[web_garbagetype].active == nil then
+                        dprintlog("==> GarbageDate:" .. tostring (web_garbagedate) .. " GarbageType:" .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev)..'; *** Notify skipped because there is no record in garbagetype_cfg[]!',0,0)
+                     else
+                        dprintlog("==> GarbageDate:" .. tostring (web_garbagedate) .. " GarbageType:" .. tostring(web_garbagetype) .. ';  Notify: Active=' .. tostring(garbagetype_cfg[web_garbagetype].active) .. '  Time=' .. tostring(garbagetype_cfg[web_garbagetype].hour) .. ':' .. tostring(garbagetype_cfg[web_garbagetype].min) .. '   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev),0,0)
+                        -- fill the text with the next defined number of events
+                        notification(web_garbagetype,web_garbagedate,daysdiffdev)  -- check notification for new found info
+                     end
                   end
                   stextformat = stextformat:gsub('sdesc',web_garbagetype)
                   stextformat = stextformat:gsub('ldesc',web_garbagedesc)
@@ -416,12 +420,7 @@ if garbagetype_cfg["reloaddata"] == nil or garbagetype_cfg["reloaddata"].hour ==
 end
 -- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
-   if gtdata.active == nil or gtdata.active:lower() ~= "on" or gtdata.active:lower() ~= "off"then
-      -- default active=on to perform each a notification for each GarbageType by default
-      gtdata.active = "on"
-   else
-      gtdata.active = gtdata.active:lower()
-   end
+   garbagetype_cfg[tbl_garbagetype].active = (gtdata.active or "on"):lower()
    if gtdata.hour == nil or gtdata.hour > 24 or gtdata.hour < 1  then
       dprintlog("!!!! Check hour field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.hour)
       garbagetype_cfg[tbl_garbagetype].hour = 0
