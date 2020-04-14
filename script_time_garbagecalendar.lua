@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200411-1900"
+ver="20200414-1700"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -25,6 +25,7 @@ scriptpath=""
 weblogfile = ""
 runlogfile = ""
 datafile = ""
+icalfile = ""
 needupdate = false
 timenow = os.date("*t")
 
@@ -71,6 +72,7 @@ function garbagecalendarconfig()
    runlogfile = datafilepath.."garbagecalendar_run_"..websitemodule..".log"
    weblogfile = datafilepath.."garbagecalendar_web_"..websitemodule..".log"
    datafile = datafilepath.."garbagecalendar_"..websitemodule..".data"
+   icalfile = datafilepath.."garbagecalendar_"..websitemodule..".ics"
    -- empty previous run runlogfile
    file = io.open(runlogfile, "w")
    if file == nil then
@@ -273,6 +275,7 @@ function Perform_Data_check()
    local missingrecords=""
    local devtxt=""
    local txtcnt = 0
+   local icalcnt = 0
    -- function to process ThisYear and Lastyear JSON data
    --
    dprintlog('Start update for text device:',1)
@@ -287,6 +290,16 @@ function Perform_Data_check()
       --- when file doesn't exist
       dprintlog(" Unable to load the data. please check your setup and runlogfile :"..runlogfile)
    else
+      -- create ICS file when requested
+      if (IcalEnable) then
+         hIcal = io.open(icalfile, "w")
+         hIcal:write("BEGIN:VCALENDAR\n")
+         hIcal:write("VERSION:2.0\n")
+         hIcal:write("PRODID:GarbageCalendar\n")
+         hIcal:write("X-WR-CALNAME:"..IcalTitle.."\n")
+         hIcal:write("X-PUBLISHED-TTL:P1H\n")
+      end
+
       dprintlog("- Start looping through data from the website to find the first "..ShowNextEvents.." event to show: "..datafile)
       for i = 1, #garbagedata do
          if garbagedata[i].garbagetype ~= nil then
@@ -336,6 +349,40 @@ function Perform_Data_check()
                   txtcnt = txtcnt + 1
                end
             end
+            -- create ICAL file when requested
+            if (IcalEnable and icalcnt < IcalEvents) then
+               -- prepare required info
+               garbageyear,garbagemonth,garbageday=web_garbagedate:match("(%d-)-(%d-)-(%d-)$")
+               icalsdate = string.format("%04d%02d%02d", garbageyear,garbagemonth,garbageday)
+               -- add one day to start day to calculate the enddate
+               icaledate = os.date("%Y%m%d",os.time{year=garbageyear, month=garbagemonth, day=garbageday, hour=0, min=0, sec=0} + 24*60*60)
+               icurdate = os.date("%Y%m%dT%H%M%SZ")
+               scalDesc = IcalDesc:gsub('@GARBAGETYPE@',web_garbagetype)
+               scalDesc = scalDesc:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[web_garbagetype].text))
+               -- write record
+--~                hIcal:write("---\n")
+               hIcal:write("BEGIN:VEVENT\n")
+               hIcal:write("UID:"..web_garbagetype.."-"..icalsdate.."\n")
+               hIcal:write("DTSTART;VALUE=DATE:"..icalsdate.."\n")
+               hIcal:write("SEQUENCE:"..icalcnt.."\n")
+               hIcal:write("TRANSP:OPAQUE\n")
+               hIcal:write("DTEND;VALUE=DATE:"..icaledate.."\n")
+               hIcal:write("SUMMARY:"..scalDesc.."\n")
+               hIcal:write("CLASS:PUBLIC\n")
+               hIcal:write("DESCRIPTION:"..scalDesc.."\n")
+               hIcal:write("X-MICROSOFT-CDO-ALLDAYEVENT:TRUE\n")
+               hIcal:write("DTSTAMP:"..icurdate.."\n")
+               --
+               if IcalNotify > 0 then
+                  hIcal:write("BEGIN:VALARM\n")
+                  hIcal:write("TRIGGER:-PT"..IcalNotify.."H\n")
+                  hIcal:write("ACTION:DISPLAY\n")
+                  hIcal:write("DESCRIPTION:"..scalDesc.."\n")
+                  hIcal:write("END:VALARM\n")
+               end
+               hIcal:write("END:VEVENT\n")
+               icalcnt = icalcnt + 1
+            end
          end
       end
    end
@@ -366,6 +413,12 @@ function Perform_Data_check()
          dprintlog('No updated text for TxtDevice.')
       end
    end
+   -- close ICAL file when requested
+   if IcalEnable then
+      hIcal:write("END:VCALENDAR")
+      hIcal:close()
+      dprintlog("==> Created an ICS file with ".. icalcnt.. " Garbage collection events entries in file: "..icalfile)
+   end
 end
 
 ----------------------------------------------------------------------------------------------------------------
@@ -392,6 +445,11 @@ daysoftheweek = daysoftheweek or {"Zon","Maa","Din","Woe","Don","Vri","Zat"}
 Longdaysoftheweek = Longdaysoftheweek or {"zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"}
 ShortMonth = ShortMonth or {"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
 LongMonth = LongMonth or {"januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"}
+if (IcalEnable == nil) then IcalEnable = false end
+IcalTitle = IcalTitle or "GarbageCalendar"
+IcalDesc = IcalDesc or "@GARBAGETEXT@ wordt opgehaald."
+IcalEvents = IcalEvents or 10
+IcalNotify = IcalNotify or 12
 ----------------------------------------------------------------------------------------------------------------
 -- checkif testload is requested
 if testdataload or false then
@@ -401,7 +459,7 @@ end
 -- Start of logic ==============================================================================================
 commandArray = {}
 -- ensure the access is set correctly for data
-if not Perform_Rights_check(datafilepath.."garbagecalendar.data") then return end
+if not Perform_Rights_check(datafilepath.."garbagecalendar_"..websitemodule..".data") then return end
 if not Perform_Rights_check(datafilepath.."garbagecalendar_run_"..websitemodule..".log") then return end
 if not Perform_Rights_check(datafilepath.."garbagecalendar_web_"..websitemodule..".log") then return end
 

@@ -37,7 +37,7 @@ domoticzjsonpath = '/home/pi/domoticz/scripts/lua'      -- specify the path to d
 --domoticzjsonpath = 'D:/_domoticz/scripts/lua'   -- specify the path to domoticz where the JSON.lua file can be found
 
 ------------------------------------------------------------------------------------------------------------------------------------
--- ### define format for text device
+-- ### define format for text device in Domoticz
    -- date options:
    --    wd   = weekday in 3 characters as defined in the daysoftheweek table below. eg zon;maa;din
    --    wdd  = weekday as defined in the Longdaysoftheweek table below. eg zondag;maandag;dinsdag
@@ -56,14 +56,12 @@ textformat = "tdesc: wd dd mmm"
    -- false => show multiple occurrences of a garbagetype (default)
    -- true  => show one the next occurrence for a unique garbagetype
 ShowSinglePerType = false
-
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Configuration for the Notificaton system:
 NotificationEmailAdress = {'',''}  -- Specify multiple Email Addresses for the notifications. Leave empty to skip email notification
 Notificationsystem = ''            -- Specify notification system eg "telegram/pushover/gcm/http/kodi/lms/nma/prowl/pushalot/pushbullet/pushsafer" leave empty to skip
 Notificationscript = ''            -- Specify personal notification script/command eg:  lua sendmessage.lua "@TEXT@"  (where @TEXT@ will be replaced by the notification text.)
 --                                                                                                                     It also supports: @GARBAGETYPE@; @GARBAGEDATE@; @GARBAGETEXT@
-
 -- Define how the title and bodytext should look
 -- @DAY@         ==> Will be replaced by notificationtoday; notificationtomorrow; notificationlonger depending on the days difference.
 -- @GARBAGETYPE@ ==> Will be replaced by the GarbageType definion from the WebSite
@@ -84,7 +82,16 @@ notificationdate     = 'dd mmm yyyy'   -- @GARBAGEDATE@ format -> Options are th
 --~ notificationtomorrow = 'tomorrow'
 --~ notificationlonger   = 'in @DAYS@ days'
 --~ notificationdate     = 'wd dd mmmm yyyy'      -- Options are the same as available for textformat date options
-
+------------------------------------------------------------------------------------------------------------------------------------
+-- Configuration for the generation of an ics file:
+-- IcalDesc:
+--   @GARBAGETYPE@ ==> Will be replaced by the GarbageType definion from the WebSite
+--   @GARBAGETEXT@ ==> Will be replaced by the text from garbagetype_cfg[].text field
+IcalEnable = false               -- false/true: When true, a garbagecalendar_Modulename.ics will be created in the datafilepath which can be used in a calendar application.
+IcalTitle = "GarbageCalendar"   -- title of the calendar
+IcalDesc = "@GARBAGETEXT@ wordt opgehaald."   -- text for the events in the calendar
+IcalEvents = 10                 -- max number of upcomming events to save to icalfile, but could be less when less events are provided by the website.
+IcalNotify = 12                 -- Notification Time in hours before event. 0=no notification
 ------------------------------------------------------------------------------------------------------------------------------------
 -- ### define a line for each garbage type returned by the webrequest.
 -- Look at the Domoticz log for any missing records as they will be displayed there and can be just copy/pasted in.
@@ -107,7 +114,6 @@ garbagetype_cfg = {
 --  "reloaddata" is used to start the background update process at this given time.
    ["reloaddata"]                       ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},
    ["dummy1"]                           ={hour=02,min=31,daysbefore=0,reminder=0,text="dummy to trigger testing"}}
-
 
 -------------------------------------------------------------------------
 -- Language options Dutch

@@ -8,6 +8,7 @@ The main changes are:
   * It has a single main script called **"script_time_garbagecalendar.lua"**
   * Subdirectory **"garbagecalendar"** contains all available modules for the supported municipality websites and your personal configuration file **"garbagecalendarconfig.lua"**.
   * The selected module scripts is ran one time per day in the background to get the website data and save that to a datafile which is used by the mainscript at the requested times. This will ensure that the Domoticz event system isn't hold up be the retrieval process!
+  * The main script can optionally create an ics calendar file which can be used by a calendar application.
 
 Detailed [<i>Setup instructions</i>](../../wiki/Setup) can be found in the [<i>WiKi</i>](../../wiki).
 
