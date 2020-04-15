@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200414-1700"
+ver="20200415-1630"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -192,7 +192,7 @@ end
 ----------------------------------------------------------------------------------------------------------------
 --
 function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
-   if ( garbagetype_cfg[s_garbagetype] ~= nil and timenow.min==garbagetype_cfg[s_garbagetype].min and garbagetype_cfg[s_garbagetype].active == "on" )
+   if ( timenow.min==garbagetype_cfg[s_garbagetype].min and garbagetype_cfg[s_garbagetype].active == "on" )
    or ( testnotification or false ) then
       if (
             (  timenow.hour == garbagetype_cfg[s_garbagetype].hour                                               --First notification
@@ -321,7 +321,7 @@ function Perform_Data_check()
                garbagetype_cfg[web_garbagetype] = {hour=0,min=0,daysbefore=0,reminder=0,text="dummy"}
                garbagetype_cfg[web_garbagetype].text = web_garbagetype
             end
-            if txtcnt < ShowNextEvents then
+            if garbagetype_cfg[web_garbagetype].active ~= "skip" and txtcnt < ShowNextEvents then
                -- get daysdiff
                local stextformat = textformat
                stextformat, daysdiffdev = getdaysdiff(web_garbagedate, stextformat)
@@ -334,7 +334,7 @@ function Perform_Data_check()
                      -- Set the nextdate for this garbagetype
                      garbagetype_cfg[web_garbagetype].nextdate = web_garbagedate
                      -- get the long description from the JSON data
-                     if garbagetype_cfg[web_garbagetype].active == nil then
+                     if garbagetype_cfg[web_garbagetype].active ~= "on" then
                         dprintlog("==> GarbageDate:" .. tostring (web_garbagedate) .. " GarbageType:" .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev)..'; *** Notify skipped because there is no record in garbagetype_cfg[]!',0,0)
                      else
                         dprintlog("==> GarbageDate:" .. tostring (web_garbagedate) .. " GarbageType:" .. tostring(web_garbagetype) .. ';  Notify: Active=' .. tostring(garbagetype_cfg[web_garbagetype].active) .. '  Time=' .. tostring(garbagetype_cfg[web_garbagetype].hour) .. ':' .. tostring(garbagetype_cfg[web_garbagetype].min) .. '   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev),0,0)
@@ -348,9 +348,11 @@ function Perform_Data_check()
                   devtxt = devtxt..stextformat.."\r\n"
                   txtcnt = txtcnt + 1
                end
+            else
+               dprintlog('==> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype)..'  GarbageDate:' .. tostring (web_garbagedate),0,0)
             end
             -- create ICAL file when requested
-            if (IcalEnable and icalcnt < IcalEvents) then
+            if (IcalEnable and garbagetype_cfg[web_garbagetype].active ~= "skip" and icalcnt < IcalEvents) then
                -- prepare required info
                garbageyear,garbagemonth,garbageday=web_garbagedate:match("(%d-)-(%d-)-(%d-)$")
                icalsdate = string.format("%04d%02d%02d", garbageyear,garbagemonth,garbageday)
@@ -479,16 +481,23 @@ end
 -- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
    garbagetype_cfg[tbl_garbagetype].active = (gtdata.active or "on"):lower()
+   if garbagetype_cfg[tbl_garbagetype].active ~= "on"
+   and garbagetype_cfg[tbl_garbagetype].active ~= "off"
+   and garbagetype_cfg[tbl_garbagetype].active ~= "skip" then
+      dprintlog('!!!! Check "active" field value for GarbageType '..tbl_garbagetype..'  current value:"'..garbagetype_cfg[tbl_garbagetype].active..'". Using "on" as default.')
+      garbagetype_cfg[tbl_garbagetype].active = "on"
+   end
+
    if gtdata.hour == nil or gtdata.hour > 24 or gtdata.hour < 1  then
-      dprintlog("!!!! Check hour field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.hour)
+      dprintlog('!!!! Check "hour" field value for GarbageType "'..tbl_garbagetype..'"  current value:"'..gtdata.hour..'"')
       garbagetype_cfg[tbl_garbagetype].hour = 0
    end
    if gtdata.min == nil or gtdata.min > 59 or gtdata.min < 0  then
-      dprintlog("!!!! Check min field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.min)
+      dprintlog('!!!! Check min field value for GarbageType "'..tbl_garbagetype..'"  current value:"'..gtdata.min..'"')
       garbagetype_cfg[tbl_garbagetype].min = 0
    end
    if gtdata.reminder == nil or gtdata.reminder > 23  or gtdata.reminder < 0  then
-      dprintlog("!!!! Check reminder field value for GarbageType "..tbl_garbagetype.."  current value:"..gtdata.reminder)
+      dprintlog('!!!! Check reminder field value for GarbageType "'..tbl_garbagetype..'"  current value:"'..gtdata.reminder..'"')
       garbagetype_cfg[tbl_garbagetype].reminder = 0
    end
    if (tbl_garbagetype ~= tbl_garbagetype:lower()) then
