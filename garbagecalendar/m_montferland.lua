@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1100"
+ver="20200419-2130"
 websitemodule="m_montferland"
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -67,7 +67,7 @@ function Perform_Update()
    dprint(" AdresID:"..AdresID.."  AdministratieID:"..AdministratieID)
 
    -- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
-   Web_Data=perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID='..AdministratieID..'&Username=GSD&Password=gsd$2014&ADR_ID='..AdresID..'&Jaar='..os.date("%Y")..'&Date='..os.date("%m/%d/%Y%%20%I:%M:%S%p")..'&Type=Topdagen"')
+   Web_Data=perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID='..AdministratieID..'&Username=GSD&Password='..url_encode('gsd$2014')..'&ADR_ID='..AdresID..'&Jaar='..os.date("%Y")..'&Date='..os.date("%m/%d/%Y%%20%I:%M:%S%p")..'&Type=Topdagen"')
    if ( Web_Data:sub(1,2) == "[]" ) then
       dprint("### Error: Unable to retrieve the Kalender information for this address...  stopping execution.")
       return
