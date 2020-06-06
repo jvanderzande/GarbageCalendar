@@ -44,7 +44,7 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
+   local sQuery   = 'curl -k '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
    dprint("sQuery="..sQuery)
    local handle=assert(io.popen(sQuery))
    local Web_Data = handle:read('*all')
