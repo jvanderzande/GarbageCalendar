@@ -1,11 +1,18 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
--- version 20200407-1100
+-- version 20200606-1100
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
+   if afwlogfile == nil then
+      print("-@"..(websitemodule or "?")..":"..(text or "?"))
+   else
+      ptext = "@"..(websitemodule or "?")..": "
+      file = io.open(afwlogfile, "a")
+      file:write(ptext..text.."\n")
+      file:close()
+   end
 end
 
 -------------------------------------------------------
@@ -142,7 +149,6 @@ function GetDateFromInput(i_garbagetype_date, iregex, idatev)
       elseif dfield == "mm" then
          garbagemonth = tonumber(d[dindex])
       elseif dfield == "mmm" then
-         print(d[dindex])
          garbagemonth = InputMonth[d[dindex]:sub(1,3)]
       elseif dfield == "mmmm" then
          garbagemonth = InputMonth[d[dindex]:sub(1,3)]

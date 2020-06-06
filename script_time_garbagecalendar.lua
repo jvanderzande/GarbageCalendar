@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200415-1630"
+ver="20200606-1100"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -143,26 +143,43 @@ end
 ---====================================================================================================
 -- run dataupdate
 function GetWebDataInBackground(whenrun)
-   --# reshell this file in the background to perform update of the data
-   local command = 'lua '..scriptpath .. "garbagecalendar/" .. websitemodule .. '.lua'
-   command = command .. ' "' .. domoticzjsonpath ..'"'
-   command = command .. ' "' .. Zipcode .. '"'
-   command = command .. ' "' .. Housenr .. '"'
-   command = command .. ' "' .. Housenrsuf .. '"'
-   command = command .. ' "' .. datafile .. '"'
-   command = command .. ' "' .. weblogfile .. '"'
-   command = command .. ' "' .. (Hostname or "") .. '"' -- optional param
-   command = command .. ' "' .. (Street or "") .. '"'   -- optional param
-   if ((whenrun or "") == "now") then
-      dprintlog('start foreground webupdate for module '..websitemodule..' of file '..datafile)
-      os.execute(command .. ' > '.. weblogfile..' 2>&1 ')
+   -- empty previous run weblogfile
+   file = io.open(weblogfile, "w")
+   if file == nil then
+      print('!!! Error opening weblogfile '..weblogfile)
    else
-      dprintlog('start background webupdate for module '..websitemodule..' of file '..datafile)
-      os.execute(command .. ' > '.. weblogfile..' 2>&1 &')
+      file:close()
    end
-   dprintlog(command,1)
+   --# reshell this file in the background to perform update of the data
+   if ((whenrun or "") ~= "now") then
+      local command = 'lua '..scriptpath .. "garbagecalendar/" .. websitemodule .. '.lua'
+      command = command .. ' "' .. domoticzjsonpath ..'"'
+      command = command .. ' "' .. Zipcode .. '"'
+      command = command .. ' "' .. Housenr .. '"'
+      command = command .. ' "' .. Housenrsuf .. '"'
+      command = command .. ' "' .. datafile .. '"'
+      command = command .. ' "' .. weblogfile .. '"'
+      command = command .. ' "' .. (Hostname or "") .. '"' -- optional param
+      command = command .. ' "' .. (Street or "") .. '"'   -- optional param
+      -- Test if lua is installed, if so the submit backgrond task to update the datafile
+      rc = os.execute('lua nul >nul')
+      if (rc) then
+         dprintlog('start background webupdate for module '..websitemodule..' of file '..datafile,1)
+         dprintlog(command)
+         --rc = os.execute(command .. ' > '.. weblogfile..' 2>&1 &')
+         rc = os.execute(command .. ' &')
+      else
+         whenrun = "now"  -- perform the update in the foreground with the domoticz LUA implementation
+      end
+   end
+   -- Run the Webupdate in the foreground when required. This happens in case the datafile doesn't exists or LUA can't be found.
+   if ((whenrun or "") == "now") then
+      -- Fill the arg[] table with the required parameters and run the script with dofile().
+      dprintlog('start new foreground webupdate for module '..websitemodule..' of file '..datafile,1)
+      dofile(scriptpath .. "garbagecalendar/" .. websitemodule .. '.lua')
+      dprintlog('done')
+   end
 end
-
 
 ---====================================================================================================
 -- get days between today and provided date

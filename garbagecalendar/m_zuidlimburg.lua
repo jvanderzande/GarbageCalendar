@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_zuidlimburg.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1100"
+ver="20200606-1300"
 websitemodule="m_zuidlimburg"
 -- Link to WebSite:  https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc=AAAA99&nr=999&t
 --
@@ -10,39 +10,9 @@ websitemodule="m_zuidlimburg"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-dofile (script_path() .. "generalfuncs.lua") --
-
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
-end
-
--------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
-function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   if ( Web_Data == "" ) then
-      dprint("### Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
+-- only include when run in separate process
+if scriptpath == nil then
+   dofile (script_path() .. "generalfuncs.lua") --
 end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
@@ -97,14 +67,14 @@ end
 -- Start of logic ========================================================================
 timenow = os.date("*t")
 -- get paramters from the commandline
-domoticzjsonpath=arg[1]
-Zipcode = arg[2]
-Housenr = arg[3]
-Housenrsuf = arg[4]
-afwdatafile = arg[5]
-afwlogfile = arg[6]
-Hostname = arg[7] or ""   -- Not needed
-Street   = arg[8] or ""   -- Not needed
+domoticzjsonpath = domoticzjsonpath or arg[1]
+Zipcode = Zipcode or arg[2]
+Housenr = Housenr or arg[3] or ""
+Housenrsuf = Housenrsuf or arg[4]
+afwdatafile = datafile or arg[5]
+afwlogfile = weblogfile or arg[6]
+Hostname = (Hostname or arg[7]) or ""   -- Not needed
+Street = (Street or arg[8]) or ""       -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 -- required when you use format mmm in the call to GetDateFromInput()

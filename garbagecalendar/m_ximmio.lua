@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1100"
+ver="20200606-1300"
 websitemodule="m_ximmio"
 -- API WebSite:  https://wasteapi.2go-mobile.com/api
 --
@@ -20,32 +20,12 @@ websitemodule="m_ximmio"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-spath=script_path()
-dofile (script_path() .. "generalfuncs.lua") --
-
--------------------------------------------------------
--- dprint function to format log records
-function dprint(text)
-   print("@"..(websitemodule or "?")..":"..(text or "?"))
+-- only include when run in separate process
+if scriptpath == nil then
+   dofile (script_path() .. "generalfuncs.lua") --
 end
-
 -------------------------------------------------------
--- round function
-function Round(num, idp)
-   return tonumber(string.format("%." ..(idp or 0).. "f", num))
-end
-
--------------------------------------------------------
--- try to load JSON library
-function loaddefaultjson()
-   if unexpected_condition then error() end
-   -- add defined Domoticz path to the search path
-   package.path = domoticzjsonpath..'?.lua;' .. package.path
-   JSON = require "JSON"     -- use generic JSON.lua
-end
-
---------------------------------------------------------------------------
--- Do the actual webquery, retrieving data from the website
+-- Do the actual update retrieving data from the website and processing it
 function perform_webquery(url)
    local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
    dprint("sQuery="..sQuery)
@@ -159,14 +139,14 @@ end
 -- Start of logic ========================================================================
 timenow = os.date("*t")
 -- get paramters from the commandline
-domoticzjsonpath=arg[1]
-Zipcode = arg[2]
-Housenr = arg[3]
-Housenrsuf = arg[4]
-afwdatafile = arg[5]
-afwlogfile = arg[6]
-companyCode = arg[7] or ""   -- Required !
-Street   = arg[8] or ""      -- Not needed
+domoticzjsonpath = domoticzjsonpath or arg[1]
+Zipcode = Zipcode or arg[2]
+Housenr = Housenr or arg[3] or ""
+Housenrsuf = Housenrsuf or arg[4]
+afwdatafile = datafile or arg[5]
+afwlogfile = weblogfile or arg[6]
+companyCode = (Hostname or arg[7]) or "" -- Required !
+Street = (Street or arg[8]) or ""       -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 

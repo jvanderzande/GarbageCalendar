@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200419-2130"
+ver="20200606-1300"
 websitemodule="m_montferland"
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -10,11 +10,12 @@ websitemodule="m_montferland"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-spath=script_path()
-dofile (script_path() .. "generalfuncs.lua") --
-
---------------------------------------------------------------------------
--- Perform the actual update process for the given address
+-- only include when run in separate process
+if scriptpath == nil then
+   dofile (script_path() .. "generalfuncs.lua") --
+end
+-------------------------------------------------------
+-- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
    function processdata(ophaaldata)
       for i = 1, #ophaaldata do
@@ -87,14 +88,14 @@ end
 -- Start of logic ========================================================================
 timenow = os.date("*t")
 -- get paramters from the commandline
-domoticzjsonpath=arg[1]
-Zipcode = arg[2]
-Housenr = arg[3]
-Housenrsuf = arg[4]
-afwdatafile = arg[5]
-afwlogfile = arg[6]
-Hostname = arg[7] or ""   -- Required!
-Street   = arg[8] or ""   -- Not needed
+domoticzjsonpath = domoticzjsonpath or arg[1]
+Zipcode = Zipcode or arg[2]
+Housenr = Housenr or arg[3] or ""
+Housenrsuf = Housenrsuf or arg[4]
+afwdatafile = datafile or arg[5]
+afwlogfile = weblogfile or arg[6]
+Hostname = (Hostname or arg[7]) or ""   -- Not needed
+Street = (Street or arg[8]) or ""       -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 

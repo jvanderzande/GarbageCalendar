@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_goeree_overflakkee.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200407-1100"
+ver="20200606-1300"
 websitemodule="m_goeree_overflakkee"
 -- Link to WebSite: https://webadapter.watsoftware.nl/
 --
@@ -10,8 +10,12 @@ websitemodule="m_goeree_overflakkee"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-spath=script_path()
-dofile (script_path() .. "generalfuncs.lua") --
+-- only include when run in separate process
+if scriptpath == nil then
+   dofile (script_path() .. "generalfuncs.lua") --
+end
+-------------------------------------------------------
+-- Do the actual update retrieving data from the website and processing it
 
 --------------------------------------------------------------------------
 -- Perform the actual update process for the given address
@@ -68,14 +72,14 @@ end
 -- Start of logic ========================================================================
 timenow = os.date("*t")
 -- get paramters from the commandline
-domoticzjsonpath=arg[1]
-Zipcode = arg[2]
-Housenr = arg[3]
-Housenrsuf = arg[4]
-afwdatafile = arg[5]
-afwlogfile = arg[6]
-Hostname = arg[7] or ""   -- Not needed
-Street   = arg[8] or ""   -- Not needed
+domoticzjsonpath = domoticzjsonpath or arg[1]
+Zipcode = Zipcode or arg[2]
+Housenr = Housenr or arg[3] or ""
+Housenrsuf = Housenrsuf or arg[4]
+afwdatafile = datafile or arg[5]
+afwlogfile = weblogfile or arg[6]
+Hostname = (Hostname or arg[7]) or ""   -- Not needed
+Street = (Street or arg[8]) or ""       -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 -- required when you use format mmm in the call to GetDateFromInput()

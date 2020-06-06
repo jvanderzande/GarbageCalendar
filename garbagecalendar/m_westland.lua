@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_westland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200410-1300"
+ver="20200606-1300"
 websitemodule="m_westland"
 -- Link to WebSite: https://huisvuilkalender.gemeentewestland.nl
 --
@@ -10,14 +10,16 @@ websitemodule="m_westland"
 function script_path()
    return arg[0]:match('.*[/\\]') or "./"
 end
-dofile (script_path() .. "generalfuncs.lua") --
-
+-- only include when run in separate process
+if scriptpath == nil then
+   dofile (script_path() .. "generalfuncs.lua") --
+end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
-   Web_Data=perform_webquery(' -k "https://huisvuilkalender.gemeentewestland.nl/huisvuilkalender/Huisvuilkalender/get-huisvuilkalender-ajax" -H "Origin: https://huisvuilkalender.gemeentewestland.nl" -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" -H "Accept: application/json, text/javascript, */*; q=0.01" -H "Referer: https://huisvuilkalender.gemeentewestland.nl/huisvuilkalender?dummy=0.9778403611955824" -H "X-Requested-With: XMLHttpRequest" -H "Connection: keep-alive" --data "postcode=' .. Zipcode .. '&query="')
+   Web_Data=perform_webquery(' "https://huisvuilkalender.gemeentewestland.nl/huisvuilkalender/Huisvuilkalender/get-huisvuilkalender-ajax" -H "Origin: https://huisvuilkalender.gemeentewestland.nl" -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" -H "Accept: application/json, text/javascript, */*; q=0.01" -H "Referer: https://huisvuilkalender.gemeentewestland.nl/huisvuilkalender?dummy=0.9778403611955824" -H "X-Requested-With: XMLHttpRequest" -H "Connection: keep-alive" --data "postcode=' .. Zipcode .. '&query="')
    if Web_Data == "" then
       dprint("### Error: Web_Data is empty.")
       return
@@ -81,14 +83,14 @@ end
 -- Start of logic ========================================================================
 timenow = os.date("*t")
 -- get paramters from the commandline
-domoticzjsonpath=arg[1]
-Zipcode = arg[2]
-Housenr = arg[3] or ""
-Housenrsuf = arg[4]
-afwdatafile = arg[5]
-afwlogfile = arg[6]
-Hostname = arg[7] or ""   -- Not needed
-Street   = arg[8] or ""   -- Not needed
+domoticzjsonpath = domoticzjsonpath or arg[1]
+Zipcode = Zipcode or arg[2]
+Housenr = Housenr or arg[3] or ""
+Housenrsuf = Housenrsuf or arg[4]
+afwdatafile = datafile or arg[5]
+afwlogfile = weblogfile or arg[6]
+Hostname = (Hostname or arg[7]) or ""   -- Not needed
+Street = (Street or arg[8]) or ""       -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 -- required when you use format mmm in the call to GetDateFromInput()
