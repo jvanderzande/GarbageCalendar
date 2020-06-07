@@ -53,10 +53,17 @@ function perform_webquery(url)
    dprint(Web_Data)
    dprint('---- web err ------------------------------------------------------------------------')
    ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
+   local Web_Error = ifile:read("*all")
+   dprint("Web_Err="..Web_Error)
    ifile:close()
    os.remove(afwlogfile:gsub('_web_','_web_err_'))
    dprint('---- end web data ------------------------------------------------------------------------')
+   if ( Web_Error:find("unsupported protocol" )) then
+      dprint("#### Error: unsupported protocol.")
+      dprint("#### This website still uses tls 1.0 and Demian Buster has set the minssl to tls 1.2 so will fail.")
+      dprint("#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot")
+      return ""
+   end
    if ( Web_Data == "" ) then
       dprint("Error: Empty result from curl command")
       return ""
