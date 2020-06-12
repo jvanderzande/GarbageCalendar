@@ -27,7 +27,7 @@ function Perform_Update()
       dprint("Error check postcode   Web_Data:" .. Web_Data)
       return
    end
-   -- Read from the data table, and extract duration and distance in value. Divide distance by 1000 and duration_in_traffic by 60
+   -- Process received webdata. 
    local web_garbagetype=""
    local web_garbagetype_date=""
    local web_garbagetype_changed=""

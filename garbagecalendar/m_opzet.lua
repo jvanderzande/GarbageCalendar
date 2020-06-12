@@ -39,7 +39,7 @@ function Perform_Update()
    dprint('---- web data stripped -------------------------------------------------------------------')
    dprint(Web_Data)
    dprint('---- end web data ------------------------------------------------------------------------')
-   -- Read from the data table, and extract duration and distance in value. Divide distance by 1000 and duration_in_traffic by 60
+   -- Process received webdata. 
    local web_garbagetype=""
    local web_garbagetype_date=""
    local web_garbagetype_changed=""
