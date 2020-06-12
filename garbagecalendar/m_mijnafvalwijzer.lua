@@ -121,7 +121,7 @@ Street = (Street or arg[8]) or ""       -- Not needed
 -- other variables
 garbagedata = {}            -- array to save information to which will be written to the data file
 
-dprint('#### '..os.date("%c")..' ### Start garbagekalerder module '.. websitemodule..' (v'..ver..')')
+dprint('#### '..os.date("%c")..' ### Start garbagecalendar module '.. websitemodule..' (v'..ver..')')
 if domoticzjsonpath == nil then
    dprint("!!! domoticzjsonpath not specified!")
 elseif Zipcode == nil then

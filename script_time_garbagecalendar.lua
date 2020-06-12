@@ -495,7 +495,7 @@ if garbagetype_cfg["reloaddata"] == nil or garbagetype_cfg["reloaddata"].hour ==
    dprintlog('             ["reloaddata"] ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},')
    garbagetype_cfg["reloaddata"] = {hour=2,min=30,daysbefore=0,reminder=0,text="default added"}
 end
--- check change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
+-- check and change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
    garbagetype_cfg[tbl_garbagetype].active = (gtdata.active or "on"):lower()
    if garbagetype_cfg[tbl_garbagetype].active ~= "on"
