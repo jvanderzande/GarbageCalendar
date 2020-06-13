@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200606-1100"
+ver="20200613-1800"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -337,6 +337,7 @@ function Perform_Data_check()
                missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower()..'"]'..string.rep(" ", 32-string.len(web_garbagetype))..' ={hour=19,min=02,daysbefore=1,reminder=0,text="'..web_garbagetype..'"},\n'
                garbagetype_cfg[web_garbagetype] = {hour=0,min=0,daysbefore=0,reminder=0,text="dummy"}
                garbagetype_cfg[web_garbagetype].text = web_garbagetype
+               garbagetype_cfg[web_garbagetype].missing = true
             end
             if garbagetype_cfg[web_garbagetype].active ~= "skip" and txtcnt < ShowNextEvents then
                -- get daysdiff
@@ -366,7 +367,11 @@ function Perform_Data_check()
                   txtcnt = txtcnt + 1
                end
             else
-               dprintlog('==> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype)..'  GarbageDate:' .. tostring (web_garbagedate),0,0)
+               -- only warn once for a skip this type setting
+               if (garbagetype_cfg[web_garbagetype].missing == nil) then
+                  garbagetype_cfg[web_garbagetype].skipwarning = true
+                  dprintlog('==> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype)..'  GarbageDate:' .. tostring (web_garbagedate),0,0)
+               end
             end
             -- create ICAL file when requested
             if (IcalEnable and garbagetype_cfg[web_garbagetype].active ~= "skip" and icalcnt < IcalEvents) then
