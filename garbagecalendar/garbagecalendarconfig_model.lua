@@ -20,7 +20,6 @@ websitemodule = "m_mijnafvalwijzer"
 --websitemodule = "m_opzet"
 --websitemodule = "m_opzet_api"
 --websitemodule = "m_rova_api"
---websitemodule = "m_rova_web"
 --websitemodule = "m_westland"
 --websitemodule = "m_ximmio"           --
 --websitemodule = "m_zuidlimburg"

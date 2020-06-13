@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rova_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200612-1300"
+ver="20200613-1800"
 websitemodule="m_rova_api"
 -- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
 --
@@ -54,23 +54,23 @@ function Perform_Update()
       dprint("### Error: Empty result from curl command. Please check whether curl.exe is installed.")
       return
    end
-   if ( Web_Data:sub(1,3) == "NOK" ) then
-      dprint("### Error: Check your Postcode and Huisnummer as we get an NOK response.")
-      return
-   end
    -- strip bulk data from "ophaaldagenNext" till the end, because this is causing some errors for some gemeentes
-   if ( Web_Data:find('ophaaldagenNext')  == nil ) then
+   if ( Web_Data:find('ophaaldagenNext') == nil ) then
       dprint("### Error: returned information does not contain the ophaaldagenNext section. stopping process.")
       return
    end
-   Web_Data=Web_Data:match('(.-),\"mededelingen\":')
-   Web_Data=Web_Data.."}}"
-   --
+   -- strip a larger chunk of the none used data for speed.
+   Web_Data=Web_Data:match('(.-),\"mededelingen\":').."}}"
    -- Decode JSON table
    decoded_response = JSON:decode(Web_Data)
+   -- Get the data section
    rdata = decoded_response["data"]
    if type(rdata) ~= "table" then
       dprint("### Error: Empty data table in JSON data...  stopping execution.")
+      return
+   end
+   if ( decoded_response["response"] == "NOK" ) then
+      dprint("### Error: Check your Postcode and Huisnummer as we get an NOK response.")
       return
    end
    -- get the description records into rdesc to retrieve the long description
