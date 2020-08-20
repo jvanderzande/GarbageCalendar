@@ -1,15 +1,10 @@
 -----------------------------------------------------------------------------------------------------------------
--- garbagecalendar module script: m_ophaalkalender-be
+-- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
---   This website still uses tls 1.0 and Demian Buster has set the minssl to tls 1.2 so will fail.
---   To fix:
---       Set /etc/ssl/openssl.cnf to MinProtocol = TLSv1.0
---       * reboot
---       And It should work
 ----------------------------------------------------------------------------------------------------------------
-ver="20200606-1300"
-websitemodule="m_ophaalkalender-be"
--- Link to https://www.ophaalkalender.be
+ver="202008018-1700"
+websitemodule="m_recycleapp-be"
+-- Link to https://www.recycleapp.be
 --
 -------------------------------------------------------
 -- get script directory
@@ -25,12 +20,13 @@ end
 function Perform_Update()
    -- function to process ThisYear and Lastyear JSON data
    function processdata(ophaaldata)
+      aantal = ophaaldata.total
+      ophaaldata = ophaaldata["items"]   -- get the Datalist tabel for the coming scheduled pickups
       for i = 1, #ophaaldata do
          record = ophaaldata[i]
          if type(record) == "table" then
-            wnameType = record["nameType"]
-            web_garbagetype = record["title"]
-            web_garbagedate = record["start"]
+            web_garbagetype = record.fraction.name.nl
+            web_garbagedate = record.timestamp
             -- first match for each Type we save the date to capture the first next dates
             -- get the long description from the JSON data
             dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
@@ -51,37 +47,52 @@ function Perform_Update()
       end
    end
    dprint('---- web update ----------------------------------------------------------------------------')
+   -- Get Access token
    local Web_Data
---~    https://www.ophaalkalender.be/Calendar/findstreets/?query=gaverlanddam&zipcode=9120
---~ [{"Value":"Gaverlanddam","Id":6644,"Brussels":false}]
-   Web_Data=perform_webquery(' "https://www.ophaalkalender.be/Calendar/findstreets/?query='..Street..'&zipcode='..Zipcode..'"')
-   if ( Web_Data:sub(1,2) == "[]" ) then
-      dprint("### Error: findstreets Check for your Zipcode and Street as we get an [] response.")
+   headerdata = ' -H "x-secret: Qp4KmgmK2We1ydc9Hxso5D6K0frz3a9raj2tqLjWN5n53TnEijmmYz78pKlcma54sjKLKogt6f9WdnNUci6Gbujnz6b34hNbYo4DzyYRZL5yzdJyagFHS15PSi2kPUc4v2yMck81yFKhlk2aWCTe93"'
+              ..' -H "x-consumer: recycleapp.be"'
+   print(headerdata)
+   Web_Data=perform_webquery(headerdata ..' https://recycleapp.be/api/app/v1/access-token')
+   webdata = JSON:decode(Web_Data)
+   accessToken = webdata.accessToken or ""
+   if accessToken == "" then
+      dprint("### Error: No accessToken retrieved...  stopping execution.")
       return
    end
-   dprint("adressid:"..Web_Data)
-   adressdata = JSON:decode(Web_Data)
-   adressid = adressdata[1].Id or ""
-   if adressid == nil or adressid == "" then
-      dprint("### Error: No adressid retrieved...  stopping execution.")
+   dprint("accessToken:"..accessToken)
+   headerdata = headerdata..' -H "Authorization:'..accessToken..'"'
+
+   -- Get zipcodeid
+   Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/zipcodes?q='..Zipcode..'"')
+   Web_Data = JSON:decode(Web_Data)
+   postcode_id = Web_Data.items[1].id or ""
+   if postcode_id == "" then
+      dprint("### Error: No postcode_id retrieved...  stopping execution.")
       return
    end
-   dprint("adressid:"..adressid)
-   --
-   -- get the Kalender information for this address(bagId) for the current year
-   Web_Data=perform_webquery(' "https://www.ophaalkalender.be/api/rides?id='..adressid..'&housenumber='..Housenr..Housenrsuf..'&zipcode='..Zipcode..'"')
-   if ( Web_Data:sub(1,2) == "[]" ) then
-      dprint("### Error: Unable to retrieve the Kalender information for this address...  stopping execution.")
+   dprint("postcode_id:"..postcode_id)
+
+   -- Get streetid
+   Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/streets?q='..Street.."&zipcodes="..postcode_id..'"')
+   Web_Data = JSON:decode(Web_Data)
+   street_id = Web_Data.items[1].id
+   if street_id == "" then
+      dprint("### Error: No street_id retrieved...  stopping execution.")
       return
    end
+   dprint("street_id:"..street_id)
+
+   -- Get calendar data
+   startDate=os.date("%Y-%m-%d")
+   endDate=os.date("%Y-%m-%d",os.time()+28*24*60*60)  -- 4 weken
+   Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/collections?zipcodeId='..postcode_id..'&streetId='..street_id..'&houseNumber='..Housenr..'&fromDate='..startDate..'&untilDate='..endDate..'&size=100"')
    Web_Data = JSON:decode(Web_Data)
    -- get the ophaaldagen tabel for the coming scheduled pickups
    if type(Web_Data) ~= "table" then
-      dprint("### Error: Empty Kalender for "..cYear..".  stopping execution.")
+      dprint("### Error: Empty Kalender .  stopping execution.")
       return
    end
    processdata(Web_Data)
-
 end
 -- End Functions =========================================================================
 

@@ -97,7 +97,7 @@ end
 -- check if that worked correctly
 local status, err = pcall(garbagecalendarconfig)
 if err then
-   print('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' start garbagecalendar script v'.. ver)
+   print('#### '..os.date("%X")..' start garbagecalendar script v'.. ver)
    print('!!! failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath..'garbagecalendar/"')
    print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
    print('       Also check the path in variable "scriptpath= "  is correctly set.')
@@ -175,9 +175,9 @@ function GetWebDataInBackground(whenrun)
    -- Run the Webupdate in the foreground when required. This happens in case the datafile doesn't exists or LUA can't be found.
    if ((whenrun or "") == "now") then
       -- Fill the arg[] table with the required parameters and run the script with dofile().
-      dprintlog('start new foreground webupdate for module '..websitemodule..' of file '..datafile,1)
+      dprintlog(os.date("%X")..' start new foreground webupdate for module '..websitemodule..' of file '..datafile,1)
       dofile(scriptpath .. "garbagecalendar/" .. websitemodule .. '.lua')
-      dprintlog('done')
+      dprintlog(os.date("%X")..' webupdate done.')
    end
 end
 
@@ -223,7 +223,12 @@ function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
          )
       or ( testnotification or false ) then
          testnotification = false  -- this will trigger a test notification for the first record
-         local dag = ""
+			-- Set reminder field text
+			reminder = ''
+			if timenow.hour ~= garbagetype_cfg[s_garbagetype].hour then
+				reminder = notificationreminder or 'reminder'
+			end
+			local dag = ""
          if i_daysdifference == 0 then
             dag = notificationtoday or "vandaag"
          elseif i_daysdifference == 1 then
@@ -250,11 +255,13 @@ function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
          inotificationtitle = inotificationtitle:gsub('@GARBAGETYPE@',s_garbagetype)
          inotificationtitle = inotificationtitle:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
          inotificationtitle = inotificationtitle:gsub('@GARBAGEDATE@',inotificationdate)
+         inotificationtitle = inotificationtitle:gsub('@REMINDER@',reminder)
          inotificationtext = notificationtext or '@GARBAGETEXT@ wordt @DAY@ opgehaald!'
          inotificationtext = inotificationtext:gsub('@DAY@',dag)
          inotificationtext = inotificationtext:gsub('@GARBAGETYPE@',s_garbagetype)
          inotificationtext = inotificationtext:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
          inotificationtext = inotificationtext:gsub('@GARBAGEDATE@',inotificationdate)
+         inotificationtext = inotificationtext:gsub('@REMINDER@',reminder)
          if type(NotificationEmailAdress) == 'table' then
             for x,emailaddress in pairs(NotificationEmailAdress) do
                if emailaddress ~= "" then
@@ -279,6 +286,7 @@ function notification(s_garbagetype,s_garbagetype_date,i_daysdifference)
             Notificationscript = Notificationscript:gsub('@GARBAGETYPE@',s_garbagetype)
             Notificationscript = Notificationscript:gsub('@GARBAGETEXT@',tostring(garbagetype_cfg[s_garbagetype].text))
             Notificationscript = Notificationscript:gsub('@GARBAGEDATE@',inotificationdate)
+            Notificationscript = Notificationscript:gsub('@REMINDER@',reminder)
             os.execute( Notificationscript..' &')
             dprintlog('---->Notification script started: '.. Notificationscript, 1)
          end
@@ -560,7 +568,6 @@ if needupdate then
 else
    dprintlog("Scheduled time(s) not reached yet, so nothing to do!")
 end
-timenow = os.date("*t")
-dprintlog('#### '..("%02d:%02d:%02d"):format(timenow.hour, timenow.min, timenow.sec)..' End garbagecalendar script v'.. ver)
+dprintlog('#### '..os.date("%X")..' End garbagecalendar script v'.. ver)
 
 return commandArray

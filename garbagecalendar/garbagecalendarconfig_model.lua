@@ -7,7 +7,7 @@ ShowNextEvents = 3                 -- indicate the next x events to show in the 
 Zipcode = ''                       -- Your zipcode
 Housenr = ''                       -- Your housnr
 Housenrsuf = ''                    -- Your housnr suffix                    (Optional: a/b/c  etc)
-Street=''                          -- Street name                           Only needed for: m_ophaalkalender-be
+Street=''                          -- Street name                           Only needed for: m_recycleapp-be
 Hostname = ''                      -- Specify the hostname of your website. Only needed for: m_opzet ; m_opzet_api ;
                                    -- OR Specify the companycode for the m_ximmio.lua module. See m_ximmio.lua on how to find this code.
 
@@ -16,7 +16,7 @@ Hostname = ''                      -- Specify the hostname of your website. Only
 --websitemodule = "m_goeree-overflakkee"
 websitemodule = "m_mijnafvalwijzer"
 --websitemodule = "m_montferland"
---websitemodule = "m_ophaalkalender-be"
+--websitemodule = "m_recycleapp-be"
 --websitemodule = "m_opzet"
 --websitemodule = "m_opzet_api"
 --websitemodule = "m_rova_api"
@@ -59,22 +59,35 @@ textformat = "tdesc: wd dd mmm"
 ShowSinglePerType = false
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Configuration for the Notificaton system:
+-- IcalDesc:
+--   @GARBAGETYPE@ ==> Will be replaced by the GarbageType definion from the WebSite
+--   @GARBAGETEXT@ ==> Will be replaced by the text from garbagetype_cfg[].text field
+IcalEnable = false               -- false/true: When true, a garbagecalendar_Modulename.ics will be created in the datafilepath which can be used in a calendar application.
+IcalTitle = "GarbageCalendar"   -- title of the calendar
+IcalDesc = "@GARBAGETEXT@ wordt opgehaald."   -- text for the events in the calendar
+IcalEvents = 10                 -- max number of upcomming events to save to icalfile, but could be less when less events are provided by the website.
+IcalNotify = 12                 -- Notification Time in hours before event. 0=no notification
+------------------------------------------------------------------------------------------------------------------------------------
+-- Configuration for the Notificaton system:
 NotificationEmailAdress = {'',''}  -- Specify multiple Email Addresses for the notifications. Leave empty to skip email notification
 Notificationsystem = ''            -- Specify notification system eg "telegram/pushover/gcm/http/kodi/lms/nma/prowl/pushalot/pushbullet/pushsafer" leave empty to skip
 Notificationscript = ''            -- Specify personal notification script/command eg:  lua sendmessage.lua "@TEXT@"  (where @TEXT@ will be replaced by the notification text.)
 --                                                                                                                     It also supports: @GARBAGETYPE@; @GARBAGEDATE@; @GARBAGETEXT@
 -- Define how the title and bodytext should look
 -- @DAY@         ==> Will be replaced by notificationtoday; notificationtomorrow; notificationlonger depending on the days difference.
--- @GARBAGETYPE@ ==> Will be replaced by the GarbageType definion from the WebSite
+-- @GARBAGETYPE@ ==> Will be replaced by the GarbageType definition from the WebSite
 -- @GARBAGEDATE@ ==> Will be replaced by the pickup date found on the schedule data
 -- @GARBAGETEXT@ ==> Will be replaced by the text from garbagetype_cfg[].text field
+-- @REMINDER@    ==> Will be set to "" for first notification and "notificationreminder" for the reminder run
+-- @TEXT@        ==> Will be replaced by the finalised notificationtext and can be used in the notification script
 --### Dutch example
+notificationreminder = 'herinnering'
 notificationtitle    = 'GarbageCalendar: @DAY@ de @GARBAGETEXT@ aan de weg zetten!'
-notificationtext     = '@GARBAGETEXT@ wordt @DAY@ opgehaald!'
+notificationtext     = '@GARBAGETEXT@ wordt @DAY@ opgehaald! (@REMINDER@)'
 notificationtoday    = 'vandaag'
 notificationtomorrow = 'morgen'
 notificationlonger   = 'over @DAYS@ dagen'
-notificationdate     = 'dd mmm yyyy'   -- @GARBAGEDATE@ format -> Options are the same as available for textformat date options
+notificationdate     = 'wd dd mmmm yyyy'   -- @GARBAGEDATE@ format -> Options are the same as available for textformat date options
 
 --### English example
 --~ notificationtitle    = 'GarbageCalendar: @GARBAGETEXT@ will be picked up in @DAY@!'
