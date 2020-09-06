@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200613-1800"
+ver="20200906-1400"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -538,7 +538,7 @@ for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
 end
 -- loop through the table to check whether
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
-   dprintlog("-> NotificationTime:"..tostring(gtdata.hour)..":"..tostring(gtdata.min)..'  Garbagetype:'..tostring(tbl_garbagetype))
+   dprintlog("-> NotificationTime="..string.format("%02d:%02d",gtdata.hour,gtdata.min)..'  Garbagetype='..tostring(tbl_garbagetype))
    if (   timenow.hour == gtdata.hour
       or  timenow.hour == gtdata.hour+gtdata.reminder    --reminder same day
       or  timenow.hour == gtdata.hour+gtdata.reminder-24 --reminder next day
