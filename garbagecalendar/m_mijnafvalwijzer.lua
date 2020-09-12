@@ -1,10 +1,10 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200606-1300"
+ver="20200912-1300"
 websitemodule="m_mijnafvalwijzer"
--- Link to WebSite: http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode=1234ab&street=&huisnummer=1&toevoeging=
---
+-- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
+-- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
 -------------------------------------------------------
 -- get script directory
 function script_path()
@@ -17,90 +17,69 @@ end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
-   -- function to process ThisYear and Lastyear JSON data
-   function processdata(ophaaldata)
-      for i = 1, #ophaaldata do
-         record = ophaaldata[i]
-         if type(record) == "table" then
-            wnameType = record["nameType"]
-            web_garbagetype = record["type"]
-            web_garbagedate = record["date"]
-            -- first match for each Type we save the date to capture the first next dates
-            -- get the long description from the JSON data
-            dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
-            local dateformat = "????????"
-            -- Get days diff
-            dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"(%w-)-(%w-)-(%w-)$",{"yyyy","mm","dd"})
-            if daysdiffdev == nil then
-               dprint ('Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
-            end
-            if ( daysdiffdev >= 0 ) then
-               garbagedata[#garbagedata+1] = {}
-               garbagedata[#garbagedata].garbagetype = web_garbagetype
-               garbagedata[#garbagedata].garbagedate = dateformat
-               -- field to be used when WebData contains a description
-               garbagedata[#garbagedata].wdesc = rdesc[web_garbagetype:upper().."_L"]
-            end
-         end
-      end
-   end
+   local txt=""
+   local txtcnt = 0
    --
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
-   Web_Data=perform_webquery('"https://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode='..Zipcode..'&street=&huisnummer='..Housenr..'&toevoeging='..Housenrsuf..'"')
-   if ( Web_Data == "" ) then
-      dprint("### Error: Empty result from curl command. Please check whether curl.exe is installed.")
+   Web_Data=perform_webquery('"https://www.mijnafvalwijzer.nl/nl/'..Zipcode..'/'..Housenr..''..Housenrsuf..'"')
+   if Web_Data == "" then
+      dprint("Error Web_Data is empty.")
+      return
+   elseif string.find(Web_Data,'{"error":true}') ~= nil then
+      dprint("Error check postcode   Web_Data:" .. Web_Data)
       return
    end
-   if ( Web_Data:sub(1,3) == "NOK" ) then
-      dprint("### Error: Check your Postcode and Huisnummer as we get an NOK response.")
+   -- Retrieve part with the dates for pickup
+   Web_Data=Web_Data:match('.-class="ophaaldagen">(.-)<div id="calendarMessage"')
+   if Web_Data == nil or Web_Data == '' then
+      print ('Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
       return
    end
-   -- strip bulk data from "ophaaldagenNext" till the end, because this is causing some errors for some gemeentes
-   if ( Web_Data:find('ophaaldagenNext')  == nil ) then
-      dprint("### Error: returned information does not contain the ophaaldagenNext section. stopping process.")
-      return
+   dprint('---- web data stripped -------------------------------------------------------------------')
+   dprint(Web_Data)
+   dprint('---- end web data ------------------------------------------------------------------------')
+   -- Process received webdata.
+   local web_garbagetype=""
+   local web_garbagetype_date=""
+   local web_garbagetype_changed=""
+   local i = 0
+   local pickuptimes = {}
+   -- loop through returned result
+   i = 0
+   dprint('- start looping through received data ----------------------------------------------------')
+--~    for web_garbagedate, web_garbagetype in string.gmatch(Web_Data, 'textDecorationNone.-<p class=".-">.-(.-)afvaldescr">(.-)</span') do
+--~    for web_garbagetype,web_garbagedesc,web_garbagedate in string.gmatch(Web_Data, '#waste-(.-)".-title="(.-)".-class="span-line-break">(.-)</s') do
+--~for web_garbagetype,web_garbagedesc,web_garbagedate in string.gmatch(Web_Data, '#waste-(.-)".-title="(.-)".-span-line-break">(.-)<') do
+   for web_garbagetype,web_garbagedesc,web_garbagedate in string.gmatch(Web_Data, '#waste.(.-)".-title="(.-)".-span.line.break">(.-)<') do
+      i = i + 1
+      dprint(i.." web_garbagetype:"..tostring(web_garbagetype or "?").." web_garbagedesc:"..tostring(web_garbagedesc or "?").."   web_garbagedate:"..tostring (web_garbagedate or "?"))
+      if web_garbagetype~= nil and web_garbagedate ~= nil then
+         web_garbagedesc = web_garbagedesc or ""
+         -- first match for each Type we save the date to capture the first next dates
+         --dprint(web_garbagetype,web_garbagedate)
+         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"%w- (%w-) (%w-)$",{"dd","mmm"})
+         -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
+         if ( daysdiffdev >= 0 ) then
+            pickuptimes[#pickuptimes+1] = {}
+            pickuptimes[#pickuptimes].garbagetype = web_garbagetype
+            pickuptimes[#pickuptimes].garbagedate = dateformat
+            pickuptimes[#pickuptimes].diff = daysdiffdev
+         -- field to be used when Web_Data contains a description
+            pickuptimes[#pickuptimes].wdesc = web_garbagedesc
+         end
+      end
    end
-   Web_Data=Web_Data:match('(.-),\"mededelingen\":')
-   Web_Data=Web_Data.."}}"
-   --
-   -- Decode JSON table
-   decoded_response = JSON:decode(Web_Data)
-   rdata = decoded_response["data"]
-   if type(rdata) ~= "table" then
-      dprint("### Error: Empty data table in JSON data...  stopping execution.")
-      return
-   end
-   -- get the description records into rdesc to retrieve the long description
-   rdesc = rdata["langs"]
-   rdesc = rdesc["data"]
-   -- get the ophaaldagen tabel for the coming scheduled pickups for this year
-   rdataty = rdata["ophaaldagen"]
-   if type(rdataty) ~= "table" then
-      dprint("### Error: Empty data.ophaaldagen table in JSON data...  stopping execution.")
-      return
-   end
-   rdataty = rdataty["data"]
-   if type(rdataty) ~= "table" then
-      dprint("### Error: Empty data.ophaaldagen.data table in JSON data...  stopping execution.")
-      return
-   end
-   dprint("- start looping through this year received data -----------------------------------------------------------")
-   processdata(rdataty)
-   -- only process nextyear data in case we do not have the requested number of next events
-   if #garbagedata < 10 then
-      -- get the ophaaldagen tabel for next year when needed
-      rdataly = rdata["ophaaldagenNext"]
-      if type(rdataly) ~= "table" then
-         print("@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.")
-      else
-         rdataly = rdataly["data"]
-         if type(rdataly) ~= "table" then
-            dprint("### Error: Empty data.ophaaldagen.data table in JSON data...  stopping execution.")
-         else
-            -- get the next number of ShowNextEvents
-            dprint("- start looping through next year received data -----------------------------------------------------------")
-            processdata(rdataly)
+   dprint("- Sorting records.")
+   local eventcnt = 0
+   for x = 0,60,1 do
+      for mom in pairs(pickuptimes) do
+         if pickuptimes[mom].diff == x then
+            garbagedata[#garbagedata+1] = {}
+            garbagedata[#garbagedata].garbagetype = pickuptimes[mom].garbagetype
+            garbagedata[#garbagedata].garbagedate = pickuptimes[mom].garbagedate
+            -- field to be used when Web_Data contains a description
+            garbagedata[#garbagedata].wdesc = pickuptimes[mom].wdesc
          end
       end
    end
@@ -130,19 +109,13 @@ elseif Housenr == nil then
    dprint("!!! Housenr not specified!")
 elseif Housenrsuf == nil then
    dprint("!!! Housenrsuf not specified!")
+--~ elseif Hostname == "" then
+--~    dprint("!!! Hostname not specified!")
 elseif afwdatafile == nil then
    dprint("!!! afwdatafile not specified!")
 elseif afwlogfile == nil then
    dprint("!!! afwlogfile not specified!")
 else
-   -- Load JSON.lua
-   if pcall(loaddefaultjson) then
-      dprint('Loaded JSON.lua.' )
-   else
-      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath..'.')
-      dprint('### Error: Please check your setup and try again.' )
-      os.exit() -- stop execution
-   end
    dprint("!!! perform background update to ".. afwdatafile .. " for Zipcode " .. Zipcode .. " - "..Housenr..Housenrsuf .. "  (optional) Hostname:"..Hostname)
    Perform_Update()
    dprint("=> Write data to ".. afwdatafile)
