@@ -342,7 +342,7 @@ function Perform_Data_check()
             -- first match for each Type we save the date to capture the first next dates
             if garbagetype_cfg[web_garbagetype] == nil then
                if web_garbagedesc == "???" then web_garbagedesc = web_garbagetype end
-               missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower()..'"]'..string.rep(" ", 32-string.len(web_garbagetype))..' ={hour=19,min=02,daysbefore=1,reminder=0,text="'..web_garbagetype..'"},\n'
+               missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower()..'"]'..string.rep(" ", 32-string.len(web_garbagetype))..' ={hour=19,min=02,daysbefore=1,reminder=0,text="'..web_garbagedesc..'"},\n'
                garbagetype_cfg[web_garbagetype] = {hour=0,min=0,daysbefore=0,reminder=0,text="dummy"}
                garbagetype_cfg[web_garbagetype].text = web_garbagetype
                garbagetype_cfg[web_garbagetype].missing = true
@@ -376,7 +376,7 @@ function Perform_Data_check()
                end
             else
                -- only warn once for a skip this type setting
-               if (garbagetype_cfg[web_garbagetype].missing == nil) then
+               if (garbagetype_cfg[web_garbagetype].missing == nil and garbagetype_cfg[web_garbagetype].active == "skip" ) then
                   garbagetype_cfg[web_garbagetype].skipwarning = true
                   dprintlog('==> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype)..'  GarbageDate:' .. tostring (web_garbagedate),0,0)
                end
