@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200912-1300"
+ver="20200916-1600"
 websitemodule="m_mijnafvalwijzer"
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -48,9 +48,6 @@ function Perform_Update()
    -- loop through returned result
    i = 0
    dprint('- start looping through received data ----------------------------------------------------')
---~    for web_garbagedate, web_garbagetype in string.gmatch(Web_Data, 'textDecorationNone.-<p class=".-">.-(.-)afvaldescr">(.-)</span') do
---~    for web_garbagetype,web_garbagedesc,web_garbagedate in string.gmatch(Web_Data, '#waste-(.-)".-title="(.-)".-class="span-line-break">(.-)</s') do
---~for web_garbagetype,web_garbagedesc,web_garbagedate in string.gmatch(Web_Data, '#waste-(.-)".-title="(.-)".-span-line-break">(.-)<') do
    for web_garbagetype,web_garbagedesc,web_garbagedate in string.gmatch(Web_Data, '#waste.(.-)".-title="(.-)".-span.line.break">(.-)<') do
       i = i + 1
       dprint(i.." web_garbagetype:"..tostring(web_garbagetype or "?").." web_garbagedesc:"..tostring(web_garbagedesc or "?").."   web_garbagedate:"..tostring (web_garbagedate or "?"))
