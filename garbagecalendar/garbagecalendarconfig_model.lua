@@ -11,7 +11,7 @@ Street=''                          -- Street name                           Only
 Hostname = ''                      -- Specify the hostname of your website. Only needed for: m_opzet ; m_opzet_api ;
                                    -- OR Specify the companycode for the m_ximmio.lua module. See m_ximmio.lua on how to find this code.
 
--- choose one of these modules
+-- choose one of these modules =======================================================================
 --websitemodule = "m_deafvalapp"
 --websitemodule = "m_goeree-overflakkee"
 websitemodule = "m_mijnafvalwijzer"
@@ -23,6 +23,13 @@ websitemodule = "m_mijnafvalwijzer"
 --websitemodule = "m_westland"
 --websitemodule = "m_ximmio"           --
 --websitemodule = "m_zuidlimburg"
+-------------------------------------------------------------------------------------------------------
+-- When using a CSV input file uncomment the next 2 lines and specify the location and name of the file.
+-- check the m_csv_file.lua file for the appropriate format.
+--websitemodule = "m_csv_file"
+--input_csv_file = "c:/data/garbage_input.csv"
+--input_csv_file = "/home/pi/garbage_input.csv"
+-- =====================================================================================================
 
 -- Switch on mydebug in case of issues and initially and check the domoticz log for any issues or missing
 mydebug      = false  -- (true/false)
