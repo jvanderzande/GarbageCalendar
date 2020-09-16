@@ -149,28 +149,30 @@ function GetDateFromInput(i_garbagetype_date, iregex, idatev)
    d[1],d[2],d[3],d[4]=i_garbagetype_date:match(iregex)
    -- loop through the provided table to find the right date information and formats
    local podate = ""
-   for dindex, dfield in pairs(idatev) do
-      podate = podate .. dfield .. "->"..d[dindex]..";"
-      if dfield == "dd" then
-         garbageday = tonumber(d[dindex])
-      elseif dfield == "mm" then
-         garbagemonth = tonumber(d[dindex])
-      elseif dfield == "mmm" then
-         garbagemonth = InputMonth[d[dindex]:sub(1,3)]
-      elseif dfield == "mmmm" then
-         garbagemonth = InputMonth[d[dindex]:sub(1,3)]
-      elseif dfield == "yy" then
-         garbageyear = tonumber(tostring(timenow.year):sub(1,2)..d[dindex])
-      elseif dfield == "yyyy" then
-         garbageyear = tonumber(d[dindex])
+   if d[1] ~= nil then
+      for dindex, dfield in pairs(idatev) do
+         podate = podate .. dfield .. "->"..d[dindex]..";"
+         if dfield == "dd" then
+            garbageday = tonumber(d[dindex])
+         elseif dfield == "mm" then
+            garbagemonth = tonumber(d[dindex])
+         elseif dfield == "mmm" then
+            garbagemonth = InputMonth[d[dindex]:sub(1,3)]
+         elseif dfield == "mmmm" then
+            garbagemonth = InputMonth[d[dindex]:sub(1,3)]
+         elseif dfield == "yy" then
+            garbageyear = tonumber(tostring(timenow.year):sub(1,2)..d[dindex])
+         elseif dfield == "yyyy" then
+            garbageyear = tonumber(d[dindex])
+         end
       end
    end
    -- found this output with the provide info
    dprint("    input: date="..(i_garbagetype_date or "nil").."   iregex="..(iregex or "nil").."   podate="..(podate or "nil"))
    if garbageday == nil or garbagemonth == nil or garbageyear == nil
    or garbageday == "??" or garbagemonth == "??" or garbageyear == "??" then
-      print ('  #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-      print("  garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
+      dprint("    #### Error: No valid date found in i_garbagetype_date: " .. i_garbagetype_date)
+      dprint("         garbageyear:"..tostring(garbageyear).."  garbagemonth:"..tostring(garbagemonth).."  garbageday:"..tostring(garbageday))   --
       return 0,-99
    end
    local garbageTime = os.time{day=garbageday,month=garbagemonth,year=garbageyear}
