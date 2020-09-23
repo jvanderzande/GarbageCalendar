@@ -19,6 +19,7 @@ websitemodule = "m_mijnafvalwijzer"
 --websitemodule = "m_recycleapp-be"
 --websitemodule = "m_opzet"
 --websitemodule = "m_opzet_api"
+--websitemodule = "m_omrin"
 --websitemodule = "m_rova_api"
 --websitemodule = "m_westland"
 --websitemodule = "m_ximmio"           --
