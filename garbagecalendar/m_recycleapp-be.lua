@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver="202008018-1700"
+ver="202010007-1700"
 websitemodule="m_recycleapp-be"
 -- Link to https://www.recycleapp.be
 --
@@ -73,9 +73,10 @@ function Perform_Update()
    dprint("postcode_id:"..postcode_id)
 
    -- Get streetid
-   Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/streets?q='..Street.."&zipcodes="..postcode_id..'"')
+   Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/streets?q='..url_encode(Street).."&zipcodes="..postcode_id..'"')
    Web_Data = JSON:decode(Web_Data)
-   street_id = Web_Data.items[1].id
+
+   street_id = Web_Data.items[1].id or ""
    if street_id == "" then
       dprint("### Error: No street_id retrieved...  stopping execution.")
       return
@@ -134,7 +135,7 @@ else
       dprint('### Error: Please check your setup and try again.' )
       os.exit() -- stop execution
    end
-   dprint("!!! perform background update to ".. afwdatafile .. " for Zipcode " .. Zipcode .. " - "..Housenr..Housenrsuf .. "  (optional) Hostname:"..Hostname)
+   dprint("!!! perform background update to ".. afwdatafile .. " for Zipcode " .. Zipcode .. " - "..Housenr..Housenrsuf .. "  Street:"..Street)
    Perform_Update()
    dprint("=> Write data to ".. afwdatafile)
    table.save( garbagedata, afwdatafile )
