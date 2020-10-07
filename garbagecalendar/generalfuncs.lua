@@ -5,6 +5,7 @@
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)
+   text = text or "nil"
    if afwlogfile == nil then
       print("-@"..(websitemodule or "?")..":"..(text or "?"))
    else

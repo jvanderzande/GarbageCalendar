@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200906-1400"
+ver="20201006-1700"
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -32,6 +32,7 @@ timenow = os.date("*t")
 ---====================================================================================================
 -- mydebug print
 function dprintlog(text, always, prefix)
+   text = text or "nil"
    local ptext = ""
    if (prefix or 1)==1 then
       ptext = "@GarbageCal("..websitemodule.."): "
@@ -367,12 +368,13 @@ function Perform_Data_check()
                         -- fill the text with the next defined number of events
                         notification(web_garbagetype,web_garbagedate,daysdiffdev)  -- check notification for new found info
                      end
+                     -- fill de domoticz text with the found info
+                     stextformat = stextformat:gsub('sdesc',web_garbagetype)
+                     stextformat = stextformat:gsub('ldesc',web_garbagedesc)
+                     stextformat = stextformat:gsub('tdesc',garbagetype_cfg[web_garbagetype].text)
+                     devtxt = devtxt..stextformat.."\r\n"
+                     txtcnt = txtcnt + 1
                   end
-                  stextformat = stextformat:gsub('sdesc',web_garbagetype)
-                  stextformat = stextformat:gsub('ldesc',web_garbagedesc)
-                  stextformat = stextformat:gsub('tdesc',garbagetype_cfg[web_garbagetype].text)
-                  devtxt = devtxt..stextformat.."\r\n"
-                  txtcnt = txtcnt + 1
                end
             else
                -- only warn once for a skip this type setting
@@ -423,6 +425,7 @@ function Perform_Data_check()
 		dprintlog("###          Please check the garbagecalendar log files for issues : " .. weblogfile .. " and " .. runlogfile,1)
 	end
    dprintlog("- End  ----------------- ")
+   missingrecords=nil
    if missingrecords ~= "" then
       dprintlog('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!',1)
       dprintlog('#!# -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)
