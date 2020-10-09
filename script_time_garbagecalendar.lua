@@ -425,7 +425,6 @@ function Perform_Data_check()
 		dprintlog("###          Please check the garbagecalendar log files for issues : " .. weblogfile .. " and " .. runlogfile,1)
 	end
    dprintlog("- End  ----------------- ")
-   missingrecords=nil
    if missingrecords ~= "" then
       dprintlog('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!',1)
       dprintlog('#!# -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :',1)

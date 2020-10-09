@@ -35,6 +35,7 @@ websitemodule = "m_mijnafvalwijzer"
 -- Switch on mydebug in case of issues and initially and check the domoticz log for any issues or missing
 mydebug      = false  -- (true/false)
 testdataload = false  -- (true/false)
+testnotification = false  -- (true/false) this will trigger a test notification for the first record for testing the notification system
 
 -- Specify the appropriate directories (Raspberry Pi example)
 datafilepath     = '/var/tmp'                           -- specify the directory where the garbagecalendar.data & garbagecalendar.log will be stored
