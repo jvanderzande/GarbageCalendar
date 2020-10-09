@@ -11,7 +11,8 @@ The main changes are:
   * The main script can optionally create an ics calendar file which can be used by a calendar application.
 
 Detailed [<i>Setup instructions</i>](../../wiki/Setup) can be found in the [<i>WiKi</i>](../../wiki).
+Detailed [<i>Test and Debugging instructions</i>](../../wiki/Testing) can be found in the [<i>WiKi</i>](../../wiki).
 
-**PullRequest for Fixes/Changes/Addtions must be made against the development branch so it can be tested first. Thanks :-)**
+**PullRequest for Fixes/Changes/Additions must be made against the development branch so it can be tested first. Thanks :-)**
 
 GarbageCalendar is a free and open source application written in lua and distributed under the [GNU General Public License](LICENSE).
