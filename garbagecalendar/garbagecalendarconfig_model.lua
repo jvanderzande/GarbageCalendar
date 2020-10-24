@@ -2,16 +2,17 @@
 -- garbagecalendarconfig.lua
 -----------------------------------------------------------------------------
 -- Specify your information here as needed for your needs
-myGarbageDevice = 'Container'      -- The Text devicename in Domoticz
-ShowNextEvents = 3                 -- indicate the next x events to show in the TEXT Sensor in Domoticz
-Zipcode = ''                       -- Your zipcode
-Housenr = ''                       -- Your housnr
-Housenrsuf = ''                    -- Your housnr suffix                    (Optional: a/b/c  etc)
-Street=''                          -- Street name                           Only needed for: m_recycleapp-be
-Hostname = ''                      -- Specify the hostname of your website. Only needed for: m_opzet ; m_opzet_api ;
-                                   -- OR Specify the companycode for the m_ximmio.lua module. See m_ximmio.lua on how to find this code.
-
--- choose one of these modules =======================================================================
+myGarbageDevice = ''  -- The Text devicename in Domoticz. eg 'Container'
+ShowNextEvents = 3    -- indicate the next x events to show in the TEXT Sensor in Domoticz
+Zipcode = ''          -- Your zipcode  eg '1234AB'
+Housenr = ''          -- Your housnr. eg '99'
+Housenrsuf = ''       -- Your housnr suffix  ('a', 'b'  etc)
+Hostname = ''         -- m_opzet & m_opzet_api: Specify the hostname of your website. eg 'inzamelkalender.hvcgroep.nl'
+                      -- *m_ximmio: Specify the companycode. (See m_ximmio.lua on how to find this code).
+Street=''             -- Street name Only needed for: m_recycleapp
+-- ==============================
+-- choose one of these modules ==
+-- ==============================
 --websitemodule = "m_deafvalapp"
 --websitemodule = "m_goeree-overflakkee"
 websitemodule = "m_mijnafvalwijzer"
