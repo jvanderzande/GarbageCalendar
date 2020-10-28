@@ -27,7 +27,7 @@ function Perform_Update()
       dprint("### Error: check Zipcode   Web_Data:" .. Web_Data)
       return
    end
-   -- Process received webdata. 
+   -- Process received webdata.
    local web_garbagetype=""
    local web_garbagetype_date=""
    local web_garbagetype_changed=""
@@ -51,7 +51,7 @@ function Perform_Update()
          -- first match for each Type we save the date to capture the first next dates
          dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
          -- check whether the first nextdate for this garbagetype is already found
-         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"(%w-) (%w-) (%w+)",{"dd","mmm","yyyy"})
+         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"([%d]+)%s+([^%s]+)%s-(%d-)$",{"dd","mmm","yyyy"})
          -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
          if ( daysdiffdev >= 0 ) then
             garbagedata[#garbagedata+1] = {}

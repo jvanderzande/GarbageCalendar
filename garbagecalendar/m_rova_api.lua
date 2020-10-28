@@ -32,7 +32,7 @@ function Perform_Update()
             dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
             local dateformat = "????????"
             -- Get days diff
-            dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"([^-]+)-([^-]+)-([^-T]+)",{"yyyy","mm","dd"})
+            dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"(%d+)[-%s]+(%d+)[-%s]+(%d+)",{"yyyy","mm","dd"})
             if daysdiffdev == nil then
                dprint ('Invalid date from web for : ' .. web_garbagetype..'   date:'..web_garbagedate)
             end

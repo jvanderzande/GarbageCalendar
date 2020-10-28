@@ -27,7 +27,7 @@ function Perform_Update()
       dprint("### Error: check Zipcode   Web_Data:" .. Web_Data)
       return
    end
-   -- Process received webdata. 
+   -- Process received webdata.
    local web_garbagetype=""
    local web_garbagetype_date=""
    local web_garbagetype_changed=""
@@ -51,7 +51,7 @@ function Perform_Update()
       dprint(i.." web_garbagetype:"..tostring(web_garbagetype).."   web_garbagedate:"..tostring (web_garbagedate))
       local dateformat = "????????"
       -- Get days diff
-      dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"%w- (%w+) (%w+) (%w+)",{"dd","mmm","yyyy"})
+      dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$",{"dd","mmm","yyyy"})
 
       if daysdiffdev == nil then
          daysdiffdev = -99

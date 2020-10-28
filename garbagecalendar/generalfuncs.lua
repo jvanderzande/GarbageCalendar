@@ -120,13 +120,13 @@ end
 -- get date, return a standard format and calculate the difference in days
 -- This are some of the used regex options for the different inputdates found:
 --                    --inputdate--            , regex Date elements                   , Date elements sequence
---~ GetDateFromInput("vrijdag 26 november"     ,"[^%s]+%s+([^%s]+)%s+([^%s]+)%s-(%d-)$",{"dd","mmm","yyyy"})
---~ GetDateFromInput("vrijdag 26 november 2021","[^%s]+%s+([^%s]+)%s+([^%s]+)%s-(%d-)$",{"dd","mmm","yyyy"})
---~ GetDateFromInput("13-01-2020"              ,"([^-]+)-([^-]+)-([^-]+)"              ,{"dd","mm","yyyy"})
---~ GetDateFromInput("2020-01-02"              ,"([^-]+)-([^-]+)-([^-T]+)"             ,{"yyyy","mm","dd"})
---~ GetDateFromInput("2020-04-08T00:00:00"     ,"([^-]+)-([^-]+)-([^-T]+)"             ,{"yyyy","mm","dd"})
---~ GetDateFromInput("7 januari"               ,"([^%s]+)%s+([^%s]+)%s-(%d-)$"         ,{"dd","mmm","yyyy"})
---~ GetDateFromInput("7 januari 2021"          ,"([^%s]+)%s+([^%s]+)%s-(%d-)$"         ,{"dd","mmm","yyyy"})
+--~ GetDateFromInput("vrijdag 26 november"     ,"[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$"   ,{"dd","mmm","yyyy"})
+--~ GetDateFromInput("vrijdag 26 november 2021","[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$"   ,{"dd","mmm","yyyy"})
+--~ GetDateFromInput("13-01-2020"              ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"dd","mm","yyyy"})
+--~ GetDateFromInput("2020-01-02"              ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"yyyy","mm","dd"})
+--~ GetDateFromInput("2020-04-08T00:00:00"     ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"yyyy","mm","dd"})
+--~ GetDateFromInput("7 januari"               ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
+--~ GetDateFromInput("7 januari 2021"          ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
 function GetDateFromInput(i_garbagetype_date, iregex, idatev)
    local timenow = os.date("*t")
    local curTime = os.time{day=timenow.day,month=timenow.month,year=timenow.year}
