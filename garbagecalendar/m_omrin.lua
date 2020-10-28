@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
 ver="20200920-1600"
-websitemodule="m_omrin_api"
+websitemodule="m_omrin"
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
 -------------------------------------------------------

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20200916-1600"
+ver="20201028-1200"
 websitemodule="m_mijnafvalwijzer"
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -55,7 +55,7 @@ function Perform_Update()
          web_garbagedesc = web_garbagedesc or ""
          -- first match for each Type we save the date to capture the first next dates
          --dprint(web_garbagetype,web_garbagedate)
-         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"%w- (%w-) (%w-)$",{"dd","mmm"})
+         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate,"%w- (%d-) (%w-)%s-(%d-)$",{"dd","mmm","yyyy"})
          -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
          if ( daysdiffdev >= 0 ) then
             pickuptimes[#pickuptimes+1] = {}

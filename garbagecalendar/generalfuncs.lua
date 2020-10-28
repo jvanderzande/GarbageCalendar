@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
--- version 20200606-1100
+-- version 20201028-1200
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)
@@ -152,7 +152,7 @@ function GetDateFromInput(i_garbagetype_date, iregex, idatev)
    local podate = ""
    if d[1] ~= nil then
       for dindex, dfield in pairs(idatev) do
-         podate = podate .. dfield .. "->"..d[dindex]..";"
+         podate = podate .. dfield .. "->"..(d[dindex] or "nil")..";"
          if dfield == "dd" then
             garbageday = tonumber(d[dindex])
          elseif dfield == "mm" then
@@ -164,7 +164,7 @@ function GetDateFromInput(i_garbagetype_date, iregex, idatev)
          elseif dfield == "yy" then
             garbageyear = tonumber(tostring(timenow.year):sub(1,2)..d[dindex])
          elseif dfield == "yyyy" then
-            garbageyear = tonumber(d[dindex])
+            garbageyear = tonumber(d[dindex]) or garbageyear
          end
       end
    end
