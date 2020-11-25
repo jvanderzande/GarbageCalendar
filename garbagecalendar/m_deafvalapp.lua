@@ -19,7 +19,7 @@ end
 function Perform_Update()
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
-   Web_Data=perform_webquery('"http://dataservice.deafvalapp.nl/dataservice/DataServiceServlet?service=OPHAALSCHEMA&land=NL&postcode='..Zipcode..'&straatId=0&huisnr='..Housenr..''..Housenrsuf..'"')
+   Web_Data=perform_webquery('"https://dataservice.deafvalapp.nl/dataservice/DataServiceServlet?service=OPHAALSCHEMA&land=NL&postcode='..Zipcode..'&straatId=0&huisnr='..Housenr..''..Housenrsuf..'"')
    if Web_Data == "" then
       dprint("Error Web_Data is empty.")
       return
