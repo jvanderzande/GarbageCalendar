@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_csv_file.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20201028-1918"
+ver="20201217-1500"
 websitemodule="m_csv_file"
 --[[
 This module requires an inputfile defined by this variable in the configfile:
@@ -54,9 +54,12 @@ function Perform_Update()
    end
 
    dprint('---- Open garbage_input.csv ----------------------------------------------------------------------------')
-   ifile = io.open(input_csv_file, "r")
-   local Web_Data = ifile:read("*all")
-   ifile:close()
+   ifile, err  = io.open(input_csv_file, "r")
+   local Web_Data = ""
+   if not err then
+      Web_Data = ifile:read("*all")
+      ifile:close()
+   end
 
    if Web_Data == "" then
       dprint("Error Web_Data is empty.")

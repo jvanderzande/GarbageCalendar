@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20201028-1918"
+ver="20201217-1500"
 websitemodule="m_ximmio"
 -- API WebSite:  https://wasteapi.2go-mobile.com/api
 --
@@ -23,27 +23,6 @@ end
 -- only include when run in separate process
 if scriptpath == nil then
    dofile (script_path() .. "generalfuncs.lua") --
-end
--------------------------------------------------------
--- Do the actual update retrieving data from the website and processing it
-function perform_webquery(url)
-   local sQuery   = 'curl '..url..' 2>'..afwlogfile:gsub('_web_','_web_err_')
-   dprint("sQuery="..sQuery)
-   local handle=assert(io.popen(sQuery))
-   local Web_Data = handle:read('*all')
-   handle:close()
-   dprint('---- web data ----------------------------------------------------------------------------')
-   dprint(Web_Data)
-   dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   dprint("Web_Err="..ifile:read("*all"))
-   ifile:close()
-   os.remove(afwlogfile:gsub('_web_','_web_err_'))
-   if ( Web_Data == "" ) then
-      dprint("### Error: Empty result from curl command")
-      return ""
-   end
-   return Web_Data
 end
 --------------------------------------------------------------------------
 -- Perform the actual update process for the given address
