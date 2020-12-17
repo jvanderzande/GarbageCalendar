@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20201028-1918"
+ver="20201217-1600"
 websitemodule="m_montferland"
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -82,6 +82,20 @@ function Perform_Update()
    -- process the data
    dprint("- start looping through received data -----------------------------------------------------------")
    processdata(jdata)
+
+   -- also get nextyears data in december
+   if tonumber(os.date("%m")) == 12 then
+      local nextyear = tostring(tonumber(os.date("%Y"))+1)
+      nextyear = nextyear:sub(0,4)
+      Web_Data=perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID='..AdministratieID..'&Username=GSD&Password='..url_encode('gsd$2014')..'&ADR_ID='..AdresID..'&Jaar='..nextyear..'&Date='..os.date("%m/%d/%Y%%20%I:%M:%S%p")..'&Type=Topdagen"')
+      if ( Web_Data:sub(1,2) == "[]" ) then
+         dprint("### Warning: no calendar data for next year.")
+      else
+         jdata = JSON:decode(Web_Data)
+         dprint("- start looping through next received data -----------------------------------------------------------")
+         processdata(jdata)
+      end
+   end
 end
 -- End Functions =========================================================================
 
