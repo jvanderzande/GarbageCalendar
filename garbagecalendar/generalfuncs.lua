@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
--- version 20201028-1200
+-- version 20201217-1500
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)
@@ -11,7 +11,7 @@ function dprint(text)
    else
       ptext = "@"..(websitemodule or "?")..": "
       file = io.open(afwlogfile, "a")
-      file:write(ptext..text.."\n")
+      file:write(ptext..os.date("%X ")..text.."\n")
       file:close()
    end
 end
@@ -42,6 +42,16 @@ function url_encode(str)
   return str
 end
 
+-------------------------------------------------------
+-- url_unescape function
+local hex_to_char = function(x)
+	return string.char(tonumber(x, 16))
+end
+
+function url_unescape(url)
+   return url:gsub("%%(%x%x)", hex_to_char)
+end
+
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url)
@@ -53,10 +63,13 @@ function perform_webquery(url)
    dprint('---- web data ----------------------------------------------------------------------------')
    dprint(Web_Data)
    dprint('---- web err ------------------------------------------------------------------------')
-   ifile = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
-   local Web_Error = ifile:read("*all")
+   local ifile, ierr = io.open(afwlogfile:gsub('_web_','_web_err_'), "r")
+   local Web_Error = ierr or ""
+   if not ierr then
+      Web_Error = ifile:read("*all")
+      ifile:close()
+   end
    dprint("Web_Err="..Web_Error)
-   ifile:close()
    os.remove(afwlogfile:gsub('_web_','_web_err_'))
    dprint('---- end web data ------------------------------------------------------------------------')
    if ( Web_Error:find("unsupported protocol" )) then
