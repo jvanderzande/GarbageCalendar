@@ -4,7 +4,7 @@
 -- This script is used to run all modules in the background and ensures to capture any hard errors.
 -- The information wil be logged to the garbagecalendar_we_modulename.log file.
 ----------------------------------------------------------------------------------------------------------------
-local ver = "20201217-1500"
+local ver = "20201222-1200"
 -- Error handling function
 function errhandler(x)
    return x .. "\n" .. debug.traceback()
@@ -30,26 +30,31 @@ function RunWebModule(arg)
    --print("Start RunWebModule .....")
    -------------------------------------------------------
    -- get script directory
-   --print(arg[0])
-   function Scriptpath()
+   function Get_Scriptpath()
       return arg[0]:match(".*[/\\]") or "./"
    end
-   local script_path = Scriptpath()
-   --print(script_path)
+   -- use Main scriptpath in case the lua script is ran in the foreground
+   if (scriptpath == nil) then
+      if arg ~= nil and arg[0] ~= nil then
+         scriptpath = Get_Scriptpath()
+      end
+      scriptpath = scriptpath or "./"
+   end
    -- only include when run in separate process
    local websitemodulescript
-   if arg[6] ~= nil then
+   if arg ~= nil and arg[6] ~= nil then
       if websitemodule == nil then
          return "", "!!!! Module name not provided. Ending run."
       end
-      afwlogfile = arg[6] or (script_path .. "garbagecalendar_runmodule.log")
+      afwlogfile = arg[6] or (scriptpath .. "garbagecalendar_runmodule.log")
       rdprint("--> ### Start -- background _runmodule.au3 for garbage module " .. (websitemodule or "??") .. " (v" .. ver .. ")")
-      --dofile(script_path .. "generalfuncs.lua") --
-      websitemodulescript = script_path .. websitemodule .. ".lua"
+      -- add standard functions when ran in the background
+      dofile(scriptpath .. "generalfuncs.lua") --
+      websitemodulescript = scriptpath .. websitemodule .. ".lua"
    else
-      afwlogfile = afwlogfile or (script_path .. "garbagecalendar_runmodule.log")
+      afwlogfile = afwlogfile or (scriptpath .. "garbagecalendar_runmodule.log")
       rdprint("### Start -- foreground _runmodule.au3 for garbage module " .. (websitemodule or "??") .. " (v" .. ver .. ")")
-      websitemodulescript = script_path .. "garbagecalendar/" .. websitemodule .. ".lua"
+      websitemodulescript = scriptpath .. "garbagecalendar/" .. websitemodule .. ".lua"
    end
    --print(websitemodulescript)
    --print(afwlogfile)
