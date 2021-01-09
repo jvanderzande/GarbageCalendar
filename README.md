@@ -14,7 +14,7 @@ The main changes are:
 - Detailed [<i>Setup instructions</i>](../../wiki/Setup).
 - Detailed [<i>Test and Debugging instructions</i>](../../wiki/Testing).
 
-**More information can be found or questions can asked here: https://www.domoticz.com/forum/viewtopic.php?f=61&t=31295**
+**More information can be found or questions can asked here: https://www.domoticz.com/forum/viewtopic.php?f=61&t=31295 or in the discussions section: https://github.com/jvanderzande/GarbageCalendar/discussions**
 
 **PullRequest for Fixes/Changes/Additions must be made against the development branch so it can be tested first. Thanks :-)**
 
