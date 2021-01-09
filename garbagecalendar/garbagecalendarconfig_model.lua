@@ -123,7 +123,7 @@ IcalNotify = 12                 -- Notification Time in hours before event. 0=no
    -- hour & min ==> the time the check needs to be performed and notification send when daysbefore is true
    -- daysbefore ==> 0 means that the notification is send on the day of the planned garbage collection
    -- daysbefore ==> X means that the notification is send X day(s) before the day of the planned garbage collection
-   -- reminder   ==> Will send a second reminder after x hours. 0=no reminder (needs to be in the same day!)
+   -- reminder   ==> Will send a second reminder after x hours. 0=no reminder (can be between 0 - 24 hours)
    -- text       ==> define the text for the notification and Text Device.
    -- active     ==> (optional)  default="on"
    --           active="on"   Both will show in Domoticz Text Device and Send notifications
