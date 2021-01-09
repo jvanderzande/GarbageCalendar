@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_csv_file.lua
 ----------------------------------------------------------------------------------------------------------------
-ver="20201217-1500"
+ver="20210109-2040"
 websitemodule="m_csv_file"
 --[[
 This module requires an inputfile defined by this variable in the configfile:
@@ -77,7 +77,7 @@ function Perform_Update()
    -- loop through returned result
    i = 0
    dprint('- start looping through received data ----------------------------------------------------')
-   for web_garbagedate, web_garbagetype in string.gmatch(Web_Data, '([^;\r\n]+);([^\r\n]+)') do
+   for web_garbagedate, web_garbagetype in string.gmatch(Web_Data, '([^;\r\n]+);([^\r\n;]+)') do
       i = i + 1
       dprint(i.." web_garbagetype:"..tostring(web_garbagetype or "?").."   web_garbagedate:"..tostring (web_garbagedate or "?"))
       if web_garbagetype~= nil and web_garbagedate ~= nil and web_garbagedate ~= "garbagedate" then
