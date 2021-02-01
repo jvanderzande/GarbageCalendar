@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver="20201028-1918"
+ver="20210201-1200"
 websitemodule="m_recycleapp-be"
 -- Link to https://www.recycleapp.be
 --
@@ -48,10 +48,19 @@ function Perform_Update()
    end
    dprint('---- web update ----------------------------------------------------------------------------')
    -- Get Access token
+   -- step 1: Get main js name from home page: <script src="/static/js/main.0b66adb4.chunk.js">
    local Web_Data
-   headerdata = ' -H "x-secret: Qp4KmgmK2We1ydc9Hxso5D6K0frz3a9raj2tqLjWN5n53TnEijmmYz78pKlcma54sjKLKogt6f9WdnNUci6Gbujnz6b34hNbYo4DzyYRZL5yzdJyagFHS15PSi2kPUc4v2yMck81yFKhlk2aWCTe93"'
+   Web_Data=perform_webquery('https://recycleapp.be')
+   MainScript = Web_Data:match('<script src="(/static/js/main.-)">')
+   dprint(" MainScript:" .. (MainScript or "?"))  -- MainScript:/static/js/main.0b66adb4.chunk.js
+   -- step 2: retrieve main js and get code from source:
+   --          var n="8a9pIQlfYpgmJZD15KdK70MCTR2xyD0EAvOmi9HCBfiBUY4n34ytxQmqo3AP2OET6tssYy6R4Be6N2M2GtiX3AcbiNxR8G7pOalN45dXPZ4emKE2c1nimx9B1YFciutJwFZHYHI2Qpzo0E0GCDHkg5",c="/api/v1/assets/<script src="/static/js/main.0b66adb4.chunk.js">
+   Web_Data=perform_webquery('https://recycleapp.be' .. MainScript)
+   secret = Web_Data:match('.+var n="(.-)",c="/api/v1/assets')
+   dprint(" secret:" .. (secret or "?"))
+   headerdata = ' -H "x-secret: '..secret..'"'
               ..' -H "x-consumer: recycleapp.be"'
-   print(headerdata)
+   -- step 3: Get access token:
    Web_Data=perform_webquery(headerdata ..' https://recycleapp.be/api/app/v1/access-token')
    webdata = JSON:decode(Web_Data)
    accessToken = webdata.accessToken or ""
@@ -62,7 +71,7 @@ function Perform_Update()
    dprint("accessToken:"..accessToken)
    headerdata = headerdata..' -H "Authorization:'..accessToken..'"'
 
-   -- Get zipcodeid
+   -- Step 4: Get zipcodeid
    Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/zipcodes?q='..Zipcode..'"')
    Web_Data = JSON:decode(Web_Data)
    postcode_id = Web_Data.items[1].id or ""
@@ -72,7 +81,7 @@ function Perform_Update()
    end
    dprint("postcode_id:"..postcode_id)
 
-   -- Get streetid
+   -- Step 5: Get streetid
    Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/streets?q='..url_encode(Street).."&zipcodes="..postcode_id..'"')
    Web_Data = JSON:decode(Web_Data)
 
@@ -83,7 +92,7 @@ function Perform_Update()
    end
    dprint("street_id:"..street_id)
 
-   -- Get calendar data
+   -- Step 6: Get calendar data
    startDate=os.date("%Y-%m-%d")
    endDate=os.date("%Y-%m-%d",os.time()+28*24*60*60)  -- 4 weken
    Web_Data=perform_webquery(headerdata ..' "https://recycleapp.be/api/app/v1/collections?zipcodeId='..postcode_id..'&streetId='..street_id..'&houseNumber='..Housenr..'&fromDate='..startDate..'&untilDate='..endDate..'&size=100"')
