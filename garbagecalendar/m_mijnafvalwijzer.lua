@@ -36,7 +36,7 @@ function Perform_Update()
       print('Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
       return
    end
-   --Web_Data = Web_Data:gsub('%s+)',' ')
+   Web_Data = Web_Data:gsub('%s+',' ')
    dprint('---- web data stripped -------------------------------------------------------------------')
    dprint(Web_Data)
    dprint('---- end web data stripped ------------------------------------------------------------------------')
