@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210210-1600'
+ver = '20210311-2100'
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -35,14 +35,18 @@ function dprintlog(text, always, prefix)
    text = text or 'nil'
    local ptext = ''
    if (prefix or 1) == 1 then
-      ptext = '(' .. websitemodule .. '): '
+      ptext = '(' .. os.date('%X ') .. websitemodule .. '): '
    end
    if testdataload or mydebug or (always or 0) >= 1 then
-      print(ptext .. os.date('%X ') .. text)
+      print(ptext .. text)
    end
-   file = io.open(runlogfile, 'a')
-   file:write(ptext .. os.date('%X ') .. text .. '\n')
-   file:close()
+   if (runlogfile ~= nil) then
+      file = io.open(runlogfile, 'a')
+      if file ~= nil then
+         file:write(ptext .. os.date('%X ') .. text .. '\n')
+         file:close()
+      end
+   end
 end
 
 ---====================================================================================================
@@ -55,6 +59,8 @@ end
 scriptpath = script_path() or './'
 --ensure the all path variables ends with /
 scriptpath = (scriptpath .. '/'):gsub('//', '/')
+dprintlog('#### scriptpath ' .. scriptpath)
+
 ---====================================================================================================
 -- Load garbagecalendarconfig.lua
 function garbagecalendarconfig()
@@ -302,6 +308,31 @@ end
 ----------------------------------------------------------------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Data_check()
+   -- ensure the access is set correctly for data
+   dprintlog('Checking access to files:')
+   function ListAccess(name)
+      local sCMD = 'ls -l ' .. name
+      local handle = assert(io.popen(sCMD))
+      local cmd_output = handle:read('*all')
+      handle:close()
+      dprintlog('-command: ' .. sCMD .. ':')
+      dprintlog(cmd_output, 0, '')
+   end
+   -- show access info when debugging
+   if mydebug or false then
+      ListAccess(datafilepath .. 'garbagecal*' .. websitemodule .. '*')
+   end
+
+   if not Perform_Rights_check(datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data') then
+      return
+   end
+   if not Perform_Rights_check(datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log') then
+      return
+   end
+   if not Perform_Rights_check(datafilepath .. 'garbagecalendar_web_' .. websitemodule .. '.log') then
+      return
+   end
+
    local missingrecords = ''
    local devtxt = ''
    local txtcnt = 0
@@ -323,11 +354,16 @@ function Perform_Data_check()
       -- create ICS file when requested
       if (IcalEnable) then
          hIcal = io.open(icalfile, 'w')
-         hIcal:write('BEGIN:VCALENDAR\n')
-         hIcal:write('VERSION:2.0\n')
-         hIcal:write('PRODID:GarbageCalendar\n')
-         hIcal:write('X-WR-CALNAME:' .. IcalTitle .. '\n')
-         hIcal:write('X-PUBLISHED-TTL:P1H\n')
+         if (hIcal ~= nil) then
+            hIcal:write('BEGIN:VCALENDAR\n')
+            hIcal:write('VERSION:2.0\n')
+            hIcal:write('PRODID:GarbageCalendar\n')
+            hIcal:write('X-WR-CALNAME:' .. IcalTitle .. '\n')
+            hIcal:write('X-PUBLISHED-TTL:P1H\n')
+         else
+            IcalEnable = false
+            dprintlog(' Unable to create iCAL file:' .. icalfile .. '  Check for the appropriate rights.')
+         end
       end
 
       dprintlog('- Start looping through data from the website to find the first ' .. ShowNextEvents .. ' event to show: ' .. datafile)
@@ -474,7 +510,11 @@ function Perform_Rights_check(filename)
             dprintlog('Still no access. Please check the settings for ' .. filename .. ' and then try again.', 1)
             return false
          end
+      else
+         dprintlog('Access OK to File: ' .. filename)
       end
+   else
+      dprintlog('File doesnt exists: ' .. filename, 1)
    end
    return true
 end
@@ -515,16 +555,6 @@ end
 
 -- Start of logic ==============================================================================================
 commandArray = {}
--- ensure the access is set correctly for data
-if not Perform_Rights_check(datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data') then
-   return
-end
-if not Perform_Rights_check(datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log') then
-   return
-end
-if not Perform_Rights_check(datafilepath .. 'garbagecalendar_web_' .. websitemodule .. '.log') then
-   return
-end
 
 -- check for notification times and run update only when we are at one of these defined times
 dprintlog('Start checking garbagetype_cfg table:')
@@ -598,10 +628,18 @@ if needupdate then
    Perform_Data_check()
    -- Save run log during update
    ifile = io.open(runlogfile, 'r')
-   ofile = io.open(string.gsub(runlogfile, '_run_', '_run_update_'), 'w')
-   ofile:write(ifile:read('*all'))
-   ifile:close()
-   ofile:close()
+   if ifile ~= nil then
+      ofile = io.open(string.gsub(runlogfile, '_run_', '_run_update_'), 'w')
+      if ofile ~= nil then
+         ofile:write(ifile:read('*all'))
+         ofile:close()
+      else
+         dprintlog(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '. Check for the appropriate rights.')
+      end
+      ifile:close()
+   else
+      dprintlog(' Unable to create _run_update log file:' .. runlogfile .. '. Check for the appropriate rights.')
+   end
 else
    dprintlog('Scheduled time(s) not reached yet, so nothing to do!')
 end

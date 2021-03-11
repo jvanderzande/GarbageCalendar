@@ -146,6 +146,8 @@ garbagetype_cfg = {
 -- Language options Dutch
 -- Date/day info:
 -- used by getdate for formats "mmm" & "mm"
+--
+-- Pas deze tabellen aan indien de afvalverwerker andere afkortingen gebruikt.
 daysoftheweek={"zon","maa","din","woe","don","vri","zat"}
 Longdaysoftheweek={"zondag","maandag","dinsdag","woensdag","donderdag","vrijdag","zaterdag"}
 ShortMonth={"jan","feb","maa","apr","mei","jun","jul","aug","sep","okt","nov","dec"}
@@ -153,6 +155,8 @@ LongMonth={"januari","februari","maart","april","mei","juni","juli","augustus","
 -------------------------------------------------------------------------
 -- Language options English
 -- Date/day info:
+--
+-- Adapt these tables in case your garbage company is using different abbreviations.
 --~ daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
 --~ Longdaysoftheweek={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"}
 --~ ShortMonth={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
