@@ -35,7 +35,7 @@ function dprintlog(text, always, prefix)
    text = text or 'nil'
    local ptext = ''
    if (prefix or 1) == 1 then
-      ptext = '(' .. os.date('%X ') .. websitemodule .. '): '
+      ptext = '' .. os.date('%X ') .. websitemodule .. ': '
    end
    if testdataload or mydebug or (always or 0) >= 1 then
       print(ptext .. text)
@@ -43,7 +43,7 @@ function dprintlog(text, always, prefix)
    if (runlogfile ~= nil) then
       file = io.open(runlogfile, 'a')
       if file ~= nil then
-         file:write(ptext .. os.date('%X ') .. text .. '\n')
+         file:write(ptext .. text .. '\n')
          file:close()
       end
    end
