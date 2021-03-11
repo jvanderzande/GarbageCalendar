@@ -134,7 +134,7 @@ if err then
    print('!!! LUA Error: ' .. err)
    return
 else
-   dprintlog('Loaded ' .. scriptpath .. 'garbagecalendar/generalfuncs.lua.')
+   dprintlog('Loaded ' .. scriptpath .. 'garbagecalendar/generalfuncs.lua  (v'.. (generalversion or '??') .. ')')
 end
 
 ---====================================================================================================
