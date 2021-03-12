@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210311-2100'
+mver = '20210312-1700'
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -35,7 +35,7 @@ function dprintlog(text, always, prefix)
    text = text or 'nil'
    local ptext = ''
    if (prefix or 1) == 1 then
-      ptext = '' .. os.date('%X ') .. websitemodule .. ': '
+      ptext = '' .. os.date('%X ') .. 'MainScript: '
    end
    if testdataload or mydebug or (always or 0) >= 1 then
       print(ptext .. text)
@@ -58,9 +58,8 @@ function script_path()
 end
 scriptpath = script_path() or './'
 --ensure the all path variables ends with /
+scriptpath = scriptpath:gsub('\\', '/')
 scriptpath = (scriptpath .. '/'):gsub('//', '/')
-dprintlog('#### scriptpath ' .. scriptpath)
-
 ---====================================================================================================
 -- Load garbagecalendarconfig.lua
 function garbagecalendarconfig()
@@ -89,14 +88,14 @@ function garbagecalendarconfig()
    else
       file:close()
    end
-   dprintlog('#### ' .. os.date('%c') .. ' ### Start garbagecalendar script v' .. ver)
+   dprintlog('### Start garbagecalendar script v' .. mver .. '   ' .. os.date('%c'))
    if testdataload then
-      dprintlog('#### Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
-      dprintlog('####    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
+      dprintlog('---> Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
+      dprintlog('--->    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
    end
    if mydebug or false then
-      dprintlog('#### Debuging with extra messages because "mydebug=true" in garbagecalendarconfig.lua')
-      dprintlog('####    please change it back to "mydebug=false" when done testing to avoid growing a big domoticz log.')
+      dprintlog('---> Debuging with extra messages because "mydebug=true" in garbagecalendarconfig.lua')
+      dprintlog('--->    please change it back to "mydebug=false" when done testing to avoid growing a big domoticz log.')
    end
    --ensure the all path variables ends with /
    dprintlog('domoticzjsonpath: ' .. domoticzjsonpath)
@@ -106,7 +105,7 @@ end
 -- check if that worked correctly
 local status, err = pcall(garbagecalendarconfig)
 if err then
-   print('#### ' .. os.date('%X') .. ' start garbagecalendar script v' .. ver)
+   print('#### ' .. os.date('%X') .. ' start garbagecalendar script v' .. mver .. '####')
    print('!!! failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath .. 'garbagecalendar/"')
    print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
    print('       Also check the path in variable "scriptpath= "  is correctly set.')
@@ -129,25 +128,25 @@ end
 -- check if that worked correctly
 local status, err = pcall(generalfuncs)
 if err then
-   dprintlog('!!! Error: failed loading generalfuncs.lua from : ' .. scriptpath .. 'garbagecalendar/.', 1)
-   dprintlog('!!! Error: Please check the path in variable "scriptpath= "  in your setup and try again.', 1)
+   dprintlog('### Error: failed loading generalfuncs.lua from : ' .. scriptpath .. 'garbagecalendar/.', 1)
+   dprintlog('### Error: Please check the path in variable "scriptpath= "  in your setup and try again.', 1)
    print('!!! LUA Error: ' .. err)
    return
 else
-   dprintlog('Loaded ' .. scriptpath .. 'garbagecalendar/generalfuncs.lua  (v'.. (generalversion or '??') .. ')')
+   dprintlog('Loaded ' .. scriptpath .. 'garbagecalendar/generalfuncs.lua (v' .. (generalversion or '??') .. ')')
 end
 
 ---====================================================================================================
 -- check whether provide paths are valid
 if (not isdir(datafilepath)) then
-   dprintlog('!!! Error: invalid path for datafilepath : ' .. datafilepath .. '.', 1)
-   dprintlog('!!! Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.', 1)
+   dprintlog('### Error: invalid path for datafilepath : ' .. datafilepath .. '.', 1)
+   dprintlog('### Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.', 1)
    return
 end
 
 if (not exists(scriptpath .. 'garbagecalendar/' .. websitemodule .. '.lua')) then
-   dprintlog('!!! Error: module not found: ' .. scriptpath .. 'garbagecalendar/' .. websitemodule .. '.lua', 1)
-   dprintlog('!!! Error: Please check the path&name in variables "scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.', 1)
+   dprintlog('### Error: module not found: ' .. scriptpath .. 'garbagecalendar/' .. websitemodule .. '.lua', 1)
+   dprintlog('### Error: Please check the path&name in variables "scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.', 1)
    return
 end
 
@@ -175,9 +174,8 @@ function GetWebDataInBackground(whenrun)
       -- Test if lua is installed, if so submit backgrond task to update the datafile to releave the event system
       rc = os.execute('lua nul >nul')
       if (rc) then
-         dprintlog('start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
+         dprintlog('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
          dprintlog(command .. ' &')
-         --rc = os.execute(command .. ' > '.. weblogfile..' 2>&1 &')
          rc = os.execute(command .. ' &')
       else
          whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
@@ -186,11 +184,9 @@ function GetWebDataInBackground(whenrun)
    -- Run the Webupdate in the foreground when required. This happens in case the datafile doesn't exists or LUA can't be found.
    if ((whenrun or '') == 'now') then
       -- Fill the arg[] table with the required parameters and run the script with dofile().
-      dprintlog(' start new foreground webupdate for module ' .. websitemodule .. ' for file ' .. datafile, 1)
-      dprintlog(scriptpath .. 'garbagecalendar/_runmodule.lua')
+      dprintlog('=> Start new foreground WebUpdate for module ' .. websitemodule, 1)
       dofile(scriptpath .. 'garbagecalendar/_runmodule.lua')
-      --dofile(scriptpath .. "garbagecalendar/" .. websitemodule .. ".lua")
-      dprintlog(' webupdate done.')
+      dprintlog('=< End WebUpdate.')
    end
 end
 
@@ -201,7 +197,7 @@ function getdaysdiff(i_garbagetype_date, stextformat)
    -- check if date in variable i_garbagetype_date contains "vandaag" in stead of a valid date -> use today's date
    garbageyear, garbagemonth, garbageday = i_garbagetype_date:match('(%d-)-(%d-)-(%d-)$')
    if (garbageday == nil or garbagemonth == nil or garbageyear == nil) then
-      dprintlog(' Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date, 1)
+      dprintlog('### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date, 1)
       return
    end
    local garbageTime = os.time {day = garbageday, month = garbagemonth, year = garbageyear}
@@ -309,13 +305,15 @@ end
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Data_check()
    -- ensure the access is set correctly for data
-   dprintlog('Checking access to files:')
+   dprintlog('=> Action starting, First check access to required files:')
    function ListAccess(name)
       local sCMD = 'ls -l ' .. name
+      dprintlog('   Run command:\n' .. sCMD .. ':')
       local handle = assert(io.popen(sCMD))
       local cmd_output = handle:read('*all')
+      -- remove ending CR LF chars
+      cmd_output = cmd_output:gsub('[\r\n]+$', '')
       handle:close()
-      dprintlog('-command: ' .. sCMD .. ':')
       dprintlog(cmd_output, 0, '')
    end
    -- show access info when debugging
@@ -339,7 +337,7 @@ function Perform_Data_check()
    local icalcnt = 0
    -- function to process ThisYear and Lastyear JSON data
    --
-   dprintlog('Start update for text device:', 1)
+   dprintlog('=> Start update for text device:', 1)
    local garbagedata, perr = table.load(datafile)
    if perr ~= 0 then
       --- when file doesn't exist
@@ -351,6 +349,7 @@ function Perform_Data_check()
       --- when file doesn't exist
       dprintlog(' Unable to load the data. please check your setup and runlogfile :' .. runlogfile)
    else
+      dprintlog('   ' .. (#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '') .. ' from datafile:' .. datafile)
       -- create ICS file when requested
       if (IcalEnable) then
          hIcal = io.open(icalfile, 'w')
@@ -366,7 +365,7 @@ function Perform_Data_check()
          end
       end
 
-      dprintlog('- Start looping through data from the website to find the first ' .. ShowNextEvents .. ' event to show: ' .. datafile)
+      dprintlog('-> Start looping through data to find the first ' .. ShowNextEvents .. ' events to show: ')
       for i = 1, #garbagedata do
          if garbagedata[i].garbagetype ~= nil then
             -- change all table entries to lower to make the script case insensitive
@@ -466,7 +465,7 @@ function Perform_Data_check()
       dprintlog('### Warning: No valid records found in the datafile: ' .. datafile, 1)
       dprintlog('###          Please check the garbagecalendar log files for issues : ' .. weblogfile .. ' and ' .. runlogfile, 1)
    end
-   dprintlog('- End  ----------------- ')
+   dprintlog('-< End data loop')
    if missingrecords ~= '' then
       dprintlog('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!', 1)
       dprintlog('#!# -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :', 1)
@@ -474,13 +473,13 @@ function Perform_Data_check()
       dprintlog('#!# -- end ----------------------------')
    end
    if (cnt == 0) then
-      dprintlog(' Error: No valid data found in returned webdata.  skipping the rest of the logic.', 1)
+      dprintlog('### Error: No valid data found in returned webdata.  skipping the rest of the logic.', 1)
       return
    end
    -- always update the domoticz device so one can see it is updating and when it was ran last.
    dprintlog('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
    if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
-      dprintlog("Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
+      dprintlog("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
    else
       commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
       if (otherdevices[myGarbageDevice] ~= devtxt) then
@@ -505,16 +504,16 @@ function Perform_Rights_check(filename)
          dprintlog('No access to the file. Running->sudo chmod 777 ' .. filename, 1)
          os.execute('sudo chmod 777 ' .. filename .. ' 2>nul')
          if (haveaccess(filename)) then
-            dprintlog('Access fixed to the data file.', 1)
+            dprintlog('Access Fixed: ' .. filename)
          else
-            dprintlog('Still no access. Please check the settings for ' .. filename .. ' and then try again.', 1)
+            dprintlog('### Error: Still no access. Please check the settings for ' .. filename .. ' and then try again.', 1)
             return false
          end
       else
-         dprintlog('Access OK to File: ' .. filename)
+         dprintlog('Access OK: ' .. filename)
       end
    else
-      dprintlog('File doesnt exists: ' .. filename, 1)
+      dprintlog("File doesn't exists: " .. filename, 1)
    end
    return true
 end
@@ -524,22 +523,7 @@ end
 daysoftheweek = daysoftheweek or {'Zon', 'Maa', 'Din', 'Woe', 'Don', 'Vri', 'Zat'}
 Longdaysoftheweek = Longdaysoftheweek or {'zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'}
 ShortMonth = ShortMonth or {'jan', 'feb', 'maa', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'}
-LongMonth =
-   LongMonth or
-   {
-      'januari',
-      'februari',
-      'maart',
-      'april',
-      'mei',
-      'juni',
-      'juli',
-      'augustus',
-      'september',
-      'oktober',
-      'november',
-      'december'
-   }
+LongMonth = LongMonth or {'januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'}
 if (IcalEnable == nil) then
    IcalEnable = false
 end
@@ -557,9 +541,9 @@ end
 commandArray = {}
 
 -- check for notification times and run update only when we are at one of these defined times
-dprintlog('Start checking garbagetype_cfg table:')
+dprintlog('=> Start checking garbagetype_cfg table whether an action is needed:')
 if garbagetype_cfg == nil then
-   dprintlog('!!! Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.', 1)
+   dprintlog('### Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.', 1)
    return
 end
 if garbagetype_cfg['reloaddata'] == nil or garbagetype_cfg['reloaddata'].hour == nil or garbagetype_cfg['reloaddata'].min == nil then
@@ -603,24 +587,26 @@ for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
 end
 -- loop through the table to check whether
 for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
-   dprintlog('-> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
    if
       (timenow.hour == gtdata.hour or timenow.hour == gtdata.hour + gtdata.reminder or --reminder same day
          timenow.hour == gtdata.hour + gtdata.reminder - 24) and --reminder next day
          timenow.min == gtdata.min
     then
-      dprintlog('   NotificationTime is true ')
+      dprintlog('=> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
       if tbl_garbagetype == 'reloaddata' then
          -- perform background data updates
          GetWebDataInBackground()
       else
          needupdate = true
       end
+   else
+      dprintlog('>   NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
    end
 end
 -- Always update when mydebugging
 if mydebug then
    needupdate = true
+   dprintlog('#> Perform update because mydebug=true.')
 end
 -- get information from website, update device and send notification when required
 if needupdate then
@@ -643,6 +629,6 @@ if needupdate then
 else
    dprintlog('Scheduled time(s) not reached yet, so nothing to do!')
 end
-dprintlog('#### ' .. os.date('%X') .. ' End garbagecalendar script v' .. ver)
+dprintlog('==< End garbagecalendar script v' .. mver)
 
 return commandArray

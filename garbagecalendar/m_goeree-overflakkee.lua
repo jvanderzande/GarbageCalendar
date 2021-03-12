@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_goeree_overflakkee.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210311-2100'
+ver = '20210312-1700'
 websitemodule = 'm_goeree_overflakkee'
 -- Link to WebSite: https://webadapter.watsoftware.nl/
 --
@@ -90,8 +90,6 @@ Hostname = (Hostname or arg[7]) or '' -- Not needed
 Street = (Street or arg[8]) or '' -- Not needed
 -- other variables
 garbagedata = {} -- array to save information to which will be written to the data file
--- required when you use format mmm in the call to GetDateFromInput()
-InputMonth = {jan = 1, feb = 2, maa = 3, apr = 4, mei = 5, jun = 6, jul = 7, aug = 8, sep = 9, okt = 10, nov = 11, dec = 12}
 
 dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
 if domoticzjsonpath == nil then

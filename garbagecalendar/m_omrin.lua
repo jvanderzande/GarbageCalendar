@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210311-2100'
+ver = '20210312-1700'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -78,7 +78,7 @@ function Perform_Update()
    Web_Data = Web_Data:match('omrinDataGroups = (.-);')
    print(Web_Data)
    if Web_Data == nil or Web_Data == '' then
-      print('Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
+      print('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
       return
    end
    dprint('---- web data stripped -------------------------------------------------------------------')

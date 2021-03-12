@@ -1,17 +1,17 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-generalversion = '20210311-2100'
+generalversion = '20210312-1700'
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)
    text = text or 'nil'
+   local ptext = '' .. os.date('%X ') .. (websitemodule or '?') .. ': ' .. text
    if afwlogfile == nil then
-      print('-@' .. (websitemodule or '?') .. ':' .. (text or '?'))
+      print(ptext)
    else
-      ptext = '@' .. (websitemodule or '?') .. ': '
       file = io.open(afwlogfile, 'a')
-      file:write(ptext .. os.date('%X ') .. text .. '\n')
+      file:write(ptext .. '\n')
       file:close()
    end
 end
@@ -63,7 +63,9 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url, logdata)
-   if logdata == nil then logdata = true end
+   if logdata == nil then
+      logdata = true
+   end
    local sQuery = 'curl -k ' .. url .. ' 2>' .. afwlogfile:gsub('_web_', '_web_err_')
    dprint('sQuery=' .. sQuery)
    local handle = assert(io.popen(sQuery))
@@ -84,13 +86,13 @@ function perform_webquery(url, logdata)
    os.remove(afwlogfile:gsub('_web_', '_web_err_'))
    dprint('---- end web data ------------------------------------------------------------------------')
    if (Web_Error:find('unsupported protocol')) then
-      dprint('#### Error: unsupported protocol.')
+      dprint('### Error: unsupported protocol.')
       dprint('#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
       dprint('#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
       return ''
    end
    if (Web_Data == '') then
-      dprint('Error: Empty result from curl command')
+      dprint('### Error: Empty result from curl command')
       return ''
    end
    return Web_Data
@@ -158,19 +160,19 @@ function GetDateFromInput(i_garbagetype_date, iregex, idatev)
    local garbagemonth = '??'
    local garbageyear = timenow.year
    -- Define InputMonth table in the Module itself, this is just in case it isn't defined yet as default
-   local InputMonth = InputMonth or {jan = 1, feb = 2, maa = 3, apr = 4, mei = 5, jun = 6, jul = 7, aug = 8, sep = 9, okt = 10, nov = 11, dec = 12}
+   local InputMonth = InputMonth or {jan = 1, feb = 2, mrt = 3, maa = 3, apr = 4, mei = 5, jun = 6, jul = 7, aug = 8, sep = 9, okt = 10, nov = 11, dec = 12}
    -- get information from the input garbagedate using the provided regex
    local d = {}
    if i_garbagetype_date == nil then
-      print('  #### Error: inputdate i_garbagetype_date is nil')
+      print('   ### Error: inputdate i_garbagetype_date is nil')
       return 0, -99
    end
    if iregex == nil then
-      print('  #### Error: iregex is nil')
+      print('   ### Error: iregex is nil')
       return 0, -99
    end
    if idatev == nil then
-      print('  #### Error: idatev is nil')
+      print('   ### Error: idatev is nil')
       return 0, -99
    end
    d[1], d[2], d[3], d[4] = i_garbagetype_date:match(iregex)
@@ -255,6 +257,7 @@ end
       if tbl == nil then
          tbl = {}
       end
+      tbl["Garbage_LastUpdate"] = os.date("%c")
       -- initiate variables for save procedure
       local tables, lookup = {tbl}, {[tbl] = 1}
       file:write('return {' .. charE)
@@ -320,6 +323,7 @@ end
       end
       file:write('}')
       file:close()
+      dprint('==> Data is saved, file contains ' .. #tbl .. ' records.')
    end
 
    --// The Load Function

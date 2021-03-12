@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210311-2100'
+ver = '20210312-1700'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
