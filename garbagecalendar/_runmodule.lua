@@ -4,7 +4,7 @@
 -- This script is used to run all modules in the background and ensures to capture any hard errors.
 -- The information wil be logged to the garbagecalendar_we_modulename.log file.
 ----------------------------------------------------------------------------------------------------------------
-rver = '20210312-1700'
+MainRunModVersion = '20210313-1220'
 -- Error handling function
 function errhandler(x)
    return x .. '\n' .. debug.traceback()
@@ -50,7 +50,7 @@ function RunWebModule(arg)
          return '', '!!!! Module name not provided. Ending run.'
       end
       afwlogfile = arg[6] or (scriptpath .. 'garbagecalendar_runmodule.log')
-      rdprint('--> Start -- background _runmodule.lua (v' .. rver .. ') for garbage module ' .. (websitemodule or '??') )
+      rdprint('--> Start -- background _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??') )
       -- add standard functions when ran in the background
       dofile(scriptpath .. 'generalfuncs.lua') --
       websitemodulescript = scriptpath .. websitemodule .. '.lua'
@@ -60,7 +60,7 @@ function RunWebModule(arg)
          return
       end
       afwlogfile = afwlogfile or (scriptpath .. 'garbagecalendar_runmodule.log')
-      rdprint('--> Start -- foreground _runmodule.lua (v' .. rver .. ') for garbage module ' .. (websitemodule or '??'))
+      rdprint('--> Start -- foreground _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??'))
       websitemodulescript = scriptpath .. 'garbagecalendar/' .. websitemodule .. '.lua'
    end
    --print(websitemodulescript)
@@ -71,6 +71,15 @@ function RunWebModule(arg)
 end
 
 -- Main script
+-- Part to check if version of this script is equal to Main script when run in foreground
+if arg[6] == nil and (MainScriptVersion or "??") ~= MainRunModVersion  then
+   dprintlog('### Warning: Version of _runmodule.lua(v' .. (MainRunModVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
+end
+-- Don't do anything when variable is set true, use for version check
+if OnlyCheckVersion or false then
+   return
+end
+--
 websitemodule = websitemodule or table.remove(arg, 1)
 afwlogfile = weblogfile or arg[6]
 local estatus, err, result = xpcall(RunWebModule, errhandler, arg)

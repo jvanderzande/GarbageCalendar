@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-generalversion = '20210312-1700'
+MainGenUtilsVersion = '20210313-1220'
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)

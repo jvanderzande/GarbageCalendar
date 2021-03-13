@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-mver = '20210312-1700'
+MainScriptVersion = '20210313-1220'
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -88,7 +88,7 @@ function garbagecalendarconfig()
    else
       file:close()
    end
-   dprintlog('### Start garbagecalendar script v' .. mver .. '   ' .. os.date('%c'))
+   dprintlog('### Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
    if testdataload then
       dprintlog('---> Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
       dprintlog('--->    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
@@ -105,7 +105,7 @@ end
 -- check if that worked correctly
 local status, err = pcall(garbagecalendarconfig)
 if err then
-   print('#### ' .. os.date('%X') .. ' start garbagecalendar script v' .. mver .. '####')
+   print('#### ' .. os.date('%X') .. ' start garbagecalendar script v' .. MainScriptVersion .. '####')
    print('!!! failed loading "garbagecalendarconfig.lua" from : "' .. scriptpath .. 'garbagecalendar/"')
    print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
    print('       Also check the path in variable "scriptpath= "  is correctly set.')
@@ -133,9 +133,11 @@ if err then
    print('!!! LUA Error: ' .. err)
    return
 else
-   dprintlog('Loaded ' .. scriptpath .. 'garbagecalendar/generalfuncs.lua (v' .. (generalversion or '??') .. ')')
+   dprintlog('Loaded ' .. scriptpath .. 'garbagecalendar/generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ')')
+   if MainScriptVersion ~= MainGenUtilsVersion then
+      dprintlog('### Warning: Version of generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
+   end
 end
-
 ---====================================================================================================
 -- check whether provide paths are valid
 if (not isdir(datafilepath)) then
@@ -151,8 +153,8 @@ if (not exists(scriptpath .. 'garbagecalendar/' .. websitemodule .. '.lua')) the
 end
 
 ---====================================================================================================
--- run dataupdate
-function GetWebDataInBackground(whenrun)
+-- perform  Web data update
+function GetWebData(whenrun)
    -- empty previous run weblogfile
    file = io.open(weblogfile, 'w')
    if file == nil then
@@ -160,8 +162,9 @@ function GetWebDataInBackground(whenrun)
    else
       file:close()
    end
-   --# reshell this file in the background to perform update of the data
+   -- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
    if ((whenrun or '') ~= 'now') then
+      -- Shell _runmodule.lua as separate process in the background to perform update of the data
       local command = 'lua ' .. scriptpath .. 'garbagecalendar/_runmodule.lua ' .. websitemodule
       command = command .. ' "' .. domoticzjsonpath .. '"'
       command = command .. ' "' .. Zipcode .. '"'
@@ -177,6 +180,9 @@ function GetWebDataInBackground(whenrun)
          dprintlog('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
          dprintlog(command .. ' &')
          rc = os.execute(command .. ' &')
+         -- Check the version to make sure it is the same as the main script.
+         OnlyCheckVersion = true
+         dofile(scriptpath .. 'garbagecalendar/_runmodule.lua')
       else
          whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
       end
@@ -342,7 +348,7 @@ function Perform_Data_check()
    if perr ~= 0 then
       --- when file doesn't exist
       dprintlog('### Warning: Datafile not found:' .. datafile .. ' . Start webupdate now.')
-      GetWebDataInBackground('now')
+      GetWebData('now')
       garbagedata, perr = table.load(datafile)
    end
    if perr ~= 0 then
@@ -534,7 +540,7 @@ IcalNotify = IcalNotify or 12
 ----------------------------------------------------------------------------------------------------------------
 -- checkif testload is requested
 if testdataload or false then
-   GetWebDataInBackground('now')
+   GetWebData('now')
 end
 
 -- Start of logic ==============================================================================================
@@ -595,7 +601,7 @@ for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
       dprintlog('=> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
       if tbl_garbagetype == 'reloaddata' then
          -- perform background data updates
-         GetWebDataInBackground()
+         GetWebData()
       else
          needupdate = true
       end
@@ -629,6 +635,6 @@ if needupdate then
 else
    dprintlog('Scheduled time(s) not reached yet, so nothing to do!')
 end
-dprintlog('==< End garbagecalendar script v' .. mver)
+dprintlog('==< End garbagecalendar script v' .. MainScriptVersion)
 
 return commandArray
