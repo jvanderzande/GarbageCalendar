@@ -66,6 +66,7 @@ function RunWebModule(arg)
    --print(websitemodulescript)
    --print(afwlogfile)
    dofile(websitemodulescript)
+   datafile = datafile or arg[5] or "??"
    return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. datafile ..'. Look at ' .. afwlogfile .. ' for process details.'
 end
 
