@@ -4,7 +4,7 @@
 -- This script is used to run all modules in the background and ensures to capture any hard errors.
 -- The information wil be logged to the garbagecalendar_we_modulename.log file.
 ----------------------------------------------------------------------------------------------------------------
-MainRunModVersion = '20210313-1220'
+MainRunModVersion = '20210314-1004'
 -- Error handling function
 function errhandler(x)
    return x .. '\n' .. debug.traceback()
@@ -72,7 +72,7 @@ end
 
 -- Main script
 -- Part to check if version of this script is equal to Main script when run in foreground
-if arg[6] == nil and (MainScriptVersion or "??") ~= MainRunModVersion  then
+if arg == nil and (MainScriptVersion or "??") ~= MainRunModVersion  then
    dprintlog('### Warning: Version of _runmodule.lua(v' .. (MainRunModVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
 end
 -- Don't do anything when variable is set true, use for version check
@@ -85,7 +85,7 @@ afwlogfile = weblogfile or arg[6]
 local estatus, err, result = xpcall(RunWebModule, errhandler, arg)
 if estatus then
    rdprint((err or '') .. (result or ''))
-   if arg[6] == nil then dprintlog(result or '') end
+   if arg == nil then dprintlog(result or '') end
 else
    rdprint('!! Module ' .. (websitemodule or '???') .. ' had hard error. check log:' .. (afwlogfile or '') .. '\n' .. (err or ''))
    rdprint(afwlogfile or 'no logfile')
