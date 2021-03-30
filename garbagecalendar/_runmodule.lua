@@ -4,7 +4,7 @@
 -- This script is used to run all modules in the background and ensures to capture any hard errors.
 -- The information wil be logged to the garbagecalendar_we_modulename.log file.
 ----------------------------------------------------------------------------------------------------------------
-MainRunModVersion = '20210314-1004'
+MainRunModVersion = '20210330-1836'
 -- Error handling function
 function errhandler(x)
    return x .. '\n' .. debug.traceback()
@@ -36,12 +36,22 @@ function RunWebModule(arg)
    -- use Main scriptpath in case the lua script is ran in the foreground
    if (scriptpath == nil) then
       if arg ~= nil and arg[0] ~= nil then
-         scriptpath = Get_Scriptpath()
+         scriptpath = Get_Scriptpath() or './'
+      else
+         -- When for some reason the arg isn't provided then try a diffferent way to get the scriptpath
+         function script_path2()
+            local str = debug.getinfo(2, 'S').source:sub(2)
+            return str:match('(.*[/\\])')
+         end
+         scriptpath = script_path2() or './'
       end
+
       --ensure the all path variables ends with /
       scriptpath = scriptpath:gsub('\\', '/')
       scriptpath = (scriptpath .. '/'):gsub('//', '/')
       rdprint('#1 scriptpath ' .. scriptpath)
+   else
+      rdprint('#2 scriptpath ' .. scriptpath)
    end
    -- only include when run in separate process
    local websitemodulescript
@@ -82,6 +92,7 @@ end
 --
 websitemodule = websitemodule or table.remove(arg, 1)
 afwlogfile = weblogfile or arg[6]
+--
 local estatus, err, result = xpcall(RunWebModule, errhandler, arg)
 if estatus then
    rdprint((err or '') .. (result or ''))
