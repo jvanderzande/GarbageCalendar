@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210312-1700'
+ver = '20210421-2000'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -18,12 +18,12 @@ end
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
    function processdata(ophaaldata)
-      for i = 1, #ophaaldata do
-         record = ophaaldata[i]
-         if type(record) == 'table' then
-            web_garbageid = record['afvalstroom_id']
+      --for i = 1, #ophaaldata do
+      for record, data in pairs(ophaaldata) do
+         if type(data) == 'table' then
+            web_garbageid = data.afvalstroom_id
             web_garbagetype = ''
-            web_garbagedate = record['ophaaldatum']
+            web_garbagedate = data.ophaaldatum
             wnameType = ''
             for i = 1, #garbagedata do
                record = garbagedata[i]
@@ -86,6 +86,23 @@ function Perform_Update()
       dprint('### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
       return
    end
+    -- remove Icon data as that messes things up
+   --
+   -- Strip Icon info as that contains much data which is giving JSON lexing problems.
+   Web_Data = Web_Data:gsub('(,"icon_data":".-",)', ',')
+   dprint("==== Stripped 1 ========================================================")
+   dprint(Web_Data)
+   --
+   -- Strip \ infront of "" to ensuree the next stripping will work
+   Web_Data = Web_Data:gsub('(\\")', '"')
+   dprint("==== Stripped 2 ========================================================")
+   dprint(Web_Data)
+   --
+   -- Strip content info as that contains much data which is giving JSON lexing problems.
+   Web_Data = Web_Data:gsub('(,"content":".-",)', ',')
+   dprint("==== Stripped 2 ========================================================")
+   dprint(Web_Data)
+   dprint("============================================================")
    garbagedata = JSON:decode(Web_Data)
    -- get the Kalender information for this address(bagId) for the current year
    local Web_Data = perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/ophaaldata"')
