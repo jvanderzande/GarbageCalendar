@@ -26,32 +26,45 @@ function rdprint(text)
    end
 end
 -- RunWebModule Function
-function RunWebModule(arg)
+function RunWebModule()
    --print("Start RunWebModule .....")
    -------------------------------------------------------
    -- get script directory
    function Get_Scriptpath()
       return arg[0]:match('.*[/\\]') or './'
    end
+   if (scriptpath ~= nil) then
    -- use Main scriptpath in case the lua script is ran in the foreground
-   if (scriptpath == nil) then
+      rdprint('Foreground scriptpath ' .. scriptpath)
+   else
+      -- Get Scriptpath from arg[0] as that should be the path to this script.
+      -- list arg array for debugging
+      rdprint('> RunWebModule Input arg table:')
+      if arg ~= nil then
+         for key,value in pairs(arg) do --pseudocode
+            rdprint('> arg:'..key..'='..value)
+         end
+      end
+      -- check if scriptname is provided in LUA
       if arg ~= nil and arg[0] ~= nil then
          scriptpath = Get_Scriptpath() or './'
+         rdprint('>>arg[0] scriptpath ' .. scriptpath)
       else
-         -- When for some reason the arg isn't provided then try a diffferent way to get the scriptpath
+         -- When for some reason the arg[0] isn't provided then try a diffferent way to get the scriptpath
          function script_path2()
             local str = debug.getinfo(2, 'S').source:sub(2)
             return str:match('(.*[/\\])')
          end
          scriptpath = script_path2() or './'
+         rdprint('getinfo scriptpath ' .. scriptpath)
       end
-
       --ensure the all path variables ends with /
       scriptpath = scriptpath:gsub('\\', '/')
+      -- Strip possible wrong directory when it returns the sub in stead of main directory
+      -- * scriptpath = scriptpath:gsub('([gG][aA][rR][bB][aA][gG][eE][cC][aA]l[eE][nN][dD][aA][rR]/-$', '')
+      -- remove possible duplicate //
       scriptpath = (scriptpath .. '/'):gsub('//', '/')
       rdprint('#1 scriptpath ' .. scriptpath)
-   else
-      rdprint('#2 scriptpath ' .. scriptpath)
    end
    -- only include when run in separate process
    local websitemodulescript
@@ -70,8 +83,8 @@ function RunWebModule(arg)
          return
       end
       afwlogfile = afwlogfile or (scriptpath .. 'garbagecalendar_runmodule.log')
-      rdprint('--> Start -- foreground _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??'))
       websitemodulescript = scriptpath .. 'garbagecalendar/' .. websitemodule .. '.lua'
+      rdprint('--> Start -- foreground _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??').."  file:"..(websitemodulescript or '??'))
    end
    --print(websitemodulescript)
    --print(afwlogfile)
@@ -92,8 +105,15 @@ end
 --
 websitemodule = websitemodule or table.remove(arg, 1)
 afwlogfile = weblogfile or arg[6]
+-- list arg array for debugging
+rdprint('> Input arg table:')
+if arg ~= nil then
+   for key,value in pairs(arg) do --pseudocode
+      rdprint('> arg:'..key..'='..value)
+   end
+end
 --
-local estatus, err, result = xpcall(RunWebModule, errhandler, arg)
+local estatus, err, result = xpcall(RunWebModule, errhandler)
 if estatus then
    rdprint((err or '') .. (result or ''))
    if arg == nil then dprintlog(result or '') end

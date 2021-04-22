@@ -194,6 +194,20 @@ function GetWebData(whenrun)
       dofile(scriptpath .. 'garbagecalendar/_runmodule.lua')
       dprintlog('=< End WebUpdate.')
    end
+   -- Save run log during webupdate
+   local ifile = io.open(runlogfile, 'r')
+   if ifile ~= nil then
+      local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_webupdate_'), 'w')
+      if ofile ~= nil then
+         ofile:write(ifile:read('*all'))
+         ofile:close()
+      else
+         dprintlog(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
+      end
+      ifile:close()
+   else
+      dprintlog(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
+   end
 end
 
 ---====================================================================================================
@@ -619,9 +633,9 @@ if needupdate then
    -- empty previous run_update logfile
    Perform_Data_check()
    -- Save run log during update
-   ifile = io.open(runlogfile, 'r')
+   local ifile = io.open(runlogfile, 'r')
    if ifile ~= nil then
-      ofile = io.open(string.gsub(runlogfile, '_run_', '_run_update_'), 'w')
+      local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_update_'), 'w')
       if ofile ~= nil then
          ofile:write(ifile:read('*all'))
          ofile:close()
