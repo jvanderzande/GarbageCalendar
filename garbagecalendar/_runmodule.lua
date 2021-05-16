@@ -121,7 +121,8 @@ else
    rdprint('!! Module ' .. (websitemodule or '???') .. ' had hard error. check log:' .. (afwlogfile or '') .. '\n' .. (err or ''))
    rdprint(afwlogfile or 'no logfile')
    rdprint('\n%%%%% LUA Hardcrash log %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-   rdprint(x)
+   rdprint(estatus)
+   rdprint(err)
    rdprint(debug.traceback())
    rdprint('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 end

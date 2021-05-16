@@ -175,7 +175,7 @@ function GetWebData(whenrun)
       command = command .. ' "' .. (Hostname or '') .. '"' -- optional param
       command = command .. ' "' .. (Street or '') .. '"' -- optional param
       -- Test if lua is installed, if so submit backgrond task to update the datafile to releave the event system
-      rc = os.execute('lua nul >nul')
+      rc = os.execute('lua nul 2>/dev/null')
       if (rc) then
          dprintlog('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
          dprintlog(command .. ' &')
@@ -522,7 +522,7 @@ function Perform_Rights_check(filename)
    if (exists(filename)) then
       if (not haveaccess(filename)) then
          dprintlog('No access to the file. Running->sudo chmod 777 ' .. filename, 1)
-         os.execute('sudo chmod 777 ' .. filename .. ' 2>nul')
+         os.execute('sudo chmod 777 ' .. filename .. ' 2>/dev/null')
          if (haveaccess(filename)) then
             dprintlog('Access Fixed: ' .. filename)
          else

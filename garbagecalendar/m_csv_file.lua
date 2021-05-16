@@ -40,7 +40,7 @@ function Perform_Update()
       dprint('input File ' .. input_csv_file .. ' found, check access.')
       if (not haveaccess(input_csv_file)) then
          dprint('No access to the file. Running->sudo chmod 777 ' .. input_csv_file)
-         os.execute('sudo chmod 777 ' .. input_csv_file .. ' 2>nul')
+         os.execute('sudo chmod 777 ' .. input_csv_file .. ' 2>/dev/null')
          if (haveaccess(input_csv_file)) then
             dprint('Access fixed to the data file.')
          else
