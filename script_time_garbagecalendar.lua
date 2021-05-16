@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-MainScriptVersion = '20210516-1114'
+MainScriptVersion = '20210516-1732'
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -174,9 +174,17 @@ function GetWebData(whenrun)
       command = command .. ' "' .. weblogfile .. '"'
       command = command .. ' "' .. (Hostname or '') .. '"' -- optional param
       command = command .. ' "' .. (Street or '') .. '"' -- optional param
-      -- Test if lua is installed, if so submit backgrond task to update the datafile to releave the event system
-      rc = os.execute('lua nul 2>/dev/null')
-      if (rc) then
+      -- Test if lua is installed, if so submit backgrond task to update the datafile to relieve the event system
+      os.execute('lua nul >' .. datafilepath .. '/luatest.log 2>&1')
+      local ifile, ierr = io.open(datafilepath .. '/luatest.log', 'r')
+      local Chk_Error = ierr or ''
+      if not ierr then
+         Chk_Error = ifile:read('*all')
+         ifile:close()
+         os.remove(datafilepath .. '/luatest.log')
+      end
+      -- if the
+      if Chk_Error:find("lua: cannot open nul") then
          dprintlog('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
          dprintlog(command .. ' &')
          rc = os.execute(command .. ' &')
@@ -184,6 +192,7 @@ function GetWebData(whenrun)
          OnlyCheckVersion = true
          dofile(scriptpath .. 'garbagecalendar/_runmodule.lua')
       else
+         dprintlog('=> check LUA rc:' .. (Chk_Error or "?") .. ' --> Run foreground.', 1)
          whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
       end
    end
