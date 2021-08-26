@@ -69,16 +69,6 @@ textformat = 'tdesc: wd dd mmm'
 ShowSinglePerType = false
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Configuration for the Notificaton system:
--- IcalDesc:
---   @GARBAGETYPE@ ==> Will be replaced by the GarbageType definion from the WebSite
---   @GARBAGETEXT@ ==> Will be replaced by the text from garbagetype_cfg[].text field
-IcalEnable = false -- false/true: When true, a garbagecalendar_Modulename.ics will be created in the datafilepath which can be used in a calendar application.
-IcalTitle = 'GarbageCalendar' -- title of the calendar
-IcalDesc = '@GARBAGETEXT@ wordt opgehaald.' -- text for the events in the calendar
-IcalEvents = 10 -- max number of upcomming events to save to icalfile, but could be less when less events are provided by the website.
-IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
-------------------------------------------------------------------------------------------------------------------------------------
--- Configuration for the Notificaton system:
 NotificationEmailAdress = {'', ''} -- Specify multiple Email Addresses for the notifications. Leave empty to skip email notification
 Notificationsystem = '' -- Specify notification system eg "telegram/pushover/gcm/http/kodi/lms/nma/prowl/pushalot/pushbullet/pushsafer" leave empty to skip
 Notificationscript = '' -- Specify personal notification script/command eg:  lua sendmessage.lua "@TEXT@"  (where @TEXT@ will be replaced by the notification text.)
