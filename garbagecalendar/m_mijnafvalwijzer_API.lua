@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------------------------------------------
--- garbagecalendar module script: m_mijnafvalwijzer.lua
+-- garbagecalendar module script: m_mijnafvalwijzer_API.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210312-1700'
-websitemodule = 'm_mijnafvalwijzer'
--- Link to WebSite: http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode=1234ab&street=&huisnummer=1&toevoeging=
+ver = '20210826-1600'
+websitemodule = 'm_mijnafvalwijzer_API'
+-- Link to WebSite: https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=1234AB&street=&huisnummer=1&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=2021-01-01&version=58&langs=nl
 --
 -------------------------------------------------------
 -- get script directory
@@ -14,9 +14,17 @@ end
 if scriptpath == nil then
    dofile(script_path() .. 'generalfuncs.lua') --
 end
+
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
+   local function longGarbageName(str) -- Use descriptive strings
+      str = tostring(str)
+      str = str:gsub("plastic"," Plastic verpakkingen, blik en drinkpakken ")
+      str = str:gsub("papier"," Papier en kartonnen verpakkingen ")
+      str = str:gsub("gft"," Groente-, fruit- en tuin afval ")
+      return str
+   end
    -- function to process ThisYear and Lastyear JSON data
    function processdata(ophaaldata)
       for i = 1, #ophaaldata do
@@ -39,7 +47,7 @@ function Perform_Update()
                garbagedata[#garbagedata].garbagetype = web_garbagetype
                garbagedata[#garbagedata].garbagedate = dateformat
                -- field to be used when WebData contains a description
-               garbagedata[#garbagedata].wdesc = rdesc[web_garbagetype:upper() .. '_L']
+               -- garbagedata[#garbagedata].wdesc = ....
             end
          end
       end
@@ -47,7 +55,7 @@ function Perform_Update()
    --
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
-   Web_Data = perform_webquery('"http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode=' .. Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=' .. Housenrsuf .. '"')
+   Web_Data = perform_webquery('"https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=' .. Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=' .. tostring(os.date('*t').year) .. '-01-01&version=58&langs=nl"')
    if (Web_Data == '') then
       dprint('### Error: Empty result from curl command. Please check whether curl.exe is installed.')
       return
@@ -56,41 +64,32 @@ function Perform_Update()
       dprint('### Error: Check your Postcode and Huisnummer as we get an NOK response.')
       return
    end
-   -- strip bulk data from "ophaaldagenNext" till the end, because this is causing some errors for some gemeentes
-   if (Web_Data:find('ophaaldagenNext') == nil) then
-      dprint('### Error: returned information does not contain the ophaaldagenNext section. stopping process.')
+   if (Web_Data:find('ophaaldagen') == nil) then
+      dprint('### Error: returned information does not contain the ophaaldagen section. stopping process.')
       return
    end
-   Web_Data = Web_Data:match('(.-),"mededelingen":')
-   Web_Data = Web_Data .. '}}'
    --
    -- Decode JSON table
    decoded_response = JSON:decode(Web_Data)
-   rdata = decoded_response['data']
-   if type(rdata) ~= 'table' then
-      dprint('### Error: Empty data table in JSON data...  stopping execution.')
-      return
-   end
-   -- get the description records into rdesc to retrieve the long description
-   rdesc = rdata['langs']
-   rdesc = rdesc['data']
+
    -- get the ophaaldagen tabel for the coming scheduled pickups for this year
-   rdataty = rdata['ophaaldagen']
-   if type(rdataty) ~= 'table' then
+   rdata = decoded_response['ophaaldagen']
+   if type(rdata) ~= 'table' then
       dprint('### Error: Empty data.ophaaldagen table in JSON data...  stopping execution.')
       return
    end
-   rdataty = rdataty['data']
-   if type(rdataty) ~= 'table' then
-      dprint('### Error: Empty data.ophaaldagen.data table in JSON data...  stopping execution.')
+
+   rdata = rdata['data']
+   if type(rdata) ~= 'table' then
+      dprint('### Error: Empty ophaaldagen.data table in JSON data...  stopping execution.')
       return
    end
    dprint('- start looping through this year received data -----------------------------------------------------------')
-   processdata(rdataty)
+   processdata(rdata)
    -- only process nextyear data in case we do not have the requested number of next events
    if #garbagedata < 10 then
       -- get the ophaaldagen tabel for next year when needed
-      rdataly = rdata['ophaaldagenNext']
+      rdataly = decoded_response['ophaaldagenNext']
       if type(rdataly) ~= 'table' then
          print('@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.')
       else
