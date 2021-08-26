@@ -183,7 +183,7 @@ function GetWebData(whenrun)
          ifile:close()
          os.remove(datafilepath .. '/luatest.log')
       end
-      -- if the
+      -- if the testfile contain this error, it means lua is installed.
       if Chk_Error:find("lua: cannot open nul") then
          dprintlog('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
          dprintlog(command .. ' &')
