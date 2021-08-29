@@ -364,6 +364,13 @@ function Perform_Data_check()
    local devtxt = ''
    local txtcnt = 0
    local icalcnt = 0
+   -- fields used for Combine_Garbage_perDay option
+   local txtdev_sdesc = ""
+   local txtdev_ldesc = ""
+   local txtdev_tdesc = ""
+   local txtdev_prevdesc = ""
+   local txtdev_prevdate = ""
+
    -- function to process ThisYear and Lastyear JSON data
    --
    dprintlog('=> Start update for text device:', 1)
@@ -438,10 +445,26 @@ function Perform_Data_check()
                         -- fill the text with the next defined number of events
                         notification(web_garbagetype, web_garbagedate, daysdiffdev) -- check notification for new found info
                      end
+
                      -- fill de domoticz text with the found info
-                     stextformat = stextformat:gsub('sdesc', web_garbagetype)
-                     stextformat = stextformat:gsub('ldesc', web_garbagedesc)
-                     stextformat = stextformat:gsub('tdesc', garbagetype_cfg[web_garbagetype].text)
+                     -- =========================================
+                     -- Check if we want to combine garbagetypes for one day
+                     if (Combine_Garbage_perDay or true) and txtdev_prevdate == web_garbagedate then
+                        txtdev_sdesc = txtdev_sdesc .. ", " .. web_garbagetype
+                        txtdev_ldesc = txtdev_ldesc .. ", " .. web_garbagedesc
+                        txtdev_tdesc = txtdev_tdesc .. ", " .. garbagetype_cfg[web_garbagetype].text
+                        devtxt = txtdev_prevdesc
+                        txtcnt = txtcnt - 1
+                     else
+                        txtdev_sdesc = web_garbagetype
+                        txtdev_ldesc = web_garbagedesc
+                        txtdev_tdesc = garbagetype_cfg[web_garbagetype].text
+                     end
+                     txtdev_prevdate = web_garbagedate
+                     stextformat = stextformat:gsub('sdesc', txtdev_sdesc)
+                     stextformat = stextformat:gsub('ldesc', txtdev_ldesc)
+                     stextformat = stextformat:gsub('tdesc', txtdev_tdesc)
+                     txtdev_prevdesc = devtxt
                      devtxt = devtxt .. stextformat .. '\r\n'
                      txtcnt = txtcnt + 1
                   end

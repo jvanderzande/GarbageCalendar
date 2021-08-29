@@ -2,8 +2,10 @@
 -- garbagecalendarconfig.lua
 -----------------------------------------------------------------------------
 -- Specify your information here as needed for your needs
-myGarbageDevice = ''  -- The Text devicename in Domoticz. eg 'Container'
-ShowNextEvents = 3    -- indicate the next x events to show in the TEXT Sensor in Domoticz
+myGarbageDevice = ''             -- The Text devicename in Domoticz. eg 'Container'
+ShowNextEvents = 3               -- indicate the next x eventlines to show in the TEXT Sensor in Domoticz
+Combine_Garbage_perDay = false   -- (default) false will show each garbagetype on its own line
+                                 -- true will show multiple garbagetype on a single line when collected the same day
 Zipcode = ''          -- Your zipcode  eg '1234AB'
 Housenr = ''          -- Your housnr. eg '99'
 Housenrsuf = ''       -- Your housnr suffix  ('a', 'b'  etc)
@@ -63,6 +65,9 @@ domoticzjsonpath = '/home/pi/domoticz/scripts/lua' -- specify the path to domoti
 --    ldesc = long garbage type description from Website when available, will be replaced by table description when not
 --    tdesc = Use the description available in the table text field
 textformat = 'tdesc: wd dd mmm'
+-- One can also add some html formatting formating to the output when the used interface supports that:eg:
+--    textformat = '<font color="red" size=1>tdesc: wd dd mmm</font>'
+
 -- ### define  what to show in the domoticz text device
 -- false => show multiple occurrences of a garbagetype (default)
 -- true  => show one the next occurrence for a unique garbagetype
