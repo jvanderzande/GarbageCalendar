@@ -3,9 +3,6 @@
 -----------------------------------------------------------------------------
 -- Specify your information here as needed for your needs
 myGarbageDevice = ''             -- The Text devicename in Domoticz. eg 'Container'
-ShowNextEvents = 3               -- indicate the next x eventlines to show in the TEXT Sensor in Domoticz
-Combine_Garbage_perDay = false   -- (default) false will show each garbagetype on its own line
-                                 -- true will show multiple garbagetype on a single line when collected the same day
 Zipcode = ''          -- Your zipcode  eg '1234AB'
 Housenr = ''          -- Your housnr. eg '99'
 Housenrsuf = ''       -- Your housnr suffix  ('a', 'b'  etc)
@@ -69,9 +66,13 @@ textformat = 'tdesc: wd dd mmm'
 --    textformat = '<font color="red" size=1>tdesc: wd dd mmm</font>'
 
 -- ### define  what to show in the domoticz text device
--- false => show multiple occurrences of a garbagetype (default)
--- true  => show one the next occurrence for a unique garbagetype
-ShowSinglePerType = false
+-- !!! ShowSinglePerType will be forced to false when Combine_Garbage_perDay = true
+ShowSinglePerType = false        -- (default) false => show multiple occurrences of a garbagetype (default)
+                                    -- true  => show one the next occurrence for a unique garbagetype
+ShowNextEvents = 3               -- indicate the next x eventlines to show in the TEXT Sensor in Domoticz
+Combine_Garbage_perDay = false   -- (default) false will show each garbagetype on its own line
+                                    -- true will show multiple garbagetype on a single line when collected the same day
+
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Configuration for the Notificaton system:
 NotificationEmailAdress = {'', ''} -- Specify multiple Email Addresses for the notifications. Leave empty to skip email notification

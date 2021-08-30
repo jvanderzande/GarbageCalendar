@@ -73,6 +73,10 @@ function garbagecalendarconfig()
    testdataload = testdataload or false
    mydebug = mydebug or false
    ShowSinglePerType = ShowSinglePerType or false
+   Combine_Garbage_perDay = Combine_Garbage_perDay or false
+   -- Force ShowSinglePerType to false when Combine_Garbage_perDay = true
+   if Combine_Garbage_perDay then ShowSinglePerType = false end
+
    -- initialise the variables
    domoticzjsonpath = (domoticzjsonpath .. '/'):gsub('//', '/')
    datafilepath = (datafilepath .. '/'):gsub('//', '/')
@@ -184,7 +188,7 @@ function GetWebData(whenrun)
          os.remove(datafilepath .. '/luatest.log')
       end
       -- if the testfile contain this error, it means lua is installed.
-      if Chk_Error:find("lua: cannot open nul") then
+      if Chk_Error:find('lua: cannot open nul') then
          dprintlog('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
          dprintlog(command .. ' &')
          rc = os.execute(command .. ' &')
@@ -192,7 +196,7 @@ function GetWebData(whenrun)
          OnlyCheckVersion = true
          dofile(scriptpath .. 'garbagecalendar/_runmodule.lua')
       else
-         dprintlog('=> check LUA rc:' .. (Chk_Error or "?") .. ' --> Run foreground.', 1)
+         dprintlog('=> check LUA rc:' .. (Chk_Error or '?') .. ' --> Run foreground.', 1)
          whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
       end
    end
@@ -365,11 +369,11 @@ function Perform_Data_check()
    local txtcnt = 0
    local icalcnt = 0
    -- fields used for Combine_Garbage_perDay option
-   local txtdev_sdesc = ""
-   local txtdev_ldesc = ""
-   local txtdev_tdesc = ""
-   local txtdev_prevdesc = ""
-   local txtdev_prevdate = ""
+   local txtdev_sdesc = ''
+   local txtdev_ldesc = ''
+   local txtdev_tdesc = ''
+   local txtdev_prevdesc = ''
+   local txtdev_prevdate = ''
 
    -- function to process ThisYear and Lastyear JSON data
    --
@@ -425,6 +429,7 @@ function Perform_Data_check()
                garbagetype_cfg[web_garbagetype].text = web_garbagetype
                garbagetype_cfg[web_garbagetype].missing = true
             end
+            -- Add event to Devtxt
             if garbagetype_cfg[web_garbagetype].active ~= 'skip' and txtcnt < ShowNextEvents then
                -- get daysdiff
                local stextformat = textformat
@@ -449,12 +454,13 @@ function Perform_Data_check()
                      -- fill de domoticz text with the found info
                      -- =========================================
                      -- Check if we want to combine garbagetypes for one day
-                     if (Combine_Garbage_perDay or true) and txtdev_prevdate == web_garbagedate then
-                        txtdev_sdesc = txtdev_sdesc .. ", " .. web_garbagetype
-                        txtdev_ldesc = txtdev_ldesc .. ", " .. web_garbagedesc
-                        txtdev_tdesc = txtdev_tdesc .. ", " .. garbagetype_cfg[web_garbagetype].text
+                     if Combine_Garbage_perDay and txtdev_prevdate == web_garbagedate then
+                        txtdev_sdesc = txtdev_sdesc .. ', ' .. web_garbagetype
+                        txtdev_ldesc = txtdev_ldesc .. ', ' .. web_garbagedesc
+                        txtdev_tdesc = txtdev_tdesc .. ', ' .. garbagetype_cfg[web_garbagetype].text
                         devtxt = txtdev_prevdesc
-                        txtcnt = txtcnt - 1
+                        dprintlog('  -- merging record:' .. i - 1 .. ' Date:' .. garbagedata[i - 1].garbagedate .. ' Type:' .. garbagedata[i - 1].garbagetype .. '  wdesc:' .. (garbagedata[i - 1].wdesc or ''))
+                        dprintlog('             record:' .. i .. ' Date:' .. garbagedata[i].garbagedate .. ' Type:' .. garbagedata[i].garbagetype .. '  wdesc:' .. (garbagedata[i].wdesc or ''))
                      else
                         txtdev_sdesc = web_garbagetype
                         txtdev_ldesc = web_garbagedesc
@@ -466,7 +472,13 @@ function Perform_Data_check()
                      stextformat = stextformat:gsub('tdesc', txtdev_tdesc)
                      txtdev_prevdesc = devtxt
                      devtxt = devtxt .. stextformat .. '\r\n'
-                     txtcnt = txtcnt + 1
+                     -- only add 1 when the next display record is a different date or seperate line wanted
+                     if (i < #garbagedata) then
+                        if ((not Combine_Garbage_perDay) or web_garbagedate ~= garbagedata[i + 1].garbagedate) then
+                           txtcnt = txtcnt + 1
+                           txtdev_prevdesc = devtxt
+                        end
+                     end
                   end
                end
             else
