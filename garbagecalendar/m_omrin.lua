@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210312-1700'
+ver = '20211012-2200'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -61,15 +61,15 @@ function Perform_Update()
       end
    end
    --
-   --[[
-  info from: https://github.com/Dashticz/dashticz/blob/9266ca820adea22b03f13e8939f662c9d74eb4ba/vendor/dashticz/garbage/index.php
+--[[
+      info from: https://github.com/Dashticz/dashticz/blob/9266ca820adea22b03f13e8939f662c9d74eb4ba/vendor/dashticz/garbage/index.php
 --]]
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
    local thnr = Housenr .. Housenrsuf
    local cookie = 'address=' .. url_encode('a:3:{s:7:"ziparea";s:2:"' .. Zipcode:sub(5, 6) .. '";s:9:"zipnumber";s:4:"' .. Zipcode:sub(1, 4) .. '";s:7:"housenr";s:' .. thnr:len() .. ':"' .. thnr .. '";}')
    -- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
-   Web_Data = perform_webquery('--cookie "' .. cookie .. '" https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender')
+   Web_Data = perform_webquery(' -L --cookie "' .. cookie .. '" https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender')
    if (Web_Data:sub(1, 2) == '[]') then
       dprint('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
       return
