@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210312-1700'
+ver = '20211022-1800'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
@@ -56,7 +56,7 @@ function Perform_Update()
    -- step 2: retrieve main js and get code from source:
    --          var n="8a9pIQlfYpgmJZD15KdK70MCTR2xyD0EAvOmi9HCBfiBUY4n34ytxQmqo3AP2OET6tssYy6R4Be6N2M2GtiX3AcbiNxR8G7pOalN45dXPZ4emKE2c1nimx9B1YFciutJwFZHYHI2Qpzo0E0GCDHkg5",c="/api/v1/assets/<script src="/static/js/main.0b66adb4.chunk.js">
    Web_Data = perform_webquery('https://recycleapp.be' .. MainScript)
-   secret = Web_Data:match('.+var n="(.-)",c="/api/v1/assets')
+   secret = Web_Data:match('.+var n="(.-)",')
    dprint(' secret:' .. (secret or '?'))
    headerdata = ' -H "x-secret: ' .. secret .. '"' .. ' -H "x-consumer: recycleapp.be"'
    -- step 3: Get access token:
