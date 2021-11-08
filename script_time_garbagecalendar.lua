@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-MainScriptVersion = '20210516-1732'
+MainScriptVersion = '20211108-1836'
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -303,7 +303,7 @@ function notification(s_garbagetype, s_garbagetype_date, i_daysdifference)
          if type(NotificationEmailAdress) == 'table' then
             for x, emailaddress in pairs(NotificationEmailAdress) do
                if emailaddress ~= '' then
-                  commandArray[x] = {
+                  commandArray[#commandArray + 1] = {
                      ['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress
                   }
                   dprintlog('----> Notification Email send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress .. '|', 1, 0)
@@ -311,13 +311,13 @@ function notification(s_garbagetype, s_garbagetype_date, i_daysdifference)
             end
          else
             if (NotificationEmailAdress or '') ~= '' then
-               commandArray['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress
+               commandArray[#commandArray + 1] = {['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress}
                dprintlog('----> Notification Email send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress .. '|', 1, 0)
             end
          end
 
          if (Notificationsystem or '') ~= '' then
-            commandArray['SendNotification'] = inotificationtitle .. '#' .. inotificationtext .. '####' .. Notificationsystem
+            commandArray[#commandArray + 1] = {['SendNotification'] = inotificationtitle .. '#' .. inotificationtext .. '####' .. Notificationsystem}
             dprintlog('----> Notification send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext .. '####' .. Notificationsystem, 1, 0)
          end
 

@@ -4,7 +4,7 @@
 -- This script is used to run all modules in the background and ensures to capture any hard errors.
 -- The information wil be logged to the garbagecalendar_we_modulename.log file.
 ----------------------------------------------------------------------------------------------------------------
-MainRunModVersion = '20210516-1732'
+MainRunModVersion = '20211108-1836'
 -- Error handling function
 function errhandler(x)
    return x .. '\n' .. debug.traceback()
