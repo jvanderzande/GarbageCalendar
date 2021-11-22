@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210312-1700'
+ver = '20211010-1900'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -33,9 +33,13 @@ function Perform_Update()
          record = ophaaldata[i]
          if type(record) == 'table' then
             web_garbagetype = record['_pickupTypeText']
-            print(web_garbagetype)
-            web_garbagedesc = record['description']
-            print(web_garbagedesc)
+            --dprint(web_garbagetype)
+            if (record['description'] ~= nil and record['description'] ~= "Null") then
+               web_garbagedesc = record['description']
+               --dprint(web_garbagedesc)
+            else
+               web_garbagedesc = ""
+            end
             garbagedate = record['pickupDates']
             local dateformat = '????????'
             for i = 1, #garbagedate do
