@@ -260,7 +260,10 @@ function notification(s_garbagetype, s_garbagetype_date, i_daysdifference)
                i_daysdifference + 1 == garbagetype_cfg[s_garbagetype].daysbefore) or
             (testnotification or false)
        then
-         testnotification = false -- this will trigger a test notification for the first record
+         if (testnotification) then
+            dprintlog('----> testnotification ?!?!', 1, 0)
+            testnotification = false -- this will trigger a test notification for the first record
+         end
          -- Set reminder field text
          local reminder = ''
          if garbagetype_cfg[s_garbagetype].reminder ~= 0 and timenow.hour ~= garbagetype_cfg[s_garbagetype].hour then
