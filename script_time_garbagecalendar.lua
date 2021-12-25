@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-MainScriptVersion = '20211108-1836'
+MainScriptVersion = '20211225-1127'
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -260,7 +260,10 @@ function notification(s_garbagetype, s_garbagetype_date, i_daysdifference)
                i_daysdifference + 1 == garbagetype_cfg[s_garbagetype].daysbefore) or
             (testnotification or false)
        then
-         testnotification = false -- this will trigger a test notification for the first record
+         if (testnotification) then
+            dprintlog('----> testnotification ?!?!', 1, 0)
+            testnotification = false -- this will trigger a test notification for the first record
+         end
          -- Set reminder field text
          local reminder = ''
          if garbagetype_cfg[s_garbagetype].reminder ~= 0 and timenow.hour ~= garbagetype_cfg[s_garbagetype].hour then
@@ -379,15 +382,29 @@ function Perform_Data_check()
    --
    dprintlog('=> Start update for text device:', 1)
    local garbagedata, perr = table.load(datafile)
+   -- try reload data when datafile is missing
    if perr ~= 0 then
       --- when file doesn't exist
       dprintlog('### Warning: Datafile not found:' .. datafile .. ' . Start webupdate now.')
       GetWebData('now')
       garbagedata, perr = table.load(datafile)
-   end
+   else
+      -- try reload data when the number of records are 0 in the datafile
+      if (#garbagedata or 0) == 0 then
+         --- when file doesn't exist
+         dprintlog('### Warning: Datafile contains ' .. (#garbagedata or "?") .. ' datarecords. Start webupdate now.')
+         GetWebData('now')
+         garbagedata, perr = table.load(datafile)
+      end
+	end
+
    if perr ~= 0 then
       --- when file doesn't exist
-      dprintlog(' Unable to load the data. please check your setup and runlogfile :' .. runlogfile)
+      dprintlog('#### Error: Unable to load the data. please check your setup and runlogfile :' .. runlogfile)
+      return
+   elseif (#garbagedata or 0) == 0 then
+      dprintlog('#### Error: ' .. (#garbagedata or '?') .. ' data records, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '') .. ' from datafile:' .. datafile)
+      return
    else
       dprintlog('   ' .. (#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '') .. ' from datafile:' .. datafile)
       -- create ICS file when requested
