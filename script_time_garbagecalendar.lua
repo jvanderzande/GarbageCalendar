@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------
 -- GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-MainScriptVersion = '20211225-1127'
+MainScriptVersion = '20220503-1709'
 -- curl in os required!!
 -- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 -- Update all your personal settings in garbagecalendar/garbagecalendarconfig.lua
@@ -426,7 +426,7 @@ function Perform_Data_check()
       for i = 1, #garbagedata do
          if garbagedata[i].garbagetype ~= nil then
             -- change all table entries to lower to make the script case insensitive
-            web_garbagetype = garbagedata[i].garbagetype:lower()
+            web_garbagetype = garbagedata[i].garbagetype:lower():gsub("\\","")
             web_garbagedate = garbagedata[i].garbagedate
             web_garbagedesc = (garbagedata[i].wdesc or '')
             if (web_garbagedesc == '') then
