@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210421-2000'
+ver = '20220505-1900'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -10,6 +10,7 @@ websitemodule = 'm_opzet_api'
 function script_path()
    return arg[0]:match('.*[/\\]') or './'
 end
+
 -- only include when run in separate process
 if scriptpath == nil then
    dofile(script_path() .. 'generalfuncs.lua') --
@@ -18,40 +19,35 @@ end
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
    function processdata(ophaaldata)
-      --for i = 1, #ophaaldata do
+      local pickuptimes = {}
       for record, data in pairs(ophaaldata) do
          if type(data) == 'table' then
-            web_garbageid = data.afvalstroom_id
-            web_garbagetype = ''
-            web_garbagedate = data.ophaaldatum
-            wnameType = ''
-            for i = 1, #garbagedata do
-               record = garbagedata[i]
-               if type(record) == 'table' then
-                  if web_garbageid == record['id'] then
-                     web_garbagetype = record['title']
-                     break
-                  end
+            local web_garbagetype = data.title
+            local web_garbagedate = data.ophaaldatum
+            if web_garbagedate == nil then
+               -- this is a type that is not collected and has no ophaaldag defined
+               dprint(' Not collected web_garbagetype : ' .. (web_garbagetype or "?????"))
+            else
+               dprint(' web_garbagetype : ' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
+               local dateformat = '????????'
+               -- Get days diff
+               dateformat, daysdiffdev = GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', { 'yyyy', 'mm', 'dd' })
+               if daysdiffdev == nil then
+                  dprint('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+                  return
                end
-            end
-            dprint('  web_garbageid:' .. web_garbageid .. ' Afvalsoort : ' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
-            local dateformat = '????????'
-            -- Get days diff
-            dateformat, daysdiffdev = GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
-            if daysdiffdev == nil then
-               dprint('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
-               return
-            end
-            if (daysdiffdev >= 0) then
-               garbagedata[#garbagedata + 1] = {}
-               garbagedata[#garbagedata].garbagetype = web_garbagetype
-               garbagedata[#garbagedata].garbagedate = dateformat
-            -- field to be used when WebData contains a description
-            -- garbagedata[#garbagedata].wdesc = ....
+               if (daysdiffdev >= 0) then
+                  pickuptimes[#pickuptimes + 1] = {}
+                  pickuptimes[#pickuptimes].garbagetype = web_garbagetype
+                  pickuptimes[#pickuptimes].garbagedate = dateformat
+                  pickuptimes[#pickuptimes].diff = daysdiffdev
+               end
             end
          end
       end
+      return pickuptimes
    end
+
    dprint('---- web update ----------------------------------------------------------------------------')
    local Web_Data
    -- Get the information for the specified address specifically the bagId for the subsequent calls
@@ -63,14 +59,15 @@ function Perform_Update()
       dprint('### Error: Check your Zipcode and Housenr as we get an [] response.')
       return
    end
-   adressdata = JSON:decode(Web_Data)
+   local adressdata = JSON:decode(Web_Data)
    -- Decode JSON table and find the appropriate address when there are multiple options when toevoeging is used like 10a
+   local bagId = ""
    for i = 1, #adressdata do
-      record = adressdata[i]
+      local record = adressdata[i]
       dprint('Address options: ' .. record['huisletter'] .. '=' .. Housenrsuf .. '->' .. record['bagId'])
       if type(record) == 'table' then
+         bagId = record['bagId']
          if Housenrsuf == record['huisletter'] then
-            bagId = record['bagId']
             break
          end
       end
@@ -80,46 +77,45 @@ function Perform_Update()
       return
    end
    dprint('bagId:' .. bagId)
-   -- get the Afvalstromen information for all possible garbagetypeid's for this address(bagId)
+
+   -- get the Afvalstromen information for all possible garbagetypeid's with their ophaaldatum info for this address(bagId)
    Web_Data = perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/afvalstromen"')
    if (Web_Data:sub(1, 2) == '[]') then
       dprint('### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
       return
    end
-    -- remove Icon data as that messes things up
    --
    -- Strip Icon info as that contains much data which is giving JSON lexing problems.
    Web_Data = Web_Data:gsub('(,"icon_data":".-",)', ',')
    dprint("==== Stripped 1 ========================================================")
    dprint(Web_Data)
    --
-   -- Strip \ infront of "" to ensuree the next stripping will work
+   -- Strip \ infront of " to ensure the next stripping will work
    Web_Data = Web_Data:gsub('(\\")', '"')
    dprint("==== Stripped 2 ========================================================")
    dprint(Web_Data)
    --
-   -- Strip content info as that contains much data which is giving JSON lexing problems.
+   -- Strip content field as that contains much data which is giving JSON lexing problems.
    Web_Data = Web_Data:gsub('(,"content":".-",)', ',')
-   dprint("==== Stripped 2 ========================================================")
+   dprint("==== Stripped 3 ========================================================")
    dprint(Web_Data)
    dprint("============================================================")
-   garbagedata = JSON:decode(Web_Data)
-   -- get the Kalender information for this address(bagId) for the current year
-   local Web_Data = perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/ophaaldata"')
-   if (Web_Data:sub(1, 2) == '[]') then
-      dprint('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
-      return
-   end
-   jdata = JSON:decode(Web_Data)
-   -- get the ophaaldagen tabel for the coming scheduled pickups
-   if type(jdata) ~= 'table' then
-      dprint('### Error: Empty Kalender found stopping execution.')
-      return
-   end
+
    -- process the data
    dprint('- start looping through received data -----------------------------------------------------------')
-   processdata(jdata)
+   local igarbagedata = processdata(JSON:decode(Web_Data))
+   dprint('- Sorting records.')
+   for x = 0, 60, 1 do
+      for mom in pairs(igarbagedata) do
+         if igarbagedata[mom].diff == x then
+            garbagedata[#garbagedata + 1] = {}
+            garbagedata[#garbagedata].garbagetype = igarbagedata[mom].garbagetype
+            garbagedata[#garbagedata].garbagedate = igarbagedata[mom].garbagedate
+         end
+      end
+   end
 end
+
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
