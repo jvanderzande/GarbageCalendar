@@ -1,17 +1,18 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20220309-1000'
+ver = '20230104-1705'
 websitemodule = 'm_opzet'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
 -------------------------------------------------------
 -- get script directory
 function script_path()
-   return arg[0]:match('.*[/\\]') or './'
+	local str = debug.getinfo(2, 'S').source:sub(2)
+	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
 end
 -- only include when run in separate process
-if scriptpath == nil then
+if GC_scriptpath == nil then
    dofile(script_path() .. 'generalfuncs.lua') --
 end
 -------------------------------------------------------
@@ -60,7 +61,6 @@ function Perform_Update()
    dprint('found bagid:' .. bagid)
 
    -- Get Garbage Calendar info
-   -- webcal= https://afvalkalender.purmerend.nl/ical/%bagid%
    Web_Data = perform_webquery('"https://' .. Hostname .. '/ical/' .. bagid .. '"')
    if Web_Data == '' then
       dprint('Error Web_Data is empty.')
@@ -82,28 +82,23 @@ function Perform_Update()
       if web_garbagetype ~= nil and web_garbagedate ~= nil then
          -- first match for each Type we save the date to capture the first next dates
          --dprint(web_garbagetype,web_garbagedate)
-         dateformat, daysdiffdev = GetDateFromInput(web_garbagedate, '(%d%d%d%d)(%d%d)(%d%d)', {'yyyy', 'mm', 'dd'})
+         local dateformat, daysdiffdev = GetDateFromInput(web_garbagedate, '(%d%d%d%d)(%d%d)(%d%d)', {'yyyy', 'mm', 'dd'})
          -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
          if (daysdiffdev >= 0) then
             pickuptimes[#pickuptimes + 1] = {}
             pickuptimes[#pickuptimes].garbagetype = web_garbagetype
             pickuptimes[#pickuptimes].garbagedate = dateformat
             pickuptimes[#pickuptimes].diff = daysdiffdev
-         -- field to be used when Web_Data contains a description
-         -- pickuptimes[#pickuptimes].wdesc = ....
          end
       end
    end
    dprint('- Sorting records.')
-   local eventcnt = 0
    for x = 0, 60, 1 do
       for mom in pairs(pickuptimes) do
          if pickuptimes[mom].diff == x then
             garbagedata[#garbagedata + 1] = {}
             garbagedata[#garbagedata].garbagetype = pickuptimes[mom].garbagetype
             garbagedata[#garbagedata].garbagedate = pickuptimes[mom].garbagedate
-         -- field to be used when Web_Data contains a description
-         --garbagedata[#garbagedata].wdesc = pickuptimes[mom].wdesc
          end
       end
    end
@@ -113,21 +108,18 @@ end
 -- Start of logic ========================================================================
 timenow = os.date('*t')
 -- get paramters from the commandline
-domoticzjsonpath = domoticzjsonpath or arg[1]
-Zipcode = Zipcode or arg[2]
-Housenr = Housenr or arg[3] or ''
-Housenrsuf = Housenrsuf or arg[4]
-afwdatafile = datafile or arg[5]
-afwlogfile = weblogfile or arg[6]
-Hostname = (Hostname or arg[7]) or '' -- Not needed
-Street = (Street or arg[8]) or '' -- Not needed
+Zipcode = Zipcode or arg[1]
+Housenr = Housenr or arg[2] or ''
+Housenrsuf = Housenrsuf or arg[3]
+afwdatafile = datafile or arg[4]
+afwlogfile = weblogfile or arg[5]
+Hostname = Hostname_strip((Hostname or arg[6]) or '')
+Street = (Street or arg[7]) or '' -- Not needed
 -- other variables
 garbagedata = {} -- array to save information to which will be written to the data file
 
 dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
-if domoticzjsonpath == nil then
-   dprint('!!! domoticzjsonpath not specified!')
-elseif Zipcode == nil then
+if Zipcode == nil then
    dprint('!!! Zipcode not specified!')
 elseif Housenr == nil then
    dprint('!!! Housenr not specified!')
@@ -144,7 +136,7 @@ else
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.')
    else
-      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath .. '.')
+      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
       dprint('### Error: Please check your setup and try again.')
       os.exit() -- stop execution
    end

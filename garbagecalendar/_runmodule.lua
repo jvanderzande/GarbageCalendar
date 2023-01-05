@@ -4,7 +4,8 @@
 -- This script is used to run all modules in the background and ensures to capture any hard errors.
 -- The information wil be logged to the garbagecalendar_we_modulename.log file.
 ----------------------------------------------------------------------------------------------------------------
-MainRunModVersion = '20220503-1709'
+MainRunModVersion = '20230104-1705'
+GC_scriptpath = GC_scriptpath or "?"
 -- Error handling function
 function errhandler(x)
    return x .. '\n' .. debug.traceback()
@@ -30,14 +31,10 @@ function RunWebModule()
    --print("Start RunWebModule .....")
    -------------------------------------------------------
    -- get script directory
-   function Get_Scriptpath()
-      return arg[0]:match('.*[/\\]') or './'
-   end
-   if (scriptpath ~= nil) then
-   -- use Main scriptpath in case the lua script is ran in the foreground
-      rdprint('Foreground scriptpath ' .. scriptpath)
+   if (GC_scriptpath ~= "?") then
+   -- use Main GC_scriptpath in case the lua script is ran in the foreground
+      rdprint('Foreground GC_scriptpath ' .. GC_scriptpath)
    else
-      -- Get Scriptpath from arg[0] as that should be the path to this script.
       -- list arg array for debugging
       rdprint('> RunWebModule Input arg table:')
       if arg ~= nil then
@@ -45,51 +42,39 @@ function RunWebModule()
             rdprint('> arg:'..key..'='..value)
          end
       end
-      -- check if scriptname is provided in LUA
-      if arg ~= nil and arg[0] ~= nil then
-         scriptpath = Get_Scriptpath() or './'
-         rdprint('>>arg[0] scriptpath ' .. scriptpath)
-      else
-         -- When for some reason the arg[0] isn't provided then try a diffferent way to get the scriptpath
-         function script_path2()
-            local str = debug.getinfo(2, 'S').source:sub(2)
-            return str:match('(.*[/\\])')
-         end
-         scriptpath = script_path2() or './'
-         rdprint('getinfo scriptpath ' .. scriptpath)
-      end
-      --ensure the all path variables ends with /
-      scriptpath = scriptpath:gsub('\\', '/')
-      -- Strip possible wrong directory when it returns the sub in stead of main directory
-      -- * scriptpath = scriptpath:gsub('([gG][aA][rR][bB][aA][gG][eE][cC][aA]l[eE][nN][dD][aA][rR]/-$', '')
-      -- remove possible duplicate //
-      scriptpath = (scriptpath .. '/'):gsub('//', '/')
-      rdprint('#1 scriptpath ' .. scriptpath)
+		-- When for some reason the arg[0] isn't provided then try a diffferent way to get the GC_scriptpath
+		function script_path()
+			local str = debug.getinfo(2, 'S').source:sub(2)
+			return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
+		end
+		-- Set Script_path
+		GC_scriptpath = script_path() or './'
+      rdprint('#1 GC_scriptpath ' .. GC_scriptpath)
    end
    -- only include when run in separate process
    local websitemodulescript
-   if arg ~= nil and arg[6] ~= nil then
+   if arg ~= nil and arg[5] ~= nil then
       if websitemodule == nil then
          return '', '!!!! Module name not provided. Ending run.'
       end
-      afwlogfile = arg[6] or (scriptpath .. 'garbagecalendar_runmodule.log')
+      afwlogfile = arg[5] or (GC_scriptpath .. 'garbagecalendar_runmodule.log')
       rdprint('--> Start -- background _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??') )
       -- add standard functions when ran in the background
-      dofile(scriptpath .. 'generalfuncs.lua') --
-      websitemodulescript = scriptpath .. websitemodule .. '.lua'
+      dofile(GC_scriptpath .. 'generalfuncs.lua') --
+      websitemodulescript = GC_scriptpath .. websitemodule .. '.lua'
    else
       if websitemodule == nil then
          rdprint("!!!!! You can't run _runmodule just by itself.")
          return
       end
-      afwlogfile = afwlogfile or (scriptpath .. 'garbagecalendar_runmodule.log')
-      websitemodulescript = scriptpath .. 'garbagecalendar/' .. websitemodule .. '.lua'
+      afwlogfile = afwlogfile or (GC_scriptpath .. 'garbagecalendar_runmodule.log')
+      websitemodulescript = GC_scriptpath .. '' .. websitemodule .. '.lua'
       rdprint('--> Start -- foreground _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??').."  file:"..(websitemodulescript or '??'))
    end
    --print(websitemodulescript)
    --print(afwlogfile)
    dofile(websitemodulescript)
-   datafile = datafile or arg[5] or "??"
+   datafile = datafile or arg[4] or "??"
    return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. datafile ..'. Look at ' .. afwlogfile .. ' for process details.'
 end
 
@@ -104,7 +89,7 @@ if OnlyCheckVersion or false then
 end
 --
 websitemodule = websitemodule or table.remove(arg, 1)
-afwlogfile = weblogfile or arg[6]
+afwlogfile = weblogfile or arg[5]
 -- list arg array for debugging
 rdprint('> Input arg table:')
 if arg ~= nil then

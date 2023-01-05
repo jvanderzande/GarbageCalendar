@@ -1,17 +1,19 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer_API.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210826-1600'
+ver = '20230104-1705'
 websitemodule = 'm_mijnafvalwijzer_API'
 -- Link to WebSite: https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=1234AB&street=&huisnummer=1&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=2021-01-01&version=58&langs=nl
 --
 -------------------------------------------------------
 -- get script directory
 function script_path()
-   return arg[0]:match('.*[/\\]') or './'
+	local str = debug.getinfo(2, 'S').source:sub(2)
+	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
 end
+
 -- only include when run in separate process
-if scriptpath == nil then
+if GC_scriptpath == nil then
    dofile(script_path() .. 'generalfuncs.lua') --
 end
 
@@ -109,21 +111,18 @@ end
 -- Start of logic ========================================================================
 timenow = os.date('*t')
 -- get paramters from the commandline
-domoticzjsonpath = domoticzjsonpath or arg[1]
-Zipcode = Zipcode or arg[2]
-Housenr = Housenr or arg[3] or ''
-Housenrsuf = Housenrsuf or arg[4]
-afwdatafile = datafile or arg[5]
-afwlogfile = weblogfile or arg[6]
-Hostname = (Hostname or arg[7]) or '' -- Not needed
-Street = (Street or arg[8]) or '' -- Not needed
+Zipcode = Zipcode or arg[1]
+Housenr = Housenr or arg[2] or ''
+Housenrsuf = Housenrsuf or arg[3]
+afwdatafile = datafile or arg[4]
+afwlogfile = weblogfile or arg[5]
+Hostname = (Hostname or arg[6]) or '' -- Not needed
+Street = (Street or arg[7]) or '' -- Not needed
 -- other variables
 garbagedata = {} -- array to save information to which will be written to the data file
 
 dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
-if domoticzjsonpath == nil then
-   dprint('!!! domoticzjsonpath not specified!')
-elseif Zipcode == nil then
+if Zipcode == nil then
    dprint('!!! Zipcode not specified!')
 elseif Housenr == nil then
    dprint('!!! Housenr not specified!')
@@ -138,7 +137,7 @@ else
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.')
    else
-      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath .. '.')
+      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
       dprint('### Error: Please check your setup and try again.')
       os.exit() -- stop execution
    end

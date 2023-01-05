@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_csv_file.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210312-1700'
+ver = '20230104-1705'
 websitemodule = 'm_csv_file'
 --[[
 This module requires an inputfile defined by this variable in the configfile:
@@ -22,10 +22,12 @@ garbagedate;garbagetype
 -------------------------------------------------------
 -- get script directory
 function script_path()
-   return arg[0]:match('.*[/\\]') or './'
+	local str = debug.getinfo(2, 'S').source:sub(2)
+	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
 end
+
 -- only include when run in separate process
-if scriptpath == nil then
+if GC_scriptpath == nil then
    dofile(script_path() .. 'generalfuncs.lua') --
 end
 
@@ -115,14 +117,13 @@ end
 -- Start of logic ========================================================================
 timenow = os.date('*t')
 -- get paramters from the commandline
-domoticzjsonpath = domoticzjsonpath or arg[1]
-Zipcode = Zipcode or arg[2]
-Housenr = Housenr or arg[3] or ''
-Housenrsuf = Housenrsuf or arg[4]
-afwdatafile = datafile or arg[5]
-afwlogfile = weblogfile or arg[6]
-Hostname = (Hostname or arg[7]) or '' -- Not needed
-Street = (Street or arg[8]) or '' -- Not needed
+Zipcode = Zipcode or arg[1]
+Housenr = Housenr or arg[2] or ''
+Housenrsuf = Housenrsuf or arg[3]
+afwdatafile = datafile or arg[4]
+afwlogfile = weblogfile or arg[5]
+Hostname = (Hostname or arg[6]) or '' -- Not needed
+Street = (Street or arg[7]) or '' -- Not needed
 -- other variables
 garbagedata = {} -- array to save information to which will be written to the data file
 
