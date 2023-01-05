@@ -16,6 +16,17 @@ function dprint(text)
 	end
 end
 
+-- dprint function to format log records
+function addlogmessage(text,level)
+	text = text or 'nil'
+	level = tostring(level) or '1'
+	url = 'http://127.0.0.1:8080/json.htm?type=command&param=addlogmessage&message='..url_encode(text)..'&level='..level
+	local sQuery = 'curl -k "' .. url .. '" > /tmp/garbagecalendar_logerrors.log 2>&1 '
+	local handle = assert(io.popen(sQuery))
+	local Web_Data = handle:read('*all')
+	handle:close()
+end
+
 -------------------------------------------------------
 -- try to load JSON library
 function loaddefaultjson()

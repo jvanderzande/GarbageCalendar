@@ -5,7 +5,7 @@
 EventScriptVersion = '20230104-1705'
 
 -- set variable to false=disable or true=enable the script
-local GC_enabled=true
+local GC_enabled = true
 
 -- Get script path
 function script_path()
@@ -13,6 +13,15 @@ function script_path()
 	return str:match('(.*[/\\])')
 end
 local GC_scriptpath = script_path() or './'
+
+-- run the script and check for errors.
+function run_garbagecalendar(GC_scriptpath, commandArray, domoticz)
+	dofile(GC_scriptpath .. 'garbagecalendar/garbagecalendar_main.lua')
+	local rc, errmsg  = pcall(garbagecalendar_main, commandArray, domoticz)
+	if not rc then
+		print("-----done with error", errmsg)
+	end
+end
 
 -- determine if this is a DzVents or Regular LUA time script
 if (_G.scriptsFolderPath ~= nil) then
@@ -22,19 +31,18 @@ if (_G.scriptsFolderPath ~= nil) then
 			timer = {'Every 1 minutes'}
 		},
 		execute = function(domoticz)
-			-- save domotiz table to a global variable so we can use it in the main script
-			GC_domoticz=domoticz
-			dofile(GC_scriptpath.."garbagecalendar/garbagecalendar_main.lua")
-			-- restore the modified table from the global variable to apply the changes
-			domoticz=GC_domoticz
+			local lamp = 'TVLampje'
+			domoticz.devices(lamp).setLevel(50)
+			-- run the script when enabled (true)
+			run_garbagecalendar(GC_scriptpath, nil, domoticz)
 		end
 	}
 else
 	-- Regular Time Event script
 	commandArray = {}
-		-- run the script when enabled (true)
-		if GC_enabled then
-			dofile(GC_scriptpath.."garbagecalendar/garbagecalendar_main.lua")
-		end
+	-- run the script when enabled (true)
+	if GC_enabled then
+		run_garbagecalendar(GC_scriptpath, commandArray, nil)
+	end
 	return commandArray
 end
