@@ -375,16 +375,16 @@ function garbagecalendar_main(commandArray, domoticz)
 					Notify_Reminder = reminder
 					--
 					-- User event script function to capture any errors seperately
-					function run_notification_event(commandArray, domoticz)
+					function run_notification_event(RunbyDzVents, commandArray, domoticz)
 						dofile(GC_scriptpath .. '' .. EventNotificationscript)
-						notification_event(commandArray, domoticz)
+						notification_event(RunbyDzVents, commandArray, domoticz)
 					end
 					-- run the extra function
 					local n_rc, n_errmsg
 					if RunbyDzVents then
-						n_rc, n_errmsg  = pcall(run_notification_event, nil, domoticz)
+						n_rc, n_errmsg  = pcall(run_notification_event, RunbyDzVents, nil, domoticz)
 					else
-						n_rc, n_errmsg  = pcall(run_notification_event, commandArray, nil)
+						n_rc, n_errmsg  = pcall(run_notification_event, RunbyDzVents, commandArray, nil)
 					end
 					-- check for errors
 					if n_rc then

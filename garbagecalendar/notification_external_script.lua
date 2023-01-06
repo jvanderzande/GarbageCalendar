@@ -14,7 +14,7 @@ dofile((script_path() or '') .. 'generalfuncs.lua') --
 
 -- Variables
 local domoticzurl = 'http://127.0.0.1:8080' 	-- define the url for domoticz
-local idx = 439 										-- define the IDX of the Light
+local idx = 439 								-- define the IDX of the Light
 afwlogfile = '/tmp/GC_ExEvent.data' 			-- datafile voor perform_webquery()
 local red = 0 -- Red color 0-255
 local green = 0 -- Green color 0-255

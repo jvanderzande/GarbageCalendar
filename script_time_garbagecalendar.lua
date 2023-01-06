@@ -31,8 +31,6 @@ if (_G.scriptsFolderPath ~= nil) then
 			timer = {'Every 1 minutes'}
 		},
 		execute = function(domoticz)
-			local lamp = 'TVLampje'
-			domoticz.devices(lamp).setLevel(50)
 			-- run the script when enabled (true)
 			run_garbagecalendar(GC_scriptpath, nil, domoticz)
 		end
