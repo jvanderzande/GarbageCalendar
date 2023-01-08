@@ -280,10 +280,10 @@ function garbagecalendar_main(commandArray, domoticz)
 					dprintlog('----> testnotification ?!?!', 1, 0)
 					testnotification = false -- this will trigger a test notification for the first record
 				end
-				-- Set reminder field text
-				local reminder = ''
+				-- Set ireminder field text
+				local ireminder = ''
 				if garbagetype_cfg[s_garbagetype].reminder ~= 0 and timenow.hour ~= garbagetype_cfg[s_garbagetype].hour then
-					reminder = notificationreminder or 'reminder'
+					ireminder = notificationreminder or 'reminder'
 				end
 				local dag = ''
 				if i_daysdifference == 0 then
@@ -312,13 +312,13 @@ function garbagecalendar_main(commandArray, domoticz)
 				inotificationtitle = inotificationtitle:gsub('@GARBAGETYPE@', s_garbagetype)
 				inotificationtitle = inotificationtitle:gsub('@GARBAGETEXT@', tostring(garbagetype_cfg[s_garbagetype].text))
 				inotificationtitle = inotificationtitle:gsub('@GARBAGEDATE@', inotificationdate)
-				inotificationtitle = inotificationtitle:gsub('@REMINDER@', reminder)
+				inotificationtitle = inotificationtitle:gsub('@REMINDER@', ireminder)
 				inotificationtext = notificationtext or '@GARBAGETEXT@ wordt @DAY@ opgehaald!'
 				inotificationtext = inotificationtext:gsub('@DAY@', dag)
 				inotificationtext = inotificationtext:gsub('@GARBAGETYPE@', s_garbagetype)
 				inotificationtext = inotificationtext:gsub('@GARBAGETEXT@', tostring(garbagetype_cfg[s_garbagetype].text))
 				inotificationtext = inotificationtext:gsub('@GARBAGEDATE@', inotificationdate)
-				inotificationtext = inotificationtext:gsub('@REMINDER@', reminder)
+				inotificationtext = inotificationtext:gsub('@REMINDER@', ireminder)
 				if type(NotificationEmailAdress) == 'table' then
 					for x, emailaddress in pairs(NotificationEmailAdress) do
 						if emailaddress ~= '' then
@@ -354,10 +354,11 @@ function garbagecalendar_main(commandArray, domoticz)
 
 				if (Notificationscript or '') ~= '' then
 					Notificationscript = Notificationscript:gsub('@TEXT@', inotificationtext)
+					Notificationscript = Notificationscript:gsub('@TITLE@', inotificationtitle)
 					Notificationscript = Notificationscript:gsub('@GARBAGETYPE@', s_garbagetype)
 					Notificationscript = Notificationscript:gsub('@GARBAGETEXT@', tostring(garbagetype_cfg[s_garbagetype].text))
 					Notificationscript = Notificationscript:gsub('@GARBAGEDATE@', inotificationdate)
-					Notificationscript = Notificationscript:gsub('@REMINDER@', reminder)
+					Notificationscript = Notificationscript:gsub('@REMINDER@', ireminder)
 					os.execute(Notificationscript .. ' &')
 					dprintlog('---->Notification script started: ' .. Notificationscript)
 				end
@@ -368,11 +369,12 @@ function garbagecalendar_main(commandArray, domoticz)
 						return
 					end
 					dprintlog('---->Notification script started: ' .. EventNotificationscript)
-					Notify_text = inotificationtext
-					Notify_Gdate = inotificationdate
-					Notify_Gtype = s_garbagetype
-					Notify_Gtext = tostring(garbagetype_cfg[s_garbagetype].text)
-					Notify_Reminder = reminder
+					Notify_mtext = inotificationtext
+					Notify_mtitle = inotificationtitle
+					Notify_date = inotificationdate
+					Notify_type = s_garbagetype
+					Notify_text = tostring(garbagetype_cfg[s_garbagetype].text)
+					Notify_reminder = ireminder
 					--
 					-- User event script function to capture any errors seperately
 					function run_notification_event(RunbyDzVents, commandArray, domoticz)

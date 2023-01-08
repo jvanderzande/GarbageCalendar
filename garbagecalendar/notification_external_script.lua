@@ -14,8 +14,7 @@ dofile((script_path() or '') .. 'generalfuncs.lua') --
 
 -- Variables
 local domoticzurl = 'http://127.0.0.1:8080' 	-- define the url for domoticz
-local idx = 439 								-- define the IDX of the Light
-afwlogfile = '/tmp/GC_ExEvent.data' 			-- datafile voor perform_webquery()
+local idx = 439 								      -- define the IDX of the Light
 local red = 0 -- Red color 0-255
 local green = 0 -- Green color 0-255
 local blue = 0 -- Blue color 0-255
@@ -44,8 +43,7 @@ if red ~= 0 or green ~= 0 or blue ~= 0 then
 	url = " --data-urlencode 'color={\"m\":3,\"t\":0,\"r\":" .. red .. ',"g":' .. green .. ',"b":' .. blue .. "}' "
 	url = url .. ' "' .. domoticzurl .. '/json.htm?type=command&param=setcolbrightnessvalue&idx=' .. idx .. '&brightness=' .. brightness .. '"'
 	print(url)
-
-	perform_webquery(url, true)
+	print(perform_webquery(url, true))
 
 	-- sleep xx seconds
 	os.execute('sleep 10')
@@ -54,10 +52,11 @@ if red ~= 0 or green ~= 0 or blue ~= 0 then
 	brightness = 20 -- (0-100%)
 	url = " --data-urlencode 'color={\"m\":2,\"t\":0,\"r\":0,\"g\":0,\"b\":0,\"cw\":0,\"ww\":255}' "
 	url = url .. ' "' .. domoticzurl .. '/json.htm?type=command&param=setcolbrightnessvalue&idx=' .. idx .. '&brightness=' .. brightness .. '"'
-	perform_webquery(url, true)
+	print(url)
+	print(perform_webquery(url, true))
 
 	-- Switch Off the light when required
 	url = '"' .. domoticzurl .. '/json.htm?type=command&param=switchlight&idx=' .. idx .. '&switchcmd=Off"'
 	print(url)
-	perform_webquery(url, true)
+	print(perform_webquery(url, true))
 end

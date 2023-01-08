@@ -98,6 +98,7 @@ EventNotificationscript = 'notification_event_script.lua' -- Specify personal no
 -- @GARBAGETEXT@ ==> Will be replaced by the text from garbagetype_cfg[].text field
 -- @REMINDER@    ==> Will be set to "" for first notification and "notificationreminder" for the reminder run
 -- @TEXT@        ==> Will be replaced by the finalised notificationtext and can be used in the notification script
+-- @TITLE@       ==> Will be replaced by the finalised notificationtitle and can be used in the notification script
 --### Dutch example
 -- Define how the title and bodytext should look
 notificationreminder = ' (herinnering)'
@@ -144,9 +145,10 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 
 garbagetype_cfg = {
 	-- Add any missing records below this line
-	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'pmd'},
-	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'gft'},
-	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'papier'},
+	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'plastic bak'},
+	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'groene bak'},
+	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'blauwe bak'},
+	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'grijze bak'},
 	-- Add any missing records above this line
 	--  "reloaddata" is used to start the background update process at this given time.
 	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},

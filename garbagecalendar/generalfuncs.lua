@@ -74,27 +74,41 @@ end
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
 function perform_webquery(url, logdata)
+	-- Show retrieved webdat by default or else depening on mydebug
 	if logdata == nil then
 		logdata = true
+	else
+		logdata = mydebug
 	end
-	local sQuery = 'curl -k ' .. url .. ' 2>' .. afwlogfile .. '_err'
+	-- Define Web Query
+	local sQuery = 'curl -k ' .. url
+	-- Pipe STDERR to file when defined
+	if afwlogfile ~= nil then
+		sQuery = sQuery .. ' 2>' .. afwlogfile .. '_err'
+	end
+	-- Run Query
 	dprint('sQuery=' .. sQuery)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
 	handle:close()
-	if logdata or mydebug then
+	-- Show Webdata retrieved
+	if logdata then
 		dprint('---- web data ----------------------------------------------------------------------------')
 		dprint(Web_Data)
 	end
+	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
 	dprint('---- web err ------------------------------------------------------------------------')
-	local ifile, ierr = io.open(afwlogfile .. '_err', 'r')
-	local Web_Error = ierr or ''
-	if not ierr then
-		Web_Error = ifile:read('*all')
-		ifile:close()
+	local Web_Error = ''
+	if afwlogfile ~= nil then
+		local ifile, ierr = io.open(afwlogfile .. '_err', 'r')
+		Web_Error = ierr or ''
+		if not ierr then
+			Web_Error = ifile:read('*all')
+			ifile:close()
+		end
+		dprint('Web_Err=' .. Web_Error)
+		os.remove(afwlogfile .. '_err')
 	end
-	dprint('Web_Err=' .. Web_Error)
-	os.remove(afwlogfile .. '_err')
 	dprint('---- end web data ------------------------------------------------------------------------')
 	if (Web_Error:find('unsupported protocol')) then
 		dprint('### Error: unsupported protocol.')
