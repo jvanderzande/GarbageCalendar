@@ -11,11 +11,12 @@ The main changes are:
   * The main script can optionally create an ics calendar file which can be used by a calendar application.
 
 # Check the Wiki for:
-- Detailed [<i>Setup instructions</i>](../../wiki/Setup).
-- Detailed [<i>Test and Debugging instructions</i>](../../wiki/Testing).  
+- Detailed [*Setup instructions*](../../wiki/Setup).
+- Detailed [*Test and Debugging instructions*](../../wiki/Testing).  
 **Dev:**  
-- Detailed [<i>Setup instructions</i>](wiki/Setup.md).
-- Detailed [<i>Test and Debugging instructions</i>](wiki/Testing.md).
+- [*Development Wiki updates*](/wiki/Home.md):
+- Detailed [*Setup instructions*](wiki/Setup.md).
+- Detailed [*Test and Debugging instructions*](wiki/Testing.md).
 
 **More information can be found or questions can asked here: https://www.domoticz.com/forum/viewtopic.php?f=61&t=31295 or in the discussions section: https://github.com/jvanderzande/GarbageCalendar/discussions**
 
