@@ -1,5 +1,5 @@
 # Welcome to the GarbageCalendar site for Domoticz
-![Domotics text device](/../../wiki/domotextdevice.png)
+![Domotics text device](../../wiki/domotextdevice.png)
 
 This is a project to retrieve the Garbage calendar information for your home address by means of  a Domoticz time script which will update a Domoticz TEXT device and optionally send you a notification at the specified time(s) 0-x days before the event.<br>
 This repository is a replacement for the initial repository I started: https://github.com/jvanderzande/mijnafvalwijzer. <br>
@@ -13,10 +13,6 @@ The main changes are:
 # Check the Wiki for:
 - Detailed [*Setup instructions*](../../wiki/Setup).
 - Detailed [*Test and Debugging instructions*](../../wiki/Testing).  
-**Dev:**  
-- [*Development Wiki updates*](/wiki/Home.md):
-- Detailed [*Setup instructions*](wiki/Setup.md).
-- Detailed [*Test and Debugging instructions*](wiki/Testing.md).
 
 **More information can be found or questions can asked here: https://www.domoticz.com/forum/viewtopic.php?f=61&t=31295 or in the discussions section: https://github.com/jvanderzande/GarbageCalendar/discussions**
 
