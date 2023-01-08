@@ -15,9 +15,9 @@ The main changes are:
 ## Check the Wiki for:
   * [How does it all work](../../wiki/Process)
   * [Modules](../../wiki/Available_modules)
-  * [*Setup instructions*](../../wiki/Setup)
+  * [**Setup instructions**](../../wiki/Setup)
   * [Add own notification code](../../wiki/Notifications)
-  * [*Test and Debugging instructions*](../../wiki/Testing)
+  * [**Test and Debugging instructions**](../../wiki/Testing)
 
 
 **More information can be found or questions can asked here**:  
