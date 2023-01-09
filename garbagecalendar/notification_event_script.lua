@@ -56,11 +56,11 @@ function notification_event(RunbyDzVents, commandArray, domoticz)
 		end
 
 		--## Reset to WarmWhite after xx seconds
-		domoticz.devices(lamp).setColor(0, 0, 0, 20, 0, 0, 2, 255) .afterSec(ontime-5)
+		domoticz.devices(lamp).setColor(0, 0, 0, 20, 0, 0, 2, 255) .afterSec(ontime)
 
 		--## Turn off lamp after xx seconds when it is currently off
 		if domoticz.devices(lamp).state == "Off" then
-			domoticz.devices(lamp).switchOff().afterSec(ontime)
+			domoticz.devices(lamp).switchOff().afterSec(ontime+1)
 		end
 	else
 		-- ##############################################################
@@ -79,33 +79,30 @@ function notification_event(RunbyDzVents, commandArray, domoticz)
 		--## Turn on lamp
 		commandArray[#commandArray + 1] = {[lamp] = 'On'}
 
+		--## Turn off lamp after xx +1 seconds when it is currently off
+		if otherdevices[lamp] == "Off" then
+			commandArray[#commandArray + 1] = {[lamp] = 'Off AFTER '..ontime+1}
+		end
+
 		--##  setColor(r, g, b, br, cw, ww, m, t)
 		url = 'http://127.0.0.1:8080/json.htm?type=command&param=setcolbrightnessvalue&idx='..idx
 		if Notify_type == 'gft' then	--green
 			url = url .. '&color={"m":3,"t":0,"r":0,"g":255,"b":0,"cw":0,"ww":0}&brightness=50'
 		elseif Notify_type == 'papier' then --blue
 			url = url .. '&color={"m":3,"t":0,"r":0,"g":0,"b":255,"cw":0,"ww":0}&brightness=50'
-			domoticz.devices(lamp).setColor(0, 0, 255, 50, 0, 0, 3, 0)
 		elseif Notify_type == 'pmd' then -- yellow
 			url = url .. '&color={"m":3,"t":0,"r":255,"g":255,"b":0,"cw":0,"ww":0}&brightness=50'
-			domoticz.devices(lamp).setColor(255, 255, 0, 50, 0, 0, 3, 0)
 		elseif Notify_type == 'restafval' then --
 			url = url .. '&color={"m":3,"t":0,"r":128,"g":128,"b":128,"cw":0,"ww":0}&brightness=50'
-			domoticz.devices(lamp).setColor(128, 128, 128, 100, 0, 0, 3, 0)
 		else -- purple
 			url = url .. '&color={"m":3,"t":0,"r":128,"g":0,"b":128,"cw":0,"ww":0}&brightness=50'
-			domoticz.devices(lamp).setColor(128, 0, 128, 50, 0, 0, 3, 0)
 		end
 		commandArray[#commandArray + 1] = {["OpenURL"] = url}
 
 		--## Reset color after xx seconds via URL
-		url = url .. '&color={"m":2,"t":255,"r":0,"g":0,"b":0,"cw":0,"ww":0}&brightness=20'
+		url = 'http://127.0.0.1:8080/json.htm?type=command&param=setcolbrightnessvalue&idx='..idx
+		url = url .. '&color={"m":2,"t":0,"r":0,"g":0,"b":0,"cw":0,"ww":255}&brightness=20'
 		url = url .. ' AFTER '..ontime
 		commandArray[#commandArray + 1] = {["OpenURL"] = url}
-
-		--## Turn off lamp after xx seconds when it is currently off
-		if otherdevices['yourotherdevicename'] == "Off" then
-			commandArray[#commandArray + 1] = {[lamp] = 'Off AFTER '..ontime}
-		end
 	end
 end

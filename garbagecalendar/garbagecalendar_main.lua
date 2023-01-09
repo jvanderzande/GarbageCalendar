@@ -277,7 +277,7 @@ function garbagecalendar_main(commandArray, domoticz)
 					(testnotification or false)
 			 then
 				if (testnotification) then
-					dprintlog('----> testnotification ?!?!', 1, 0)
+					dprintlog('----> test notification active', 1, 0)
 					testnotification = false -- this will trigger a test notification for the first record
 				end
 				-- Set ireminder field text
