@@ -443,7 +443,7 @@ function garbagecalendar_main(commandArray, domoticz)
 
 		-- function to process ThisYear and Lastyear JSON data
 		--
-		dprintlog('=> Start update for text device:', 1)
+		dprintlog('=> Start update for GarbageCalendar text device "'.. (myGarbageDevice or "") .. '"', 1)
 		local garbagedata, perr = table.load(datafile)
 		-- try reload data when datafile is missing
 		if perr ~= 0 then
