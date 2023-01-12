@@ -37,10 +37,10 @@ mydebug = false -- (true/false) -- run the script as it normally does when any o
 testdataload = false -- (true/false) -- run the web update module with each run for testing/debugging purposes
 testnotification = false -- (true/false) -- this will trigger a test notification for the first record for testing the notification system
 
--- Specify the appropriate directories (Raspberry Pi example)
-datafilepath = '/var/tmp' -- specify the directory where the garbagecalendar.data & garbagecalendar.log will be stored
--- Specify the appropriate directories (Windows example)
---datafilepath     = 'D:/temp'                            -- specify the directory where the garbagecalendar.data & garbagecalendar.log will be stored
+-- Specify the directoy used for the Data and Log files.
+-- It will default to the gabagecalendar/data directory when invalid or missing.
+--datafilepath = '/tmp'    -- Linux/RPI example
+--datafilepath = 'D:/temp' -- windows example
 
 ------------------------------------------------------------------------------------------------------------------------------------
 -- ### define format for text device in Domoticz
@@ -144,15 +144,15 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 -- The "dummy" entry can be used to force reading the data, update the Domoticz text device and see if there are any errors or missing garbadge types.
 
 garbagetype_cfg = {
-	-- Add any missing records below this line
+	-- Add any missing records below this line -----------------------------------------------------
 	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'plastic bak'},
 	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'groene bak'},
 	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'blauwe bak'},
 	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'grijze bak'},
-	-- Add any missing records above this line
+	-- Add any missing records above this line -----------------------------------------------------
 	--  "reloaddata" is used to start the background update process at this given time.
 	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},
-	['dummy1'] = {hour = 02, min = 31, daysbefore = 0, reminder = 0, text = 'dummy to trigger testing'}
+   ["dummy"]  = {hour = 02, min = 31, daysbefore = 0, reminder = 0, text = "dummy to trigger update of textdevice after Webupdate ran"}
 }
 
 -------------------------------------------------------------------------

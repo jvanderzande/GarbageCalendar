@@ -30,8 +30,8 @@ function garbagecalendar_main(commandArray, domoticz)
 	-- start logic - no changes below this line
 	--===================================================================================================================
 	-- Define gobal variable
-	websitemodule = '???'
-	datafilepath = ''
+	websitemodule = "unknown"
+	datafilepath = nil
 	GC_scriptpath = ''
 	weblogfile = ''
 	runlogfile = ''
@@ -75,6 +75,7 @@ function garbagecalendar_main(commandArray, domoticz)
 		if unexpected_condition then
 			error()
 		end
+
 		-- add defined Domoticz path to the search path
 		package.path = GC_scriptpath .. '?.lua;' .. package.path
 		require 'garbagecalendarconfig'
@@ -82,12 +83,52 @@ function garbagecalendar_main(commandArray, domoticz)
 		testdataload = testdataload or false
 		mydebug = mydebug or false
 
+		-- Check if file/directory exists
+		function exists(file)
+			local ok, err, code = os.rename(file, file)
+			if not ok then
+				if code == 13 then
+					-- Permission denied, but it exists
+					return true
+				end
+			end
+			return ok, err
+		end
+		-- Check if path is a directory
+		function isdir(path)
+			-- "/" works on both Unix and Windows
+			return exists(path .. '/')
+		end
+		--
+		-- Default to the data subdirectory when not provided
+		datafilepath = datafilepath or GC_scriptpath .. "data"
+		-- check whether provide datafilepath is valid
+		if (not isdir(datafilepath)) then
+			if (datafilepath ~= GC_scriptpath .. "data") then
+				print('### Warn: Invalid path for datafilepath in garbagecalendar_config.lua: datafilepath=' .. datafilepath .. '.')
+			end
+			-- using data in the garbagecalendar subdirectory.
+			datafilepath = GC_scriptpath .. "data"
+			if (not isdir(datafilepath)) then
+				-- Try creating subdir data in the garbagecalendar subdirectory.
+				os.execute('mkdir "'..datafilepath..'"')
+				print('### Info: Try creating Subdir for Data and Logs:"'..datafilepath..'"')
+			end
+			if (isdir(datafilepath)) then
+				print('### Info: Directory used for Data and Logs is changed to:"'..datafilepath..'"')
+			else
+				print('### Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.')
+				return
+			end
+		end
+
 		-- initialise the variables
 		datafilepath = (datafilepath .. '/'):gsub('//', '/')
 		runlogfile = datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log'
 		weblogfile = datafilepath .. 'garbagecalendar_web_' .. websitemodule .. '.log'
 		datafile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data'
 		icalfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.ics'
+
 		-- empty previous run runlogfile
 		file = io.open(runlogfile, 'w')
 		if file == nil then
@@ -120,7 +161,7 @@ function garbagecalendar_main(commandArray, domoticz)
 	-- check if that worked correctly
 	local status, err = pcall(garbagecalendarconfig)
 	if err then
-		print('#### ' .. os.date('%X') .. ' start garbagecalendar script v' .. MainScriptVersion .. '####')
+		print('#### ' .. os.date('%X') .. ' start garbagecalendar script v' .. MainScriptVersion .. ' ####')
 		print('!!! failed loading "garbagecalendarconfig.lua" from : "' .. GC_scriptpath .. '"')
 		print('       Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
 		print('       Also check the path in variable "GC_scriptpath= "  is correctly set.')
@@ -155,12 +196,6 @@ function garbagecalendar_main(commandArray, domoticz)
 	end
 	---====================================================================================================
 	-- check whether provide paths are valid
-	if (not isdir(datafilepath)) then
-		dprintlog('### Error: invalid path for datafilepath : ' .. datafilepath .. '.', 1)
-		dprintlog('### Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.', 1)
-		return
-	end
-
 	if (not exists(GC_scriptpath .. '' .. websitemodule .. '.lua')) then
 		dprintlog('### Error: module not found: ' .. GC_scriptpath .. '' .. websitemodule .. '.lua', 1)
 		dprintlog('### Error: Please check the path&name in variables "GC_scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.', 1)
@@ -809,6 +844,4 @@ function garbagecalendar_main(commandArray, domoticz)
 	end
 	dprintlog('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
 
-	-- save changes to Global variable
-	--GC_domoticz=domoticz
 end
