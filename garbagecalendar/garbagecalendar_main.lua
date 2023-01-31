@@ -105,7 +105,7 @@ function garbagecalendar_main(commandArray, domoticz)
 		-- check whether provide datafilepath is valid
 		if (not isdir(datafilepath)) then
 			if (datafilepath ~= GC_scriptpath .. "data") then
-				print('### Warn: Invalid path for datafilepath in garbagecalendar_config.lua: datafilepath=' .. datafilepath .. '.')
+				print('### Warning: Invalid path for datafilepath in garbagecalendar_config.lua: datafilepath=' .. datafilepath .. '.')
 			end
 			-- using data in the garbagecalendar subdirectory.
 			datafilepath = GC_scriptpath .. "data"
@@ -823,7 +823,7 @@ function garbagecalendar_main(commandArray, domoticz)
 	end
 	-- get information from website, update device and send notification when required
 	if needupdate then
-		-- empty previous run_update logfile
+		-- Check Data subdir
 		Perform_Data_check()
 		-- Save run log during update
 		local ifile = io.open(runlogfile, 'r')
