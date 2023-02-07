@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20220505-1900'
+ver = '20230207-0859'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -148,16 +148,19 @@ elseif afwdatafile == nil then
 elseif afwlogfile == nil then
    dprint('!!! afwlogfile not specified!')
 else
+	local Load_Success = true
    -- Load JSON.lua
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.')
    else
       dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath .. '.')
       dprint('### Error: Please check your setup and try again.')
-      os.exit() -- stop execution
+		Load_Success = false
    end
-   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
-   Perform_Update()
-   dprint('=> Write data to ' .. afwdatafile)
-   table.save(garbagedata, afwdatafile)
+	if Load_Success then
+		dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
+		Perform_Update()
+		dprint('=> Write data to ' .. afwdatafile)
+		table.save(garbagedata, afwdatafile)
+	end
 end

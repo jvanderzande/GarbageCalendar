@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rova_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20210312-1700'
+ver = '20230207-0859'
 websitemodule = 'm_rova_api'
 -- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
 --
@@ -137,16 +137,19 @@ elseif afwdatafile == nil then
 elseif afwlogfile == nil then
    dprint('!!! afwlogfile not specified!')
 else
+	local Load_Success = true
    -- Load JSON.lua
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.')
    else
       dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath .. '.')
       dprint('### Error: Please check your setup and try again.')
-      os.exit() -- stop execution
+		Load_Success = false
    end
-   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
-   Perform_Update()
-   dprint('=> Write data to ' .. afwdatafile)
-   table.save(garbagedata, afwdatafile)
+	if Load_Success then
+		dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
+		Perform_Update()
+		dprint('=> Write data to ' .. afwdatafile)
+		table.save(garbagedata, afwdatafile)
+	end
 end

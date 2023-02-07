@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20211010-1900'
+ver = '20230207-0859'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -160,16 +160,19 @@ elseif afwdatafile == nil then
 elseif afwlogfile == nil then
    dprint('!!! afwlogfile not specified!')
 else
+	local Load_Success = true
    -- Load JSON.lua
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.')
    else
       dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath .. '.')
       dprint('### Error: Please check your setup and try again.')
-      os.exit() -- stop execution
+		Load_Success = false
    end
-   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. ' companyCode:' .. companyCode)
-   Perform_Update()
-   dprint('=> Write data to ' .. afwdatafile)
-   table.save(garbagedata, afwdatafile)
+	if Load_Success then
+		dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
+		Perform_Update()
+		dprint('=> Write data to ' .. afwdatafile)
+		table.save(garbagedata, afwdatafile)
+	end
 end

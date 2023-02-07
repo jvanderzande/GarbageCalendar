@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"xmlTools.xqueryExecutionInputLimit": 500,
+		"lua.format.lineWidth": 700,
+		"lua.format.singleQuote": true
+	}
+}
