@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20220503-1709'
+MainGenUtilsVersion = '20230207-0859'
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)
@@ -25,6 +25,17 @@ function loaddefaultjson()
    -- add defined Domoticz path to the search path
    package.path = domoticzjsonpath .. '?.lua;' .. package.path
    JSON = require 'JSON' -- use generic JSON.lua
+end
+
+-------------------------------------------------------
+-- try to load base64 library
+function loadbase64()
+   if unexpected_condition then
+      error()
+   end
+   -- add defined Domoticz path to the search path
+   package.path = domoticzjsonpath .. '?.lua;' .. package.path
+	base64 = require 'base64'
 end
 
 -------------------------------------------------------
