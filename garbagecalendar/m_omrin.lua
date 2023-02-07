@@ -1,18 +1,19 @@
 -----------------------------------------------------------------------------------------------------------------
--- garbagecalendar module script: m_omrin.lua
+-- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230207-0859'
+ver = '20230207-1331'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
 -------------------------------------------------------
 -- get script directory
 function script_path()
-	return arg[0]:match('.*[/\\]') or './'
+	local str = debug.getinfo(2, 'S').source:sub(2)
+	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
 end
 -- only include when run in separate process
-if scriptpath == nil then
-	dofile(script_path() .. 'generalfuncs.lua') --
+if GC_scriptpath == nil then
+   dofile(script_path() .. 'generalfuncs.lua') --
 end
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
@@ -181,38 +182,34 @@ end
 -- Start of logic ========================================================================
 timenow = os.date('*t')
 -- get paramters from the commandline
-domoticzjsonpath = domoticzjsonpath or arg[1]
-Zipcode = Zipcode or arg[2]
-Housenr = Housenr or arg[3]
-Housenrsuf = Housenrsuf or arg[4] or '' -- optional
-afwdatafile = datafile or arg[5]
-afwlogfile = weblogfile or arg[6]
-Hostname = (Hostname or arg[7]) or '' -- Not needed
-Street = (Street or arg[8]) or '' -- Not needed
+Zipcode = Zipcode or arg[1]
+Housenr = Housenr or arg[2]
+Housenrsuf = Housenrsuf or arg[3] or '' -- optional
+afwdatafile = datafile or arg[4]
+afwlogfile = weblogfile or arg[5]
+Hostname = (Hostname or arg[6]) or '' -- Not needed
+Street = (Street or arg[7]) or '' -- Not needed
 -- other variables
 garbagedata = {} -- array to save information to which will be written to the data file
 
 dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalender module ' .. websitemodule .. ' (v' .. ver .. ')')
-if domoticzjsonpath == nil then
-	dprint('!!! domoticzjsonpath not specified!')
-elseif Zipcode == nil then
-	dprint('!!! Zipcode not specified!')
+if Zipcode == nil then
+   dprint('!!! Zipcode not specified!')
 elseif Housenr == nil then
-	dprint('!!! Housenr not specified!')
+   dprint('!!! Housenr not specified!')
 elseif Housenrsuf == nil then
-	dprint('!!! Housenrsuf not specified!')
+   dprint('!!! Housenrsuf not specified!')
 elseif afwdatafile == nil then
-	dprint('!!! afwdatafile not specified!')
+   dprint('!!! afwdatafile not specified!')
 elseif afwlogfile == nil then
-	dprint('!!! afwlogfile not specified!')
+   dprint('!!! afwlogfile not specified!')
 else
 	local Load_Success = true
-	-- Load JSON.lua
-	if pcall(loaddefaultjson) then
-		dprint('Loaded JSON.lua.')
-	else
-		dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath .. '.')
-		dprint('### Error: Please check your setup and try again.')
+   if pcall(loaddefaultjson) then
+      dprint('Loaded JSON.lua.')
+   else
+      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
+      dprint('### Error: Please check your setup and try again.')
 		Load_Success = false
 	end
 	-- Load base64.lua
@@ -224,9 +221,9 @@ else
 		Load_Success = false
 	end
 	if Load_Success then
-		dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
-		Perform_Update()
-		dprint('=> Write data to ' .. afwdatafile)
-		table.save(garbagedata, afwdatafile)
+   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
+   Perform_Update()
+   dprint('=> Write data to ' .. afwdatafile)
+   table.save(garbagedata, afwdatafile)
 	end
 end

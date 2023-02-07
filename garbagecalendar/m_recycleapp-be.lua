@@ -2,17 +2,18 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230207-0859'
+ver = '20230207-1331'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
 -------------------------------------------------------
 -- get script directory
 function script_path()
-   return arg[0]:match('.*[/\\]') or './'
+	local str = debug.getinfo(2, 'S').source:sub(2)
+	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
 end
 -- only include when run in separate process
-if scriptpath == nil then
+if GC_scriptpath == nil then
    dofile(script_path() .. 'generalfuncs.lua') --
 end
 -------------------------------------------------------
@@ -108,21 +109,18 @@ end
 -- Start of logic ========================================================================
 timenow = os.date('*t')
 -- get paramters from the commandline
-domoticzjsonpath = domoticzjsonpath or arg[1]
-Zipcode = Zipcode or arg[2]
-Housenr = Housenr or arg[3] or ''
-Housenrsuf = Housenrsuf or arg[4]
-afwdatafile = datafile or arg[5]
-afwlogfile = weblogfile or arg[6]
-Hostname = (Hostname or arg[7]) or '' -- Not needed
-Street = (Street or arg[8]) or '' -- Required!!
+Zipcode = Zipcode or arg[1]
+Housenr = Housenr or arg[2] or ''
+Housenrsuf = Housenrsuf or arg[3]
+afwdatafile = datafile or arg[4]
+afwlogfile = weblogfile or arg[5]
+Hostname = (Hostname or arg[6]) or '' -- Not needed
+Street = (Street or arg[7]) or '' -- Required!!
 -- other variables
 garbagedata = {} -- array to save information to which will be written to the data file
 
 dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
-if domoticzjsonpath == nil then
-   dprint('!!! domoticzjsonpath not specified!')
-elseif Zipcode == nil then
+if Zipcode == nil then
    dprint('!!! Zipcode not specified!')
 elseif Housenr == nil then
    dprint('!!! Housenr not specified!')
@@ -140,14 +138,14 @@ else
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.')
    else
-      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. domoticzjsonpath .. '.')
+      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
       dprint('### Error: Please check your setup and try again.')
 		Load_Success = false
    end
 	if Load_Success then
-		dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
-		Perform_Update()
-		dprint('=> Write data to ' .. afwdatafile)
-		table.save(garbagedata, afwdatafile)
+   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  Street:' .. Street)
+   Perform_Update()
+   dprint('=> Write data to ' .. afwdatafile)
+   table.save(garbagedata, afwdatafile)
 	end
 end
