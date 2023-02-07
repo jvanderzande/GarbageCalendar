@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230109-1437'
+MainGenUtilsVersion = '20230207-1242'
 -------------------------------------------------------
 -- dprint function to format log records
 function dprint(text)
@@ -17,10 +17,10 @@ function dprint(text)
 end
 
 -- dprint function to format log records
-function addlogmessage(text,level)
+function addlogmessage(text, level)
 	text = text or 'nil'
 	level = tostring(level) or '1'
-	url = 'http://127.0.0.1:8080/json.htm?type=command&param=addlogmessage&message='..url_encode(text)..'&level='..level
+	url = 'http://127.0.0.1:8080/json.htm?type=command&param=addlogmessage&message=' .. url_encode(text) .. '&level=' .. level
 	local sQuery = 'curl -k "' .. url .. '" > /tmp/garbagecalendar_logerrors.log 2>&1 '
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
@@ -36,6 +36,17 @@ function loaddefaultjson()
 	-- add defined Domoticz path to the search path
 	package.path = GC_scriptpath .. '?.lua;' .. package.path
 	JSON = require 'JSON' -- use generic JSON.lua
+end
+
+-------------------------------------------------------
+-- try to load base64 library
+function loadbase64()
+	if unexpected_condition then
+		error()
+	end
+	-- add defined Domoticz path to the search path
+	package.path = domoticzjsonpath .. '?.lua;' .. package.path
+	base64 = require 'base64'
 end
 
 -------------------------------------------------------
