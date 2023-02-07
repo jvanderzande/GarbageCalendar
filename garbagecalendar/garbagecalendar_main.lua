@@ -1,9 +1,8 @@
 function garbagecalendar_main(commandArray, domoticz)
-
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230109-1437'
+	MainScriptVersion = '20230207-1242'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -30,7 +29,7 @@ function garbagecalendar_main(commandArray, domoticz)
 	-- start logic - no changes below this line
 	--===================================================================================================================
 	-- Define gobal variable
-	websitemodule = "unknown"
+	websitemodule = 'unknown'
 	datafilepath = nil
 	GC_scriptpath = ''
 	weblogfile = ''
@@ -101,21 +100,21 @@ function garbagecalendar_main(commandArray, domoticz)
 		end
 		--
 		-- Default to the data subdirectory when not provided
-		datafilepath = datafilepath or GC_scriptpath .. "data"
+		datafilepath = datafilepath or GC_scriptpath .. 'data'
 		-- check whether provide datafilepath is valid
 		if (not isdir(datafilepath)) then
-			if (datafilepath ~= GC_scriptpath .. "data") then
+			if (datafilepath ~= GC_scriptpath .. 'data') then
 				print('### Warning: Invalid path for datafilepath in garbagecalendar_config.lua: datafilepath=' .. datafilepath .. '.')
 			end
 			-- using data in the garbagecalendar subdirectory.
-			datafilepath = GC_scriptpath .. "data"
+			datafilepath = GC_scriptpath .. 'data'
 			if (not isdir(datafilepath)) then
 				-- Try creating subdir data in the garbagecalendar subdirectory.
-				os.execute('mkdir "'..datafilepath..'"')
-				print('### Info: Try creating Subdir for Data and Logs:"'..datafilepath..'"')
+				os.execute('mkdir "' .. datafilepath .. '"')
+				print('### Info: Try creating Subdir for Data and Logs:"' .. datafilepath .. '"')
 			end
 			if (isdir(datafilepath)) then
-				print('### Info: Directory used for Data and Logs is changed to:"'..datafilepath..'"')
+				print('### Info: Directory used for Data and Logs is changed to:"' .. datafilepath .. '"')
 			else
 				print('### Error: Please check the path in variable "datafilepath= " in your "garbagecalenderconfig.lua" setup and try again.')
 				return
@@ -380,11 +379,11 @@ function garbagecalendar_main(commandArray, domoticz)
 
 				if (Notificationsystem or '') ~= '' then
 					if RunbyDzVents then
-						domoticz.notify(inotificationtitle, inotificationtext, domoticz.PRIORITY_NORMAL,domoticz.SOUND_DEFAULT, "" , Notificationsystem)
+						domoticz.notify(inotificationtitle, inotificationtext, domoticz.PRIORITY_NORMAL, domoticz.SOUND_DEFAULT, '', Notificationsystem)
 					else
 						commandArray[#commandArray + 1] = {['SendNotification'] = inotificationtitle .. '#' .. inotificationtext .. '####' .. Notificationsystem}
 					end
-					dprintlog('----> '..Notificationsystem..' Notification send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext, 1, 0)
+					dprintlog('----> ' .. Notificationsystem .. ' Notification send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext, 1, 0)
 				end
 
 				if (Notificationscript or '') ~= '' then
@@ -419,16 +418,16 @@ function garbagecalendar_main(commandArray, domoticz)
 					-- run the extra function
 					local n_rc, n_errmsg
 					if RunbyDzVents then
-						n_rc, n_errmsg  = pcall(run_notification_event, RunbyDzVents, nil, domoticz)
+						n_rc, n_errmsg = pcall(run_notification_event, RunbyDzVents, nil, domoticz)
 					else
-						n_rc, n_errmsg  = pcall(run_notification_event, RunbyDzVents, commandArray, nil)
+						n_rc, n_errmsg = pcall(run_notification_event, RunbyDzVents, commandArray, nil)
 					end
 					-- check for errors
 					if n_rc then
 						dprintlog('---->Notification script ended: ' .. EventNotificationscript)
 					else
-						dprintlog('!!!!> '..EventNotificationscript..'  ended with errors: ' .. n_errmsg, 1)
-						addlogmessage('!!!!> '..EventNotificationscript..'  ended with errors: ' .. n_errmsg,4)
+						dprintlog('!!!!> ' .. EventNotificationscript .. '  ended with errors: ' .. n_errmsg, 1)
+						addlogmessage('!!!!> ' .. EventNotificationscript .. '  ended with errors: ' .. n_errmsg, 4)
 					end
 				end
 			end
@@ -478,7 +477,7 @@ function garbagecalendar_main(commandArray, domoticz)
 
 		-- function to process ThisYear and Lastyear JSON data
 		--
-		dprintlog('=> Start update for GarbageCalendar text device "'.. (myGarbageDevice or "") .. '"', 1)
+		dprintlog('=> Start update for GarbageCalendar text device "' .. (myGarbageDevice or '') .. '"', 1)
 		local garbagedata, perr = table.load(datafile)
 		-- try reload data when datafile is missing
 		if perr ~= 0 then
@@ -843,5 +842,4 @@ function garbagecalendar_main(commandArray, domoticz)
 		dprintlog('Scheduled time(s) not reached yet, so nothing to do!')
 	end
 	dprintlog('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
-
 end

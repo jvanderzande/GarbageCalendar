@@ -2,7 +2,7 @@
 -- Event start script for  GarbageCalendar huisvuil script: script_time_garbagecalendar.lua
 -- Works both in DzVents and Regular LUA time scripts
 ----------------------------------------------------------------------------------------------------------------
-EventScriptVersion = '20230109-1437'
+EventScriptVersion = '20230207-1242'
 
 -- set variable to false=disable or true=enable the script
 local GC_enabled = true
@@ -17,9 +17,9 @@ local GC_scriptpath = script_path() or './'
 -- run the script and check for errors.
 function run_garbagecalendar(GC_scriptpath, commandArray, domoticz)
 	dofile(GC_scriptpath .. 'garbagecalendar/garbagecalendar_main.lua')
-	local rc, errmsg  = pcall(garbagecalendar_main, commandArray, domoticz)
+	local rc, errmsg = pcall(garbagecalendar_main, commandArray, domoticz)
 	if not rc then
-		print("-----done with error", errmsg)
+		print('-----done with error', errmsg)
 	end
 end
 

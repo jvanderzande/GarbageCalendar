@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230109-1437'
+ver = '20230207-1242'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
@@ -133,16 +133,19 @@ elseif afwdatafile == nil then
 elseif afwlogfile == nil then
    dprint('!!! afwlogfile not specified!')
 else
+	local Load_Success = true
    -- Load JSON.lua
    if pcall(loaddefaultjson) then
       dprint('Loaded JSON.lua.')
    else
       dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
       dprint('### Error: Please check your setup and try again.')
-      os.exit() -- stop execution
+		Load_Success = false
    end
+	if Load_Success then
    dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  Street:' .. Street)
    Perform_Update()
    dprint('=> Write data to ' .. afwdatafile)
    table.save(garbagedata, afwdatafile)
+	end
 end

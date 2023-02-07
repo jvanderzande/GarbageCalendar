@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_zuidlimburg.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230109-1437'
+ver = '20230207-1242'
 websitemodule = 'm_zuidlimburg'
 -- Link to WebSite:  https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc=AAAA99&nr=999&t
 --

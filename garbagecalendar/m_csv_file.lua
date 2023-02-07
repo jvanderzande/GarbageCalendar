@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_csv_file.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230109-1437'
+ver = '20230207-1242'
 websitemodule = 'm_csv_file'
 --[[
 This module requires an inputfile defined by this variable in the configfile:

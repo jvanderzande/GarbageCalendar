@@ -5,3 +5,4 @@ garbagecalendar/*.html
 garbagecalendar/test.lua
 GarbageCalendar.code-workspace
 garbagecalendar/data/
+garbagecalendar/omrin.py
