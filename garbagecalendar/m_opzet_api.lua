@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-1315'
+ver = '20230209-2000'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -18,14 +18,14 @@ function Perform_Update()
             local web_garbagedate = data.ophaaldatum
             if web_garbagedate == nil then
                -- this is a type that is not collected and has no ophaaldag defined
-               genfuncs.Print_afwlogfile( ' Not collected web_garbagetype : ' .. (web_garbagetype or "?????"))
+               Print_weblogfile( ' Not collected web_garbagetype : ' .. (web_garbagetype or "?????"))
             else
-               genfuncs.Print_afwlogfile( ' web_garbagetype : ' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
+               Print_weblogfile( ' web_garbagetype : ' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
                local dateformat = '????????'
                -- Get days diff
                dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', { 'yyyy', 'mm', 'dd' })
                if daysdiffdev == nil then
-                  genfuncs.Print_afwlogfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+                  Print_weblogfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
                   return
                end
                if (daysdiffdev >= 0) then
@@ -40,7 +40,7 @@ function Perform_Update()
       return pickuptimes
    end
 
-   genfuncs.Print_afwlogfile( '---- web update ----------------------------------------------------------------------------')
+   Print_weblogfile( '---- web update ----------------------------------------------------------------------------')
    local Web_Data
    -- Get the information for the specified address specifically the bagId for the subsequent calls
    Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. Zipcode .. '-' .. Housenr .. '"')
@@ -48,7 +48,7 @@ function Perform_Update()
       return
    end
    if (Web_Data:sub(1, 2) == '[]') then
-      genfuncs.Print_afwlogfile( '### Error: Check your Zipcode and Housenr as we get an [] response.')
+      Print_weblogfile( '### Error: Check your Zipcode and Housenr as we get an [] response.')
       return
    end
    local adressdata = JSON:decode(Web_Data)
@@ -56,7 +56,7 @@ function Perform_Update()
    local bagId = ""
    for i = 1, #adressdata do
       local record = adressdata[i]
-      genfuncs.Print_afwlogfile( 'Address options: ' .. record['huisletter'] .. '=' .. Housenrsuf .. '->' .. record['bagId'])
+      Print_weblogfile( 'Address options: ' .. record['huisletter'] .. '=' .. Housenrsuf .. '->' .. record['bagId'])
       if type(record) == 'table' then
          bagId = record['bagId']
          if Housenrsuf == record['huisletter'] then
@@ -65,38 +65,38 @@ function Perform_Update()
       end
    end
    if bagId == nil or bagId == '' then
-      genfuncs.Print_afwlogfile( '### Error: No bagId retrieved...  stopping execution.')
+      Print_weblogfile( '### Error: No bagId retrieved...  stopping execution.')
       return
    end
-   genfuncs.Print_afwlogfile( 'bagId:' .. bagId)
+   Print_weblogfile( 'bagId:' .. bagId)
 
    -- get the Afvalstromen information for all possible garbagetypeid's with their ophaaldatum info for this address(bagId)
    Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/afvalstromen"')
    if (Web_Data:sub(1, 2) == '[]') then
-      genfuncs.Print_afwlogfile( '### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
+      Print_weblogfile( '### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
       return
    end
    --
    -- Strip Icon info as that contains much data which is giving JSON lexing problems.
    Web_Data = Web_Data:gsub('(,"icon_data":".-",)', ',')
-   genfuncs.Print_afwlogfile( "==== Stripped 1 ========================================================")
-   genfuncs.Print_afwlogfile( Web_Data)
+   Print_weblogfile( "==== Stripped 1 ========================================================")
+   Print_weblogfile( Web_Data)
    --
    -- Strip \ infront of " to ensure the next stripping will work
    Web_Data = Web_Data:gsub('(\\")', '"')
-   genfuncs.Print_afwlogfile( "==== Stripped 2 ========================================================")
-   genfuncs.Print_afwlogfile( Web_Data)
+   Print_weblogfile( "==== Stripped 2 ========================================================")
+   Print_weblogfile( Web_Data)
    --
    -- Strip content field as that contains much data which is giving JSON lexing problems.
    Web_Data = Web_Data:gsub('(,"content":".-",)', ',')
-   genfuncs.Print_afwlogfile( "==== Stripped 3 ========================================================")
-   genfuncs.Print_afwlogfile( Web_Data)
-   genfuncs.Print_afwlogfile( "============================================================")
+   Print_weblogfile( "==== Stripped 3 ========================================================")
+   Print_weblogfile( Web_Data)
+   Print_weblogfile( "============================================================")
 
    -- process the data
-   genfuncs.Print_afwlogfile( '- start looping through received data -----------------------------------------------------------')
+   Print_weblogfile( '- start looping through received data -----------------------------------------------------------')
    local igarbagedata = processdata(JSON:decode(Web_Data))
-   genfuncs.Print_afwlogfile( '- Sorting records.')
+   Print_weblogfile( '- Sorting records.')
    for x = 0, 60, 1 do
       for mom in pairs(igarbagedata) do
          if igarbagedata[mom].diff == x then
@@ -119,7 +119,7 @@ local chkfields = {"websitemodule",
 	"Housenr",
 --	"Housenrsuf",
 	"afwdatafile",
-	"afwlogfile",
+	"weblogfile",
 	"Hostname",
 --	"Street",
 --	"companyCode"
@@ -129,15 +129,15 @@ local param_err=0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		genfuncs.Print_afwlogfile('!!! '..value .. ' not specified!', 1)
+		Print_weblogfile('!!! '..value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
-	genfuncs.Print_afwlogfile('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
 	Perform_Update()
-	genfuncs.Print_afwlogfile('=> Write data to ' .. afwdatafile)
+	Print_weblogfile('=> Write data to ' .. afwdatafile)
 	table.save(garbagedata, afwdatafile)
 else
-	genfuncs.Print_afwlogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

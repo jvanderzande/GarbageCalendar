@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_csv_file.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-1315'
+ver = '20230209-2000'
 websitemodule = 'm_csv_file'
 --[[
 This module requires an inputfile defined by this variable in the configfile:
@@ -27,25 +27,25 @@ function Perform_Update()
    local txt = ''
    local txtcnt = 0
    --
-   genfuncs.Print_afwlogfile( '---- check garbage_input.csv ----------------------------------------------------------------------------')
+   Print_weblogfile( '---- check garbage_input.csv ----------------------------------------------------------------------------')
    if (genfuncs.exists(input_csv_file)) then
-      genfuncs.Print_afwlogfile( 'input File ' .. input_csv_file .. ' found, check access.')
+      Print_weblogfile( 'input File ' .. input_csv_file .. ' found, check access.')
       if (not genfuncs.haveaccess(input_csv_file)) then
-         genfuncs.Print_afwlogfile( 'No access to the file. Running->sudo chmod 777 ' .. input_csv_file)
+         Print_weblogfile( 'No access to the file. Running->sudo chmod 777 ' .. input_csv_file)
          os.execute('sudo chmod 777 ' .. input_csv_file .. ' 2>/dev/null')
          if (genfuncs.haveaccess(input_csv_file)) then
-            genfuncs.Print_afwlogfile( 'Access fixed to the data file.')
+            Print_weblogfile( 'Access fixed to the data file.')
          else
-            genfuncs.Print_afwlogfile( 'Still no access. Please check the settings for ' .. input_csv_file .. ' and then try again.')
+            Print_weblogfile( 'Still no access. Please check the settings for ' .. input_csv_file .. ' and then try again.')
             return false
          end
       end
    else
-      genfuncs.Print_afwlogfile( 'input File ' .. input_csv_file .. ' not found. exit process.')
+      Print_weblogfile( 'input File ' .. input_csv_file .. ' not found. exit process.')
       return false
    end
 
-   genfuncs.Print_afwlogfile( '---- Open garbage_input.csv ----------------------------------------------------------------------------')
+   Print_weblogfile( '---- Open garbage_input.csv ----------------------------------------------------------------------------')
    ifile, err = io.open(input_csv_file, 'r')
    local Web_Data = ''
    if not err then
@@ -54,12 +54,12 @@ function Perform_Update()
    end
 
    if Web_Data == '' then
-      genfuncs.Print_afwlogfile( 'Error Web_Data is empty.')
+      Print_weblogfile( 'Error Web_Data is empty.')
       return
    end
-   genfuncs.Print_afwlogfile( '---- web data ----------------------------------------------------------------------------')
-   genfuncs.Print_afwlogfile( Web_Data)
-   genfuncs.Print_afwlogfile( '---- end web data ------------------------------------------------------------------------')
+   Print_weblogfile( '---- web data ----------------------------------------------------------------------------')
+   Print_weblogfile( Web_Data)
+   Print_weblogfile( '---- end web data ------------------------------------------------------------------------')
    -- Process received webdata.
    local web_garbagetype = ''
    local web_garbagetype_date = ''
@@ -68,14 +68,14 @@ function Perform_Update()
    local pickuptimes = {}
    -- loop through returned result
    i = 0
-   genfuncs.Print_afwlogfile( '- start looping through received data ----------------------------------------------------')
+   Print_weblogfile( '- start looping through received data ----------------------------------------------------')
    for web_garbagedate, web_garbagetype in string.gmatch(Web_Data, '([^;\r\n]+);([^\r\n;]+)') do
       i = i + 1
-      genfuncs.Print_afwlogfile( i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
+      Print_weblogfile( i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
       if web_garbagetype ~= nil and web_garbagedate ~= nil and web_garbagedate ~= 'garbagedate' then
          web_garbagedesc = web_garbagedesc or ''
          -- first match for each Type we save the date to capture the first next dates
-         --genfuncs.Print_afwlogfile( web_garbagetype,web_garbagedate)
+         --Print_weblogfile( web_garbagetype,web_garbagedate)
          dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
          -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
          if (daysdiffdev >= 0) then
@@ -88,7 +88,7 @@ function Perform_Update()
          end
       end
    end
-   genfuncs.Print_afwlogfile( '- Sorting records.')
+   Print_weblogfile( '- Sorting records.')
    local eventcnt = 0
    for x = 0, 60, 1 do
       for mom in pairs(pickuptimes) do
@@ -114,7 +114,7 @@ local chkfields = {"websitemodule",
 --	"Housenr",
 --	"Housenrsuf",
 	"afwdatafile",
-	"afwlogfile",
+	"weblogfile",
 --	"Hostname",
 --	"Street",
 --	"companyCode"
@@ -124,15 +124,15 @@ local param_err=0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		genfuncs.Print_afwlogfile('!!! '..value .. ' not specified!', 1)
+		Print_weblogfile('!!! '..value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
-	genfuncs.Print_afwlogfile('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
 	Perform_Update()
-	genfuncs.Print_afwlogfile('=> Write data to ' .. afwdatafile)
+	Print_weblogfile('=> Write data to ' .. afwdatafile)
 	table.save(garbagedata, afwdatafile)
 else
-	genfuncs.Print_afwlogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

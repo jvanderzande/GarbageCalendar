@@ -1,26 +1,9 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230209-1315'
+MainGenUtilsVersion = '20230209-2000'
 
 local genfuncs = {}
-
--------------------------------------------------------
--- dprint function to format log records
-function genfuncs.Print_afwlogfile( text, console)
-	text = text or 'nil'
-	local ptext = '' .. os.date('%X ') .. (websitemodule or '?') .. ': ' .. text
-	if afwlogfile == nil then
-		print(ptext)
-	else
-		local file = io.open(afwlogfile, 'a')
-		file:write(ptext .. '\n')
-		file:close()
-		if (console or false) then
-			print(ptext)
-		end
-	end
-end
 
 -- addlogmessage function sends messages to Domoticz log
 function genfuncs.addlogmessage(text, level)
@@ -36,7 +19,7 @@ end
 -------------------------------------------------------
 -- try to load module/library
 function genfuncs.loadlualib(libname)
-	genfuncs.Print_afwlogfile( "--> Loading module ".. (libname or "nil"))
+	Print_logfile('-> Loading module ' .. (libname or 'nil'))
 	local moduleobject
 	local function loadlib()
 		if unexpected_condition then
@@ -45,22 +28,21 @@ function genfuncs.loadlualib(libname)
 		-- add defined Domoticz path to the search path
 		if not package.path:match(GC_scriptpath .. '%?.lua;') then
 			package.path = GC_scriptpath .. '?.lua;' .. package.path
-			genfuncs.Print_afwlogfile( "updated package.path:",package.path)
+			Print_logfile('updated package.path:', package.path)
 		end
 		moduleobject = require(libname)
 	end
 
 	if pcall(loadlib) then
-		genfuncs.Print_afwlogfile( '--< Loaded '..libname..'.lua.  ->moduleobject type:'..type(moduleobject))
+		Print_logfile('-< Loaded ' .. libname .. '.lua.  ->moduleobject type:' .. type(moduleobject))
 		return moduleobject
 	else
-		genfuncs.Print_afwlogfile( '### Error: failed loading default '..libname..'.lua!')
-		genfuncs.Print_afwlogfile( '    package.path=' .. package.path .. '.')
-		genfuncs.Print_afwlogfile( '### Error: Please check your setup and try again.')
+		Print_logfile('### Error: failed loading default ' .. libname .. '.lua!')
+		Print_logfile('    package.path=' .. package.path .. '.')
+		Print_logfile('### Error: Please check your setup and try again.')
 		return nil
 	end
 end
-
 
 -------------------------------------------------------
 -- round function
@@ -106,42 +88,39 @@ function genfuncs.perform_webquery(url, logdata)
 	end
 	-- Define Web Query
 	local sQuery = 'curl -k ' .. url
+	errlogfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'webquery_err.log'
 	-- Pipe STDERR to file when defined
-	if afwlogfile ~= nil then
-		sQuery = sQuery .. ' 2>' .. afwlogfile .. '_err'
-	end
+	sQuery = sQuery .. ' 2>' .. errlogfile
 	-- Run Query
-	genfuncs.Print_afwlogfile( 'sQuery=' .. sQuery)
+	Print_weblogfile('sQuery=' .. sQuery)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
 	handle:close()
 	-- Show Webdata retrieved
 	if logdata then
-		genfuncs.Print_afwlogfile( '---- web data ----------------------------------------------------------------------------')
-		genfuncs.Print_afwlogfile( Web_Data)
+		Print_weblogfile('---- web data ----------------------------------------------------------------------------')
+		Print_weblogfile(Web_Data)
 	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
-	genfuncs.Print_afwlogfile( '---- web err ------------------------------------------------------------------------')
+	Print_weblogfile('---- web err ------------------------------------------------------------------------')
 	local Web_Error = ''
-	if afwlogfile ~= nil then
-		local ifile, ierr = io.open(afwlogfile .. '_err', 'r')
-		Web_Error = ierr or ''
-		if not ierr then
-			Web_Error = ifile:read('*all')
-			ifile:close()
-		end
-		genfuncs.Print_afwlogfile( 'Web_Err=' .. Web_Error)
-		os.remove(afwlogfile .. '_err')
+	local ifile, ierr = io.open(errlogfile, 'r')
+	Web_Error = ierr or ''
+	if not ierr then
+		Web_Error = ifile:read('*all')
+		ifile:close()
 	end
-	genfuncs.Print_afwlogfile( '---- end web data ------------------------------------------------------------------------')
+	Print_weblogfile('Web_Err=' .. Web_Error)
+	--os.remove(errlogfile)
+	Print_weblogfile('---- end web data ------------------------------------------------------------------------')
 	if (Web_Error:find('unsupported protocol')) then
-		genfuncs.Print_afwlogfile( '### Error: unsupported protocol.')
-		genfuncs.Print_afwlogfile( '#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
-		genfuncs.Print_afwlogfile( '#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
+		Print_weblogfile('### Error: unsupported protocol.')
+		Print_weblogfile('#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
+		Print_weblogfile('#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
 		return ''
 	end
 	if (Web_Data == '') then
-		genfuncs.Print_afwlogfile( '### Error: Empty result from curl command')
+		Print_weblogfile('### Error: Empty result from curl command')
 		return ''
 	end
 	return Web_Data
@@ -246,16 +225,16 @@ function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 		end
 	end
 	-- found this output with the provide info
-	genfuncs.Print_afwlogfile( '    input: date=' .. (i_garbagetype_date or 'nil') .. '   iregex=' .. (iregex or 'nil') .. '   podate=' .. (podate or 'nil'))
+	Print_weblogfile('    input: date=' .. (i_garbagetype_date or 'nil') .. '   iregex=' .. (iregex or 'nil') .. '   podate=' .. (podate or 'nil'))
 	if garbageday == nil or garbagemonth == nil or garbageyear == nil or garbageday == '??' or garbagemonth == '??' or garbageyear == '??' then
-		genfuncs.Print_afwlogfile( '    #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-		genfuncs.Print_afwlogfile( '         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
+		Print_weblogfile('    #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
+		Print_weblogfile('         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
 		return 0, -99
 	end
 	local garbageTime = os.time {day = garbageday, month = garbagemonth, year = garbageyear}
 	local diffdays = genfuncs.Round(os.difftime(garbageTime, curTime) / 86400, 0) -- 1 day = 86400 seconds
 	local oDate = garbageyear .. '-' .. garbagemonth .. '-' .. garbageday
-	genfuncs.Print_afwlogfile( '    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
+	Print_weblogfile('    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
 	-- return standard date (yyyy-mm-dd) and diffdays
 	return oDate, diffdays
 end
@@ -377,7 +356,7 @@ end
 		end
 		file:write('}')
 		file:close()
-		genfuncs.Print_afwlogfile( '==> Data is saved, file contains ' .. #tbl .. ' records.')
+		Print_weblogfile('==> Data is saved, file contains ' .. #tbl .. ' records.')
 	end
 
 	--// The Load Function

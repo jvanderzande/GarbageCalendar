@@ -2,7 +2,7 @@ function garbagecalendar_main(commandArray, domoticz)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230209-1315'
+	MainScriptVersion = '20230209-2000'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -43,18 +43,41 @@ function garbagecalendar_main(commandArray, domoticz)
 
 	---====================================================================================================
 	-- mydebug print
-	function Print_runlogfile(text, always, prefix)
+	function Print_logfile(text, always, prefix)
+		function traceback()
+			local level = 3
+			while true do
+				local info = debug.getinfo(level, 'Slfn')
+				if not info then
+					break
+				end
+				-- if info.what ~= 'C' and not info.short_src:match('generalfuncs.lua') then
+				if info.what ~= 'C' then
+					calledfrom = info.short_src:match('.*[/\\](.*)%.lua')
+					calledline = ("   "..(info.currentline or '?')):sub(-4,-1)
+					--print(string.format('[%s]:%d %s ->%s', calledfrom, info.currentline, info.name, info.short_src))
+					break
+				end
+				level = level + 1
+			end
+		end
+		calledfrom = '??'
+		traceback()
+		ShortFileNames = {garbagecalendar_main = 'GC Main', _runmodule = 'Run Mod', generalfuncs = 'genfunc'}
+		calledfrom = ShortFileNames[calledfrom] or calledfrom
 		text = text or 'nil'
 		local ptext = ''
 		if (prefix or 1) == 1 then
-			ptext = '' .. os.date('%X ') .. 'GC Main: '
+			-- .. (websitemodule or '?') .. ': '
+			--ptext = '' .. os.date('%X ') .. 'GC Main: '
+			ptext = '' .. os.date('%X ') .. calledfrom .. ':'..calledline.. ": "
 		end
 		-- Console print in case .....
-		if (runlogfile == nil) or testdataload or mydebug or (always or 0) >= 1 then
+		if (mydebug or false) or ((always or 0) == 1) then
 			print(ptext .. text)
 		end
 		-- LOG Print when file is specified
-		if (runlogfile ~= nil) then
+		if ((runlogfile or '')  ~= '') then
 			file = io.open(runlogfile, 'a')
 			if file ~= nil then
 				file:write(ptext .. text .. '\n')
@@ -73,6 +96,13 @@ function garbagecalendar_main(commandArray, domoticz)
 	if not (package.path):match(GC_scriptpath .. '%?.lua;') then
 		package.path = GC_scriptpath .. '?.lua;' .. package.path
 	end
+	-- set temp log to capture the initial log messages in until the final logfile is known
+	if runlogfile == '' then
+		runlogfile = (GC_scriptpath .. 'data/garbagecalendar_run_templog.log')
+		os.remove(GC_scriptpath .. 'data/garbagecalendar_run_templog.log')
+	end
+
+	Print_logfile('### ' .. RunText .. ' Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
 
 	-- ########################################################
 	-- First Load garbagecalendarconfig.lua
@@ -82,17 +112,16 @@ function garbagecalendar_main(commandArray, domoticz)
 	--print(status)
 	--print(err)
 	if not status then
-		print('#### ' .. os.date('%X') .. ' start garbagecalendar script v' .. MainScriptVersion .. ' ####')
 		print('!!! failed loading "garbagecalendarconfig.lua" from package.path:"' .. package.path .. '"')
 		if (err:find("module 'garbagecalendarconfig' not found:")) then
-			print(' -->Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
+			print(' ->Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
 		else
-			print(' -->Check your garbagecalendarconfig.lua for below error(s):')
+			print(' ->Check your garbagecalendarconfig.lua for below error(s):')
 		end
 		print('!!! LUA Error: ' .. err)
 		return
 	else
-		Print_runlogfile('Loaded ' .. GC_scriptpath .. 'garbagecalendarconfig.lua.')
+		--Print_logfile('Loaded ' .. GC_scriptpath .. 'garbagecalendarconfig.lua.')
 	end
 
 	-- ########################################################
@@ -100,14 +129,14 @@ function garbagecalendar_main(commandArray, domoticz)
 	-- ########################################################
 	status, genfuncs = pcall(require, 'generalfuncs')
 	if not status then
-		Print_runlogfile('### Error: failed loading generalfuncs.lua from : ' .. GC_scriptpath .. '', 1)
-		Print_runlogfile('### Error: Please check the path in variable "GC_scriptpath= "  in your setup and try again.', 1)
-		Print_runlogfile('!!! LUA Error: ' .. genfuncs)
+		Print_logfile('### Error: failed loading generalfuncs.lua from : ' .. GC_scriptpath .. '', 1)
+		Print_logfile('### Error: Please check the path in variable "GC_scriptpath= "  in your setup and try again.', 1)
+		Print_logfile('!!! LUA Error: ' .. genfuncs)
 		return
 	else
-		Print_runlogfile('Loaded ' .. GC_scriptpath .. 'generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ')')
+		--Print_logfile('Loaded ' .. GC_scriptpath .. 'generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ')')
 		if MainScriptVersion ~= MainGenUtilsVersion then
-			Print_runlogfile('### Warning: Version of generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
+			Print_logfile('### Warning: Version of generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
 		end
 	end
 
@@ -128,7 +157,7 @@ function garbagecalendar_main(commandArray, domoticz)
 			if unexpected_condition then
 				error()
 			end
-			Print_runlogfile('--> Start processed garbagecalendarconfig.lua information.')
+			Print_logfile('-> Start processing garbagecalendarconfig.lua information.')
 			-- check if debugging is required
 			testdataload = testdataload or false
 			testdataloadbatch = testdataloadbatch or false
@@ -156,6 +185,14 @@ function garbagecalendar_main(commandArray, domoticz)
 				end
 			end
 
+			-- copy temp runlog content and put that in the final runlog
+			local ifile, ierr = io.open(runlogfile, 'r')
+			local loginfo = ''
+			if not ierr then
+				loginfo = ifile:read('*all')
+				ifile:close()
+			end
+
 			-- initialise the variables
 			datafilepath = (datafilepath .. '/'):gsub('//', '/')
 			runlogfile = datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log'
@@ -163,36 +200,37 @@ function garbagecalendar_main(commandArray, domoticz)
 			datafile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data'
 			icalfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.ics'
 
-			-- empty previous run runlogfile
+			-- empty previous run runlogfile and add the temp log
 			local file = io.open(runlogfile, 'w')
 			if file == nil then
 				print('!!! Error opening runlogfile ' .. runlogfile)
 			else
+				file:write(loginfo)
 				file:close()
 			end
-			Print_runlogfile('### ' .. RunText .. ' Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
+			--Print_logfile('### ' .. RunText .. ' Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
 			if testdataload then
-				Print_runlogfile('---> Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
-				Print_runlogfile('--->    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
+				Print_logfile('!> Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
+				Print_logfile('!>    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
 			end
 			if testdataloadbatch then
-				Print_runlogfile('---> Debuging dataload each cycle in batch because "testdataloadbatch=true" in garbagecalendarconfig.lua')
-				Print_runlogfile('--->    please change it back to "testdataloadbatch=false" when done testing.')
+				Print_logfile('!> Debuging dataload each cycle in batch because "testdataloadbatch=true" in garbagecalendarconfig.lua')
+				Print_logfile('!>    please change it back to "testdataloadbatch=false" when done testing.')
 			end
-			if mydebug or false then
-				Print_runlogfile('---> Debuging with extra messages because "mydebug=true" in garbagecalendarconfig.lua')
-				Print_runlogfile('--->    please change it back to "mydebug=false" when done testing to avoid growing a big domoticz log.')
+
+			if mydebug then
+				Print_logfile('!> Debuging with extra messages because "mydebug=true" in garbagecalendarconfig.lua')
+				Print_logfile('!>    please change it back to "mydebug=false" when done testing to avoid growing a big domoticz log.')
 			end
 			--ensure the all path variables ends with /
-			Print_runlogfile('datafilepath: ' .. datafilepath)
-
+			--Print_logfile('datafilepath: ' .. datafilepath)
 			-- check some config settings
 			ShowSinglePerType = ShowSinglePerType or false
 			Combine_Garbage_perDay = Combine_Garbage_perDay or false
 			-- Force ShowSinglePerType to false when Combine_Garbage_perDay = true
 			if Combine_Garbage_perDay and ShowSinglePerType then
 				ShowSinglePerType = false
-				Print_runlogfile("! changed ShowSinglePerType=false because Combine_Garbage_perDay=true and they can't be both set.")
+				Print_logfile("! changed ShowSinglePerType=false because Combine_Garbage_perDay=true and they can't be both set.")
 			end
 		end
 	)
@@ -203,14 +241,14 @@ function garbagecalendar_main(commandArray, domoticz)
 		print('!!! LUA Error: ' .. err)
 		return
 	else
-		Print_runlogfile('--< End processed garbagecalendarconfig.lua information.')
+		Print_logfile('-< End processing garbagecalendarconfig.lua information.')
 	end
 
 	---====================================================================================================
 	-- check whether provide paths are valid
 	if (not genfuncs.exists(GC_scriptpath .. '' .. websitemodule .. '.lua')) then
-		Print_runlogfile('### Error: module not found: ' .. GC_scriptpath .. '' .. websitemodule .. '.lua', 1)
-		Print_runlogfile('### Error: Please check the path&name in variables "GC_scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.', 1)
+		Print_logfile('### Error: module not found: ' .. GC_scriptpath .. '' .. websitemodule .. '.lua', 1)
+		Print_logfile('### Error: Please check the path&name in variables "GC_scriptpath=" "websitemodule= "  in your "garbagecalenderconfig.lua" setup and try again.', 1)
 		return
 	end
 
@@ -234,12 +272,12 @@ function garbagecalendar_main(commandArray, domoticz)
 		param.Hostname = (Hostname or '')
 		param.Street = (Street or '')
 		param.companyCode = (companyCode or param.Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
-		local S_param = JSON:encode(param)
+		local S_param = string.format('%q', JSON:encode(param))
 		--print("+++>",S_param)
 		-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
 		if ((whenrun or '') ~= 'now') then
 			-- Shell _runmodule.lua as separate process in the background to perform update of the data
-			local command = 'lua ' .. GC_scriptpath .. "_runmodule.lua '" .. S_param .. "'"
+			local command = 'lua "' .. GC_scriptpath .. '_runmodule.lua" "' .. S_param .. '"'
 			-- Test if lua is installed, if so submit backgrond task to update the datafile to relieve the event system
 			os.execute('lua -v >' .. datafilepath .. 'luatest.log 2>&1')
 			local ifile, ierr = io.open(datafilepath .. 'luatest.log', 'r')
@@ -250,30 +288,29 @@ function garbagecalendar_main(commandArray, domoticz)
 				ifile:close()
 				os.remove(datafilepath .. 'luatest.log')
 				luaversion = Chk_Error:match('[lL][uU][aA]%s*([%d*%.]*)[^\r\n]*') or ''
-				Print_runlogfile('=>Found LUA version:' .. luaversion .. '   > Lua check output:' .. Chk_Error or '?')
+				Print_logfile('=>Found LUA version:' .. luaversion .. '   > Lua check output:' .. Chk_Error or '?')
 			else
-				Print_runlogfile('Lua check error:' .. Chk_Error or '?')
+				Print_logfile('Lua check error:' .. Chk_Error or '?')
 			end
 			-- if the testfile contain this error, it means lua is installed.
 			if luaversion ~= '' then
-				Print_runlogfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
-				Print_runlogfile(command .. ' &')
-				print(command .. ' &')
+				Print_logfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
+				Print_logfile(command .. ' &')
 				rc = os.execute(command .. ' &')
 				-- Run _runmodule.lua to Check the version and log warning message in case it is different.
 				OnlyCheckVersion = true
 				dofile(GC_scriptpath .. '_runmodule.lua')
 			else
-				Print_runlogfile('=> check LUA not found --> Run foreground to use internal LUA.', 1)
+				Print_logfile('=> check LUA not found -> Run foreground to use internal LUA.', 1)
 				whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
 			end
 		end
 		-- Run the Webupdate in the foreground when required. This happens in case the datafile doesn't exists or LUA can't be found.
 		if ((whenrun or '') == 'now') then
 			-- Fill the arg[] table with the required parameters and run the script with dofile().
-			Print_runlogfile('=> Start new foreground WebUpdate for module ' .. websitemodule, 1)
+			Print_logfile('==> Start new foreground WebUpdate for module ' .. websitemodule, 1)
 			dofile(GC_scriptpath .. '_runmodule.lua')
-			Print_runlogfile('=< End WebUpdate.')
+			Print_logfile('==< End WebUpdate.')
 		end
 		-- Save run log during webupdate so it can be checked together with the WebLog
 		local ifile = io.open(runlogfile, 'r')
@@ -283,11 +320,11 @@ function garbagecalendar_main(commandArray, domoticz)
 				ofile:write(ifile:read('*all'))
 				ofile:close()
 			else
-				Print_runlogfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
+				Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
 			end
 			ifile:close()
 		else
-			Print_runlogfile(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
+			Print_logfile(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
 		end
 	end
 
@@ -298,7 +335,7 @@ function garbagecalendar_main(commandArray, domoticz)
 		-- check if date in variable i_garbagetype_date contains "vandaag" in stead of a valid date -> use today's date
 		garbageyear, garbagemonth, garbageday = i_garbagetype_date:match('(%d-)-(%d-)-(%d-)$')
 		if (garbageday == nil or garbagemonth == nil or garbageyear == nil) then
-			Print_runlogfile('### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date, 1)
+			Print_logfile('### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date, 1)
 			return
 		end
 		local garbageTime = os.time {day = garbageday, month = garbagemonth, year = garbageyear}
@@ -329,7 +366,7 @@ function garbagecalendar_main(commandArray, domoticz)
 					(testnotification or false)
 			 then
 				if (testnotification) then
-					Print_runlogfile('----> test notification active', 1, 0)
+					Print_logfile('---> test notification active', 1, 0)
 					testnotification = false -- this will trigger a test notification for the first record
 				end
 				-- Set ireminder field text
@@ -381,7 +418,7 @@ function garbagecalendar_main(commandArray, domoticz)
 									['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress
 								}
 							end
-							Print_runlogfile('----> Notification Email send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress .. '|', 1, 0)
+							Print_logfile('---> Notification Email send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext .. '#' .. emailaddress .. '|', 1, 0)
 						end
 					end
 				else
@@ -391,7 +428,7 @@ function garbagecalendar_main(commandArray, domoticz)
 						else
 							commandArray[#commandArray + 1] = {['SendEmail'] = inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress}
 						end
-						Print_runlogfile('----> Notification Email send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress .. '|', 1, 0)
+						Print_logfile('---> Notification Email send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext .. '#' .. NotificationEmailAdress .. '|', 1, 0)
 					end
 				end
 
@@ -401,7 +438,7 @@ function garbagecalendar_main(commandArray, domoticz)
 					else
 						commandArray[#commandArray + 1] = {['SendNotification'] = inotificationtitle .. '#' .. inotificationtext .. '####' .. Notificationsystem}
 					end
-					Print_runlogfile('----> ' .. Notificationsystem .. ' Notification send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext, 1, 0)
+					Print_logfile('---> ' .. Notificationsystem .. ' Notification send for ' .. s_garbagetype .. ' |' .. inotificationtitle .. '#' .. inotificationtext, 1, 0)
 				end
 
 				if (Notificationscript or '') ~= '' then
@@ -412,15 +449,15 @@ function garbagecalendar_main(commandArray, domoticz)
 					Notificationscript = Notificationscript:gsub('@GARBAGEDATE@', inotificationdate)
 					Notificationscript = Notificationscript:gsub('@REMINDER@', ireminder)
 					os.execute(Notificationscript .. ' &')
-					Print_runlogfile('---->Notification script started: ' .. Notificationscript)
+					Print_logfile('--->Notification script started: ' .. Notificationscript)
 				end
 				if (EventNotificationscript or '') ~= '' then
-					Print_runlogfile('---->check : ' .. GC_scriptpath .. '' .. EventNotificationscript)
+					Print_logfile('--->check : ' .. GC_scriptpath .. '' .. EventNotificationscript)
 					if (not genfuncs.exists(GC_scriptpath .. '' .. EventNotificationscript)) then
-						Print_runlogfile('### Error: EventNotificationscript not found: ' .. GC_scriptpath .. '' .. EventNotificationscript)
+						Print_logfile('### Error: EventNotificationscript not found: ' .. GC_scriptpath .. '' .. EventNotificationscript)
 						return
 					end
-					Print_runlogfile('---->Notification script started: ' .. EventNotificationscript)
+					Print_logfile('--->Notification script started: ' .. EventNotificationscript)
 					Notify_mtext = inotificationtext
 					Notify_mtitle = inotificationtitle
 					Notify_date = inotificationdate
@@ -442,9 +479,9 @@ function garbagecalendar_main(commandArray, domoticz)
 					end
 					-- check for errors
 					if n_rc then
-						Print_runlogfile('---->Notification script ended: ' .. EventNotificationscript)
+						Print_logfile('--->Notification script ended: ' .. EventNotificationscript)
 					else
-						Print_runlogfile('!!!!> ' .. EventNotificationscript .. '  ended with errors: ' .. n_errmsg, 1)
+						Print_logfile('!!!!> ' .. EventNotificationscript .. '  ended with errors: ' .. n_errmsg, 1)
 						genfuncs.addlogmessage('!!!!> ' .. EventNotificationscript .. '  ended with errors: ' .. n_errmsg, 4)
 					end
 				end
@@ -456,16 +493,16 @@ function garbagecalendar_main(commandArray, domoticz)
 	-- Do the actual update retrieving data from the website and processing it
 	function Perform_Data_check()
 		-- ensure the access is set correctly for data
-		Print_runlogfile('=> Action starting, First check access to required files:')
+		Print_logfile('=> Action starting, First check access to required files:')
 		function ListAccess(name)
 			local sCMD = 'ls -l ' .. name
-			Print_runlogfile('   Run command:\n' .. sCMD .. ':')
+			Print_logfile('   Run command:\n' .. sCMD .. ':')
 			local handle = assert(io.popen(sCMD))
 			local cmd_output = handle:read('*all')
 			-- remove ending CR LF chars
 			cmd_output = cmd_output:gsub('[\r\n]+$', '')
 			handle:close()
-			Print_runlogfile(cmd_output, 0, '')
+			Print_logfile(cmd_output, 0, '')
 		end
 		-- show access info when debugging
 		if mydebug or false then
@@ -495,19 +532,19 @@ function garbagecalendar_main(commandArray, domoticz)
 
 		-- function to process ThisYear and Lastyear JSON data
 		--
-		Print_runlogfile('=> Start update for GarbageCalendar text device "' .. (myGarbageDevice or '') .. '"', 1)
+		Print_logfile('=> Start update for GarbageCalendar text device "' .. (myGarbageDevice or '') .. '"', 1)
 		local garbagedata, perr = table.load(datafile)
 		-- try reload data when datafile is missing
 		if perr ~= 0 then
 			--- when file doesn't exist
-			Print_runlogfile('### Warning: Datafile not found:' .. datafile .. ' . Start webupdate now.')
+			Print_logfile('### Warning: Datafile not found:' .. datafile .. ' . Start webupdate now.')
 			GetWebData('now')
 			garbagedata, perr = table.load(datafile)
 		else
 			-- try reload data when the number of records are 0 in the datafile
 			if (#garbagedata or 0) == 0 then
 				--- when file doesn't exist
-				Print_runlogfile('### Warning: Datafile contains ' .. (#garbagedata or '?') .. ' datarecords. Start webupdate now.')
+				Print_logfile('### Warning: Datafile contains ' .. (#garbagedata or '?') .. ' datarecords. Start webupdate now.')
 				GetWebData('now')
 				garbagedata, perr = table.load(datafile)
 			end
@@ -515,13 +552,13 @@ function garbagecalendar_main(commandArray, domoticz)
 
 		if perr ~= 0 then
 			--- when file doesn't exist
-			Print_runlogfile('#### Error: Unable to load the data. please check your setup and runlogfile :' .. runlogfile)
+			Print_logfile('#### Error: Unable to load the data. please check your setup and runlogfile :' .. runlogfile)
 			return
 		elseif (#garbagedata or 0) == 0 then
-			Print_runlogfile('#### Error: ' .. (#garbagedata or '?') .. ' data records, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '') .. ' from datafile:' .. datafile)
+			Print_logfile('#### Error: ' .. (#garbagedata or '?') .. ' data records, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '') .. ' from datafile:' .. datafile)
 			return
 		else
-			Print_runlogfile('   ' .. (#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '') .. ' from datafile:' .. datafile)
+			Print_logfile('   ' .. (#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '') .. ' from datafile:' .. datafile)
 			-- create ICS file when requested
 			if (IcalEnable) then
 				hIcal = io.open(icalfile, 'w')
@@ -533,11 +570,11 @@ function garbagecalendar_main(commandArray, domoticz)
 					hIcal:write('X-PUBLISHED-TTL:P1H\n')
 				else
 					IcalEnable = false
-					Print_runlogfile(' Unable to create iCAL file:' .. icalfile .. '  Check for the appropriate rights.')
+					Print_logfile(' Unable to create iCAL file:' .. icalfile .. '  Check for the appropriate rights.')
 				end
 			end
 
-			Print_runlogfile('-> Start looping through data to find the first ' .. ShowNextEvents .. ' events to show: ')
+			Print_logfile('-> Start looping through data to find the first ' .. ShowNextEvents .. ' events to show: ')
 			for i = 1, #garbagedata do
 				if garbagedata[i].garbagetype ~= nil then
 					-- change all table entries to lower to make the script case insensitive
@@ -570,15 +607,15 @@ function garbagecalendar_main(commandArray, domoticz)
 						if ((not ShowSinglePerType) or (garbagetype_cfg[web_garbagetype].nextdate == nil) and txtcnt < ShowNextEvents) then
 							-- When days is 0 or greater the date is today or in the future. Ignore any date in the past
 							if daysdiffdev == nil then
-								Print_runlogfile('    !!! Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+								Print_logfile('    !!! Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 							elseif daysdiffdev >= 0 then
 								-- Set the nextdate for this garbagetype
 								garbagetype_cfg[web_garbagetype].nextdate = web_garbagedate
 								-- get the long description from the JSON data
 								if garbagetype_cfg[web_garbagetype].active ~= 'on' then
-									Print_runlogfile('==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because there is no record in garbagetype_cfg[]!', 0, 0)
+									Print_logfile('==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because there is no record in garbagetype_cfg[]!', 0, 0)
 								else
-									Print_runlogfile('==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. ';  Notify: Active=' .. tostring(garbagetype_cfg[web_garbagetype].active) .. '  Time=' .. tostring(garbagetype_cfg[web_garbagetype].hour) .. ':' .. tostring(garbagetype_cfg[web_garbagetype].min) .. '   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev), 0, 0)
+									Print_logfile('==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. ';  Notify: Active=' .. tostring(garbagetype_cfg[web_garbagetype].active) .. '  Time=' .. tostring(garbagetype_cfg[web_garbagetype].hour) .. ':' .. tostring(garbagetype_cfg[web_garbagetype].min) .. '   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev), 0, 0)
 									-- fill the text with the next defined number of events
 									GarbageNotification(web_garbagetype, web_garbagedate, daysdiffdev) -- check notification for new found info
 								end
@@ -591,8 +628,8 @@ function garbagecalendar_main(commandArray, domoticz)
 									txtdev_ldesc = txtdev_ldesc .. ', ' .. web_garbagedesc
 									txtdev_tdesc = txtdev_tdesc .. ', ' .. garbagetype_cfg[web_garbagetype].text
 									devtxt = txtdev_prevdesc
-									Print_runlogfile('  -- merging record:' .. i - 1 .. ' Date:' .. garbagedata[i - 1].garbagedate .. ' Type:' .. garbagedata[i - 1].garbagetype .. '  wdesc:' .. (garbagedata[i - 1].wdesc or ''))
-									Print_runlogfile('             record:' .. i .. ' Date:' .. garbagedata[i].garbagedate .. ' Type:' .. garbagedata[i].garbagetype .. '  wdesc:' .. (garbagedata[i].wdesc or ''))
+									Print_logfile('  -- merging record:' .. i - 1 .. ' Date:' .. garbagedata[i - 1].garbagedate .. ' Type:' .. garbagedata[i - 1].garbagetype .. '  wdesc:' .. (garbagedata[i - 1].wdesc or ''))
+									Print_logfile('             record:' .. i .. ' Date:' .. garbagedata[i].garbagedate .. ' Type:' .. garbagedata[i].garbagetype .. '  wdesc:' .. (garbagedata[i].wdesc or ''))
 								else
 									txtdev_sdesc = web_garbagetype
 									txtdev_ldesc = web_garbagedesc
@@ -617,7 +654,7 @@ function garbagecalendar_main(commandArray, domoticz)
 						-- only warn once for a skip this type setting
 						if (garbagetype_cfg[web_garbagetype].missing == nil and garbagetype_cfg[web_garbagetype].active == 'skip') then
 							garbagetype_cfg[web_garbagetype].skipwarning = true
-							Print_runlogfile('==> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype) .. '  GarbageDate:' .. tostring(web_garbagedate), 0, 0)
+							Print_logfile('==> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype) .. '  GarbageDate:' .. tostring(web_garbagedate), 0, 0)
 						end
 					end
 					-- create ICAL file when requested
@@ -658,42 +695,42 @@ function garbagecalendar_main(commandArray, domoticz)
 			end
 		end
 		if txtcnt < 1 then
-			Print_runlogfile('### Warning: No valid records found in the datafile: ' .. datafile, 1)
-			Print_runlogfile('###          Please check the garbagecalendar log files for issues : ' .. weblogfile .. ' and ' .. runlogfile, 1)
+			Print_logfile('### Warning: No valid records found in the datafile: ' .. datafile, 1)
+			Print_logfile('###          Please check the garbagecalendar log files for issues : ' .. weblogfile .. ' and ' .. runlogfile, 1)
 		end
-		Print_runlogfile('-< End data loop')
+		Print_logfile('-< End data loop')
 		if missingrecords ~= '' then
-			Print_runlogfile('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!', 1)
-			Print_runlogfile('#!# -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :', 1)
-			Print_runlogfile(missingrecords, 1, 0)
-			Print_runlogfile('#!# -- end ----------------------------')
+			Print_logfile('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!', 1)
+			Print_logfile('#!# -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :', 1)
+			Print_logfile(missingrecords, 1, 0)
+			Print_logfile('#!# -- end ----------------------------')
 		end
 		if (cnt == 0) then
-			Print_runlogfile('### Error: No valid data found in returned webdata.  skipping the rest of the logic.', 1)
+			Print_logfile('### Error: No valid data found in returned webdata.  skipping the rest of the logic.', 1)
 			return
 		end
 		-- always update the domoticz device so one can see it is updating and when it was ran last.
-		Print_runlogfile('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
+		Print_logfile('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
 		if RunbyDzVents then
 			if domoticz.devices(myGarbageDevice).idx == nil then
-				Print_runlogfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
+				Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
 			else
 				if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
-					Print_runlogfile('Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
+					Print_logfile('Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
 					domoticz.devices(myGarbageDevice).updateText(devtxt)
 				else
-					Print_runlogfile('No updated text for TxtDevice.')
+					Print_logfile('No updated text for TxtDevice.')
 				end
 			end
 		else
 			if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
-				Print_runlogfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
+				Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
 			else
 				commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
 				if (otherdevices[myGarbageDevice] ~= devtxt) then
-					Print_runlogfile('Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
+					Print_logfile('Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
 				else
-					Print_runlogfile('No updated text for TxtDevice.')
+					Print_logfile('No updated text for TxtDevice.')
 				end
 			end
 		end
@@ -701,7 +738,7 @@ function garbagecalendar_main(commandArray, domoticz)
 		if IcalEnable then
 			hIcal:write('END:VCALENDAR')
 			hIcal:close()
-			Print_runlogfile('==> Created an ICS file with ' .. icalcnt .. ' Garbage collection events entries in file: ' .. icalfile)
+			Print_logfile('=> Created an ICS file with ' .. icalcnt .. ' Garbage collection events entries in file: ' .. icalfile)
 		end
 	end
 
@@ -710,19 +747,19 @@ function garbagecalendar_main(commandArray, domoticz)
 	function Perform_Rights_check(filename)
 		if (genfuncs.exists(filename)) then
 			if (not genfuncs.haveaccess(filename)) then
-				Print_runlogfile('No access to the file. Running->sudo chmod 777 ' .. filename, 1)
+				Print_logfile('   No access to the file. Running->sudo chmod 777 ' .. filename, 1)
 				os.execute('sudo chmod 777 ' .. filename .. ' 2>/dev/null')
 				if (genfuncs.haveaccess(filename)) then
-					Print_runlogfile('Access Fixed: ' .. filename)
+					Print_logfile('   Access Fixed: ' .. filename)
 				else
-					Print_runlogfile('### Error: Still no access. Please check the settings for ' .. filename .. ' and then try again.', 1)
+					Print_logfile('### Error: Still no access. Please check the settings for ' .. filename .. ' and then try again.', 1)
 					return false
 				end
 			else
-				Print_runlogfile('Access OK: ' .. filename)
+				Print_logfile('   Access OK: ' .. filename)
 			end
 		else
-			Print_runlogfile("File doesn't exists: " .. filename, 1)
+			--Print_logfile("File doesn't exists: " .. filename, 1)
 		end
 		return true
 	end
@@ -752,43 +789,43 @@ function garbagecalendar_main(commandArray, domoticz)
 
 	-- check for notification times and run update only when we are at one of these defined times
 	if RunbyDzVents then
-		Print_runlogfile('=> DzVents: Start checking garbagetype_cfg table whether an action is needed:')
+		Print_logfile('=> DzVents: Start checking garbagetype_cfg table whether an action is needed:')
 	else
-		Print_runlogfile('=> Time: Start checking garbagetype_cfg table whether an action is needed:')
+		Print_logfile('=> Time: Start checking garbagetype_cfg table whether an action is needed:')
 	end
 	if garbagetype_cfg == nil then
-		Print_runlogfile('### Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.', 1)
+		Print_logfile('### Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.', 1)
 		return
 	end
 	if garbagetype_cfg['reloaddata'] == nil or garbagetype_cfg['reloaddata'].hour == nil or garbagetype_cfg['reloaddata'].min == nil then
-		Print_runlogfile('### Warning: Web update will be performed on a default time at 02:30AM, because the "reloaddata" entry missing in the "garbagetype_cfg" table in your garbagecalendarconfig.lua file! ')
-		Print_runlogfile('           Check the original provided garbagecalendarconfig_model.lua for the correct format: ')
-		Print_runlogfile('             -- Add any missing records above this line')
-		Print_runlogfile('             ["reloaddata"] ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},')
+		Print_logfile('### Warning: Web update will be performed on a default time at 02:30AM, because the "reloaddata" entry missing in the "garbagetype_cfg" table in your garbagecalendarconfig.lua file! ')
+		Print_logfile('           Check the original provided garbagecalendarconfig_model.lua for the correct format: ')
+		Print_logfile('             -- Add any missing records above this line')
+		Print_logfile('             ["reloaddata"] ={hour=02,min=30,daysbefore=0,reminder=0,text="trigger for reloading data from website into garbagecalendar.data"},')
 		garbagetype_cfg['reloaddata'] = {hour = 2, min = 30, daysbefore = 0, reminder = 0, text = 'default added'}
 	end
 	-- check and change all table entries for lowercase Garbagetype to make the script case insensitive and filled in fields
 	for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
 		garbagetype_cfg[tbl_garbagetype].active = (gtdata.active or 'on'):lower()
 		if garbagetype_cfg[tbl_garbagetype].active ~= 'on' and garbagetype_cfg[tbl_garbagetype].active ~= 'off' and garbagetype_cfg[tbl_garbagetype].active ~= 'skip' then
-			Print_runlogfile('!!!! Check "active" field value for GarbageType ' .. tbl_garbagetype .. '  current value:"' .. garbagetype_cfg[tbl_garbagetype].active .. '". Using "on" as default.')
+			Print_logfile('!!!! Check "active" field value for GarbageType ' .. tbl_garbagetype .. '  current value:"' .. garbagetype_cfg[tbl_garbagetype].active .. '". Using "on" as default.')
 			garbagetype_cfg[tbl_garbagetype].active = 'on'
 		end
 
 		if gtdata.hour == nil or gtdata.hour > 24 or gtdata.hour < 1 then
-			Print_runlogfile('!!!! Check "hour" field value for GarbageType "' .. tbl_garbagetype .. '"  current value:"' .. gtdata.hour .. '"')
+			Print_logfile('!!!! Check "hour" field value for GarbageType "' .. tbl_garbagetype .. '"  current value:"' .. gtdata.hour .. '"')
 			garbagetype_cfg[tbl_garbagetype].hour = 0
 		end
 		if gtdata.min == nil or gtdata.min > 59 or gtdata.min < 0 then
-			Print_runlogfile('!!!! Check min field value for GarbageType "' .. tbl_garbagetype .. '"  current value:"' .. gtdata.min .. '"')
+			Print_logfile('!!!! Check min field value for GarbageType "' .. tbl_garbagetype .. '"  current value:"' .. gtdata.min .. '"')
 			garbagetype_cfg[tbl_garbagetype].min = 0
 		end
 		if gtdata.reminder == nil or gtdata.reminder > 23 or gtdata.reminder < 0 then
-			Print_runlogfile('!!!! Check reminder field value for GarbageType "' .. tbl_garbagetype .. '"  current value:"' .. gtdata.reminder .. '"')
+			Print_logfile('!!!! Check reminder field value for GarbageType "' .. tbl_garbagetype .. '"  current value:"' .. gtdata.reminder .. '"')
 			garbagetype_cfg[tbl_garbagetype].reminder = 0
 		end
 		if (tbl_garbagetype ~= tbl_garbagetype:lower()) then
-			Print_runlogfile(tbl_garbagetype .. ' change to ' .. tbl_garbagetype:lower())
+			Print_logfile(tbl_garbagetype .. ' change to ' .. tbl_garbagetype:lower())
 			garbagetype_cfg[tbl_garbagetype:lower()] = {
 				hour = gtdata.hour,
 				min = gtdata.min,
@@ -806,7 +843,7 @@ function garbagecalendar_main(commandArray, domoticz)
 				timenow.hour == gtdata.hour + gtdata.reminder - 24) and --reminder next day
 				timenow.min == gtdata.min
 		 then
-			Print_runlogfile('=> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
+			Print_logfile('=> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
 			if tbl_garbagetype == 'reloaddata' then
 				-- perform background data updates
 				GetWebData()
@@ -814,13 +851,13 @@ function garbagecalendar_main(commandArray, domoticz)
 				needupdate = true
 			end
 		else
-			Print_runlogfile('>   NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
+			Print_logfile('-  NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
 		end
 	end
 	-- Always update when mydebugging
 	if mydebug then
 		needupdate = true
-		Print_runlogfile('#> Perform update because mydebug=true.')
+		Print_logfile('#> Perform update because mydebug=true.')
 	end
 	-- get information from website, update device and send notification when required
 	if needupdate then
@@ -834,14 +871,14 @@ function garbagecalendar_main(commandArray, domoticz)
 				ofile:write(ifile:read('*all'))
 				ofile:close()
 			else
-				Print_runlogfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '. Check for the appropriate rights.')
+				Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '. Check for the appropriate rights.')
 			end
 			ifile:close()
 		else
-			Print_runlogfile(' Unable to create _run_update log file:' .. runlogfile .. '. Check for the appropriate rights.')
+			Print_logfile(' Unable to create _run_update log file:' .. runlogfile .. '. Check for the appropriate rights.')
 		end
 	else
-		Print_runlogfile('Scheduled time(s) not reached yet, so nothing to do!')
+		Print_logfile('Scheduled time(s) not reached yet, so nothing to do!')
 	end
-	Print_runlogfile('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
+	Print_logfile('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
 end
