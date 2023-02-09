@@ -43,7 +43,7 @@ if red ~= 0 or green ~= 0 or blue ~= 0 then
 	url = " --data-urlencode 'color={\"m\":3,\"t\":0,\"r\":" .. red .. ',"g":' .. green .. ',"b":' .. blue .. "}' "
 	url = url .. ' "' .. domoticzurl .. '/json.htm?type=command&param=setcolbrightnessvalue&idx=' .. idx .. '&brightness=' .. brightness .. '"'
 	print(url)
-	print(perform_webquery(url, true))
+	print(genfuncs.perform_webquery(url, true))
 
 	-- sleep xx seconds
 	os.execute('sleep 10')
@@ -53,10 +53,10 @@ if red ~= 0 or green ~= 0 or blue ~= 0 then
 	url = " --data-urlencode 'color={\"m\":2,\"t\":0,\"r\":0,\"g\":0,\"b\":0,\"cw\":0,\"ww\":255}' "
 	url = url .. ' "' .. domoticzurl .. '/json.htm?type=command&param=setcolbrightnessvalue&idx=' .. idx .. '&brightness=' .. brightness .. '"'
 	print(url)
-	print(perform_webquery(url, true))
+	print(genfuncs.perform_webquery(url, true))
 
 	-- Switch Off the light when required
 	url = '"' .. domoticzurl .. '/json.htm?type=command&param=switchlight&idx=' .. idx .. '&switchcmd=Off"'
 	print(url)
-	print(perform_webquery(url, true))
+	print(genfuncs.perform_webquery(url, true))
 end

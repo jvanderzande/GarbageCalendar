@@ -1,21 +1,12 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230207-1331'
+ver = '20230209-1315'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
--------------------------------------------------------
--- get script directory
-function script_path()
-	local str = debug.getinfo(2, 'S').source:sub(2)
-	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
-end
 
--- only include when run in separate process
-if GC_scriptpath == nil then
-   dofile(script_path() .. 'generalfuncs.lua') --
-end
+-- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
@@ -27,14 +18,14 @@ function Perform_Update()
             local web_garbagedate = data.ophaaldatum
             if web_garbagedate == nil then
                -- this is a type that is not collected and has no ophaaldag defined
-               dprint(' Not collected web_garbagetype : ' .. (web_garbagetype or "?????"))
+               genfuncs.Print_afwlogfile( ' Not collected web_garbagetype : ' .. (web_garbagetype or "?????"))
             else
-               dprint(' web_garbagetype : ' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
+               genfuncs.Print_afwlogfile( ' web_garbagetype : ' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
                local dateformat = '????????'
                -- Get days diff
-               dateformat, daysdiffdev = GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', { 'yyyy', 'mm', 'dd' })
+               dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', { 'yyyy', 'mm', 'dd' })
                if daysdiffdev == nil then
-                  dprint('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+                  genfuncs.Print_afwlogfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
                   return
                end
                if (daysdiffdev >= 0) then
@@ -49,15 +40,15 @@ function Perform_Update()
       return pickuptimes
    end
 
-   dprint('---- web update ----------------------------------------------------------------------------')
+   genfuncs.Print_afwlogfile( '---- web update ----------------------------------------------------------------------------')
    local Web_Data
    -- Get the information for the specified address specifically the bagId for the subsequent calls
-   Web_Data = perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. Zipcode .. '-' .. Housenr .. '"')
+   Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. Zipcode .. '-' .. Housenr .. '"')
    if Web_Data == '' then
       return
    end
    if (Web_Data:sub(1, 2) == '[]') then
-      dprint('### Error: Check your Zipcode and Housenr as we get an [] response.')
+      genfuncs.Print_afwlogfile( '### Error: Check your Zipcode and Housenr as we get an [] response.')
       return
    end
    local adressdata = JSON:decode(Web_Data)
@@ -65,7 +56,7 @@ function Perform_Update()
    local bagId = ""
    for i = 1, #adressdata do
       local record = adressdata[i]
-      dprint('Address options: ' .. record['huisletter'] .. '=' .. Housenrsuf .. '->' .. record['bagId'])
+      genfuncs.Print_afwlogfile( 'Address options: ' .. record['huisletter'] .. '=' .. Housenrsuf .. '->' .. record['bagId'])
       if type(record) == 'table' then
          bagId = record['bagId']
          if Housenrsuf == record['huisletter'] then
@@ -74,38 +65,38 @@ function Perform_Update()
       end
    end
    if bagId == nil or bagId == '' then
-      dprint('### Error: No bagId retrieved...  stopping execution.')
+      genfuncs.Print_afwlogfile( '### Error: No bagId retrieved...  stopping execution.')
       return
    end
-   dprint('bagId:' .. bagId)
+   genfuncs.Print_afwlogfile( 'bagId:' .. bagId)
 
    -- get the Afvalstromen information for all possible garbagetypeid's with their ophaaldatum info for this address(bagId)
-   Web_Data = perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/afvalstromen"')
+   Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/afvalstromen"')
    if (Web_Data:sub(1, 2) == '[]') then
-      dprint('### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
+      genfuncs.Print_afwlogfile( '### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
       return
    end
    --
    -- Strip Icon info as that contains much data which is giving JSON lexing problems.
    Web_Data = Web_Data:gsub('(,"icon_data":".-",)', ',')
-   dprint("==== Stripped 1 ========================================================")
-   dprint(Web_Data)
+   genfuncs.Print_afwlogfile( "==== Stripped 1 ========================================================")
+   genfuncs.Print_afwlogfile( Web_Data)
    --
    -- Strip \ infront of " to ensure the next stripping will work
    Web_Data = Web_Data:gsub('(\\")', '"')
-   dprint("==== Stripped 2 ========================================================")
-   dprint(Web_Data)
+   genfuncs.Print_afwlogfile( "==== Stripped 2 ========================================================")
+   genfuncs.Print_afwlogfile( Web_Data)
    --
    -- Strip content field as that contains much data which is giving JSON lexing problems.
    Web_Data = Web_Data:gsub('(,"content":".-",)', ',')
-   dprint("==== Stripped 3 ========================================================")
-   dprint(Web_Data)
-   dprint("============================================================")
+   genfuncs.Print_afwlogfile( "==== Stripped 3 ========================================================")
+   genfuncs.Print_afwlogfile( Web_Data)
+   genfuncs.Print_afwlogfile( "============================================================")
 
    -- process the data
-   dprint('- start looping through received data -----------------------------------------------------------')
+   genfuncs.Print_afwlogfile( '- start looping through received data -----------------------------------------------------------')
    local igarbagedata = processdata(JSON:decode(Web_Data))
-   dprint('- Sorting records.')
+   genfuncs.Print_afwlogfile( '- Sorting records.')
    for x = 0, 60, 1 do
       for mom in pairs(igarbagedata) do
          if igarbagedata[mom].diff == x then
@@ -120,45 +111,33 @@ end
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
-timenow = os.date('*t')
--- get paramters from the commandline
-Zipcode = Zipcode or arg[1]
-Housenr = Housenr or arg[2] or ''
-Housenrsuf = Housenrsuf or arg[3]
-afwdatafile = datafile or arg[4]
-afwlogfile = weblogfile or arg[5]
-Hostname = Hostname_strip((Hostname or arg[6]) or '')
-Street = (Street or arg[7]) or '' -- Not needed
--- other variables
-garbagedata = {} -- array to save information to which will be written to the data file
-
-dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
-if Zipcode == nil then
-   dprint('!!! Zipcode not specified!')
-elseif Housenr == nil then
-   dprint('!!! Housenr not specified!')
-elseif Housenrsuf == nil then
-   dprint('!!! Housenrsuf not specified!')
-elseif Hostname == '' then
-   dprint('!!! Hostname not specified!')
-elseif afwdatafile == nil then
-   dprint('!!! afwdatafile not specified!')
-elseif afwlogfile == nil then
-   dprint('!!! afwlogfile not specified!')
-else
-	local Load_Success = true
-   -- Load JSON.lua
-   if pcall(loaddefaultjson) then
-      dprint('Loaded JSON.lua.')
-   else
-      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
-      dprint('### Error: Please check your setup and try again.')
-		Load_Success = false
-   end
-	if Load_Success then
-   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
-   Perform_Update()
-   dprint('=> Write data to ' .. afwdatafile)
-   table.save(garbagedata, afwdatafile)
+-- ================================================================================================
+-- These activated fields will be checked for being defined and the script will end when one isn't
+-- ================================================================================================
+local chkfields = {"websitemodule",
+	"Zipcode",
+	"Housenr",
+--	"Housenrsuf",
+	"afwdatafile",
+	"afwlogfile",
+	"Hostname",
+--	"Street",
+--	"companyCode"
+}
+local param_err=0
+-- Check whether the required parameters are specified.
+for key, value in pairs(chkfields) do
+	if (_G[value] or '') == '' then
+		param_err = param_err + 1
+		genfuncs.Print_afwlogfile('!!! '..value .. ' not specified!', 1)
 	end
+end
+-- Get the web info when all required parameters are defined
+if param_err == 0 then
+	genfuncs.Print_afwlogfile('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Perform_Update()
+	genfuncs.Print_afwlogfile('=> Write data to ' .. afwdatafile)
+	table.save(garbagedata, afwdatafile)
+else
+	genfuncs.Print_afwlogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

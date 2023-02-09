@@ -1,20 +1,12 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230207-1331'
+ver = '20230209-1315'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
--------------------------------------------------------
--- get script directory
-function script_path()
-	local str = debug.getinfo(2, 'S').source:sub(2)
-	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
-end
--- only include when run in separate process
-if GC_scriptpath == nil then
-   dofile(script_path() .. 'generalfuncs.lua') --
-end
+
+-- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
@@ -25,12 +17,12 @@ function Perform_Update()
             web_garbagetype = record['Soort']
             web_garbagedate = record['Datum']
             wnameType = ''
-            dprint('  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
+            genfuncs.Print_afwlogfile( '  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
             local dateformat = '????????'
             -- Get days diff
-            dateformat, daysdiffdev = GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+            dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
             if daysdiffdev == nil then
-               dprint('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+               genfuncs.Print_afwlogfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
                return
             end
             if (daysdiffdev >= 0) then
@@ -43,15 +35,15 @@ function Perform_Update()
          end
       end
    end
-   dprint('---- web update ----------------------------------------------------------------------------')
+   genfuncs.Print_afwlogfile( '---- web update ----------------------------------------------------------------------------')
    local Web_Data
    -- Get the information for the specified address: AdresID and AdministratieID  (required for the subsequent call)
-   Web_Data = perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password=' .. url_encode('gsd$2014') .. '&Postcode=' .. Zipcode .. '&Huisnummer=' .. Housenr .. '&Toevoeging=' .. Housenrsuf .. '"')
+   Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&Postcode=' .. Zipcode .. '&Huisnummer=' .. Housenr .. '&Toevoeging=' .. Housenrsuf .. '"')
    if Web_Data == '' then
       return
    end
    if (Web_Data:sub(1, 2) == '[]') then
-      dprint('### Error: Check your Zipcode and Housenr as we get an [] response.')
+      genfuncs.Print_afwlogfile( '### Error: Check your Zipcode and Housenr as we get an [] response.')
       return
    end
    adressdata = JSON:decode(Web_Data)
@@ -59,41 +51,41 @@ function Perform_Update()
    AdresID = adressdata[1].AdresID
    AdministratieID = adressdata[1].AdministratieID
    if AdresID == nil or AdresID == '' then
-      dprint('### Error: No AdresID retrieved...  stopping execution.')
+      genfuncs.Print_afwlogfile( '### Error: No AdresID retrieved...  stopping execution.')
       return
    end
    if AdministratieID == nil or AdministratieID == '' then
-      dprint('### Error: No AdministratieID retrieved...  stopping execution.')
+      genfuncs.Print_afwlogfile( '### Error: No AdministratieID retrieved...  stopping execution.')
       return
    end
-   dprint(' AdresID:' .. AdresID .. '  AdministratieID:' .. AdministratieID)
+   genfuncs.Print_afwlogfile( ' AdresID:' .. AdresID .. '  AdministratieID:' .. AdministratieID)
 
    -- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
-   Web_Data = perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. os.date('%Y') .. '&Date=' .. os.date('%d/%m/%Y%%2001:00:00%p') .. '"')
+   Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. os.date('%Y') .. '&Date=' .. os.date('%d/%m/%Y%%2001:00:00%p') .. '"')
    if (Web_Data:sub(1, 2) == '[]') then
-      dprint('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
+      genfuncs.Print_afwlogfile( '### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
       return
    end
    jdata = JSON:decode(Web_Data)
    -- get the ophaaldagen tabel for the coming scheduled pickups
    if type(jdata) ~= 'table' then
-      dprint('### Error: Empty Kalender found stopping execution.')
+      genfuncs.Print_afwlogfile( '### Error: Empty Kalender found stopping execution.')
       return
    end
    -- process the data
-   dprint('- start looping through received data -----------------------------------------------------------')
+   genfuncs.Print_afwlogfile( '- start looping through received data -----------------------------------------------------------')
    processdata(jdata)
 
    -- also get nextyears data in november/december
    if tonumber(os.date('%m')) >= 11 then
       local nextyear = tostring(tonumber(os.date('%Y')) + 1)
       nextyear = nextyear:sub(0, 4)
-      Web_Data = perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. nextyear .. '&Date=' .. os.date('%m/%d/%Y%%20%I:%M:%S%p') .. '"')
+      Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. nextyear .. '&Date=' .. os.date('%m/%d/%Y%%20%I:%M:%S%p') .. '"')
       if (Web_Data:sub(1, 2) == '[]') then
-         dprint('### Warning: no calendar data for next year.')
+         genfuncs.Print_afwlogfile( '### Warning: no calendar data for next year.')
       else
          jdata = JSON:decode(Web_Data)
-         dprint('- start looping through next received data -----------------------------------------------------------')
+         genfuncs.Print_afwlogfile( '- start looping through next received data -----------------------------------------------------------')
          processdata(jdata)
       end
    end
@@ -101,43 +93,33 @@ end
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
-timenow = os.date('*t')
--- get paramters from the commandline
-Zipcode = Zipcode or arg[1]
-Housenr = Housenr or arg[2] or ''
-Housenrsuf = Housenrsuf or arg[3]
-afwdatafile = datafile or arg[4]
-afwlogfile = weblogfile or arg[5]
-Hostname = (Hostname or arg[6]) or '' -- Not needed
-Street = (Street or arg[7]) or '' -- Not needed
--- other variables
-garbagedata = {} -- array to save information to which will be written to the data file
-
-dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
-if Zipcode == nil then
-   dprint('!!! Zipcode not specified!')
-elseif Housenr == nil then
-   dprint('!!! Housenr not specified!')
-elseif Housenrsuf == nil then
-   dprint('!!! Housenrsuf not specified!')
-elseif afwdatafile == nil then
-   dprint('!!! afwdatafile not specified!')
-elseif afwlogfile == nil then
-   dprint('!!! afwlogfile not specified!')
-else
-	local Load_Success = true
-   -- Load JSON.lua
-   if pcall(loaddefaultjson) then
-      dprint('Loaded JSON.lua.')
-   else
-      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
-      dprint('### Error: Please check your setup and try again.')
-		Load_Success = false
-   end
-	if Load_Success then
-   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
-   Perform_Update()
-   dprint('=> Write data to ' .. afwdatafile)
-   table.save(garbagedata, afwdatafile)
+-- ================================================================================================
+-- These activated fields will be checked for being defined and the script will end when one isn't
+-- ================================================================================================
+local chkfields = {"websitemodule",
+	"Zipcode",
+	"Housenr",
+--	"Housenrsuf",
+	"afwdatafile",
+	"afwlogfile",
+--	"Hostname",
+--	"Street",
+--	"companyCode"
+}
+local param_err=0
+-- Check whether the required parameters are specified.
+for key, value in pairs(chkfields) do
+	if (_G[value] or '') == '' then
+		param_err = param_err + 1
+		genfuncs.Print_afwlogfile('!!! '..value .. ' not specified!', 1)
 	end
+end
+-- Get the web info when all required parameters are defined
+if param_err == 0 then
+	genfuncs.Print_afwlogfile('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Perform_Update()
+	genfuncs.Print_afwlogfile('=> Write data to ' .. afwdatafile)
+	table.save(garbagedata, afwdatafile)
+else
+	genfuncs.Print_afwlogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

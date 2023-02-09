@@ -7,8 +7,8 @@ Zipcode = '' -- Your zipcode  eg '1234AB'
 Housenr = '' -- Your housnr. eg '99'
 Housenrsuf = '' -- Your housnr suffix  ('a', 'b'  etc)
 Hostname = '' -- m_opzet & m_opzet_api: Specify the hostname of your website. eg 'inzamelkalender.hvcgroep.nl'
--- *m_ximmio: Specify the companycode. (See m_ximmio.lua on how to find this code).
 Street = '' -- Street name Only needed for: m_recycleapp
+companyCode = ''-- m_ximmio companycode. (See m_ximmio.lua on how to find this code).
 -- ==============================
 -- choose one of these modules ==
 -- ==============================

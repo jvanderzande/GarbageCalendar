@@ -1,26 +1,32 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230207-1331'
+MainGenUtilsVersion = '20230209-1315'
+
+local genfuncs = {}
+
 -------------------------------------------------------
 -- dprint function to format log records
-function dprint(text)
+function genfuncs.Print_afwlogfile( text, console)
 	text = text or 'nil'
 	local ptext = '' .. os.date('%X ') .. (websitemodule or '?') .. ': ' .. text
 	if afwlogfile == nil then
 		print(ptext)
 	else
-		file = io.open(afwlogfile, 'a')
+		local file = io.open(afwlogfile, 'a')
 		file:write(ptext .. '\n')
 		file:close()
+		if (console or false) then
+			print(ptext)
+		end
 	end
 end
 
--- dprint function to format log records
-function addlogmessage(text, level)
+-- addlogmessage function sends messages to Domoticz log
+function genfuncs.addlogmessage(text, level)
 	text = text or 'nil'
 	level = tostring(level) or '1'
-	url = 'http://127.0.0.1:8080/json.htm?type=command&param=addlogmessage&message=' .. url_encode(text) .. '&level=' .. level
+	url = 'http://127.0.0.1:8080/json.htm?type=command&param=addlogmessage&message=' .. genfuncs.url_encode(text) .. '&level=' .. level
 	local sQuery = 'curl -k "' .. url .. '" > /tmp/garbagecalendar_logerrors.log 2>&1 '
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
@@ -28,36 +34,43 @@ function addlogmessage(text, level)
 end
 
 -------------------------------------------------------
--- try to load JSON library
-function loaddefaultjson()
-	if unexpected_condition then
-		error()
+-- try to load module/library
+function genfuncs.loadlualib(libname)
+	genfuncs.Print_afwlogfile( "--> Loading module ".. (libname or "nil"))
+	local moduleobject
+	local function loadlib()
+		if unexpected_condition then
+			error()
+		end
+		-- add defined Domoticz path to the search path
+		if not package.path:match(GC_scriptpath .. '%?.lua;') then
+			package.path = GC_scriptpath .. '?.lua;' .. package.path
+			genfuncs.Print_afwlogfile( "updated package.path:",package.path)
+		end
+		moduleobject = require(libname)
 	end
-	-- add defined Domoticz path to the search path
-	package.path = GC_scriptpath .. '?.lua;' .. package.path
-	JSON = require 'JSON' -- use generic JSON.lua
+
+	if pcall(loadlib) then
+		genfuncs.Print_afwlogfile( '--< Loaded '..libname..'.lua.  ->moduleobject type:'..type(moduleobject))
+		return moduleobject
+	else
+		genfuncs.Print_afwlogfile( '### Error: failed loading default '..libname..'.lua!')
+		genfuncs.Print_afwlogfile( '    package.path=' .. package.path .. '.')
+		genfuncs.Print_afwlogfile( '### Error: Please check your setup and try again.')
+		return nil
+	end
 end
 
--------------------------------------------------------
--- try to load base64 library
-function loadbase64()
-	if unexpected_condition then
-		error()
-	end
-	-- add defined Domoticz path to the search path
-	package.path = domoticzjsonpath .. '?.lua;' .. package.path
-	base64 = require 'base64'
-end
 
 -------------------------------------------------------
 -- round function
-function Round(num, idp)
+function genfuncs.Round(num, idp)
 	return tonumber(string.format('%.' .. (idp or 0) .. 'f', num))
 end
 
 -------------------------------------------------------
 -- url_encode function
-function url_encode(str)
+function genfuncs.url_encode(str)
 	if (str) then
 		str =
 			string.gsub(
@@ -78,13 +91,13 @@ local hex_to_char = function(x)
 	return string.char(tonumber(x, 16))
 end
 
-function url_unescape(url)
+function genfuncs.url_unescape(url)
 	return url:gsub('%%(%x%x)', hex_to_char)
 end
 
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
-function perform_webquery(url, logdata)
+function genfuncs.perform_webquery(url, logdata)
 	-- Show retrieved webdat by default or else depening on mydebug
 	if logdata == nil then
 		logdata = true
@@ -98,17 +111,17 @@ function perform_webquery(url, logdata)
 		sQuery = sQuery .. ' 2>' .. afwlogfile .. '_err'
 	end
 	-- Run Query
-	dprint('sQuery=' .. sQuery)
+	genfuncs.Print_afwlogfile( 'sQuery=' .. sQuery)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
 	handle:close()
 	-- Show Webdata retrieved
 	if logdata then
-		dprint('---- web data ----------------------------------------------------------------------------')
-		dprint(Web_Data)
+		genfuncs.Print_afwlogfile( '---- web data ----------------------------------------------------------------------------')
+		genfuncs.Print_afwlogfile( Web_Data)
 	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
-	dprint('---- web err ------------------------------------------------------------------------')
+	genfuncs.Print_afwlogfile( '---- web err ------------------------------------------------------------------------')
 	local Web_Error = ''
 	if afwlogfile ~= nil then
 		local ifile, ierr = io.open(afwlogfile .. '_err', 'r')
@@ -117,18 +130,18 @@ function perform_webquery(url, logdata)
 			Web_Error = ifile:read('*all')
 			ifile:close()
 		end
-		dprint('Web_Err=' .. Web_Error)
+		genfuncs.Print_afwlogfile( 'Web_Err=' .. Web_Error)
 		os.remove(afwlogfile .. '_err')
 	end
-	dprint('---- end web data ------------------------------------------------------------------------')
+	genfuncs.Print_afwlogfile( '---- end web data ------------------------------------------------------------------------')
 	if (Web_Error:find('unsupported protocol')) then
-		dprint('### Error: unsupported protocol.')
-		dprint('#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
-		dprint('#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
+		genfuncs.Print_afwlogfile( '### Error: unsupported protocol.')
+		genfuncs.Print_afwlogfile( '#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
+		genfuncs.Print_afwlogfile( '#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
 		return ''
 	end
 	if (Web_Data == '') then
-		dprint('### Error: Empty result from curl command')
+		genfuncs.Print_afwlogfile( '### Error: Empty result from curl command')
 		return ''
 	end
 	return Web_Data
@@ -136,7 +149,7 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 -- Function to check if we can access a file
-function haveaccess(file)
+function genfuncs.haveaccess(file)
 	--~    print ("---------------------")
 	--~    print (file)
 	local ok, err, code = io.open(file, 'r')
@@ -160,7 +173,7 @@ end
 
 ----------------------------------------------------------------------------------------------------------------
 -- Function to check if directory exists
-function exists(file)
+function genfuncs.exists(file)
 	local ok, err, code = os.rename(file, file)
 	if not ok then
 		if code == 13 then
@@ -173,23 +186,23 @@ end
 
 -------------------------------------------------------
 --- Check if a directory exists in this path
-function isdir(path)
+function genfuncs.isdir(path)
 	-- "/" works on both Unix and Windows
-	return exists(path .. '/')
+	return genfuncs.exists(path .. '/')
 end
 
 --------------------------------------------------------------------------
 -- get date, return a standard format and calculate the difference in days
 -- This are some of the used regex options for the different inputdates found:
 --                    --inputdate--            , regex Date elements                   , Date elements sequence
---~ GetDateFromInput("vrijdag 26 november"     ,"[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$"   ,{"dd","mmm","yyyy"})
---~ GetDateFromInput("vrijdag 26 november 2021","[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$"   ,{"dd","mmm","yyyy"})
---~ GetDateFromInput("13-01-2020"              ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"dd","mm","yyyy"})
---~ GetDateFromInput("2020-01-02"              ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"yyyy","mm","dd"})
---~ GetDateFromInput("2020-04-08T00:00:00"     ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"yyyy","mm","dd"})
---~ GetDateFromInput("7 januari"               ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
---~ GetDateFromInput("7 januari 2021"          ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
-function GetDateFromInput(i_garbagetype_date, iregex, idatev)
+--~ genfuncs.GetDateFromInput("vrijdag 26 november"     ,"[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$"   ,{"dd","mmm","yyyy"})
+--~ genfuncs.GetDateFromInput("vrijdag 26 november 2021","[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$"   ,{"dd","mmm","yyyy"})
+--~ genfuncs.GetDateFromInput("13-01-2020"              ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"dd","mm","yyyy"})
+--~ genfuncs.GetDateFromInput("2020-01-02"              ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"yyyy","mm","dd"})
+--~ genfuncs.GetDateFromInput("2020-04-08T00:00:00"     ,"(%d+)[-%s]+(%d+)[-%s]+(%d+)"          ,{"yyyy","mm","dd"})
+--~ genfuncs.GetDateFromInput("7 januari"               ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
+--~ genfuncs.GetDateFromInput("7 januari 2021"          ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
+function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 	local timenow = os.date('*t')
 	local curTime = os.time {day = timenow.day, month = timenow.month, year = timenow.year}
 	local garbageday = '??'
@@ -233,20 +246,25 @@ function GetDateFromInput(i_garbagetype_date, iregex, idatev)
 		end
 	end
 	-- found this output with the provide info
-	dprint('    input: date=' .. (i_garbagetype_date or 'nil') .. '   iregex=' .. (iregex or 'nil') .. '   podate=' .. (podate or 'nil'))
+	genfuncs.Print_afwlogfile( '    input: date=' .. (i_garbagetype_date or 'nil') .. '   iregex=' .. (iregex or 'nil') .. '   podate=' .. (podate or 'nil'))
 	if garbageday == nil or garbagemonth == nil or garbageyear == nil or garbageday == '??' or garbagemonth == '??' or garbageyear == '??' then
-		dprint('    #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-		dprint('         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
+		genfuncs.Print_afwlogfile( '    #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
+		genfuncs.Print_afwlogfile( '         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
 		return 0, -99
 	end
 	local garbageTime = os.time {day = garbageday, month = garbagemonth, year = garbageyear}
-	local diffdays = Round(os.difftime(garbageTime, curTime) / 86400, 0) -- 1 day = 86400 seconds
+	local diffdays = genfuncs.Round(os.difftime(garbageTime, curTime) / 86400, 0) -- 1 day = 86400 seconds
 	local oDate = garbageyear .. '-' .. garbagemonth .. '-' .. garbageday
-	dprint('    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
+	genfuncs.Print_afwlogfile( '    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
 	-- return standard date (yyyy-mm-dd) and diffdays
 	return oDate, diffdays
 end
 --
+-- strip http(s):// from hostnames to avoid issues when specified.
+function genfuncs.Hostname_strip(Hostname)
+	Hostname = Hostname:gsub('[hH][tT][tT][pP][sS]-://', '')
+	return Hostname
+end
 
 -------------------------------------------------------------------------------
 --[[
@@ -359,7 +377,7 @@ end
 		end
 		file:write('}')
 		file:close()
-		dprint('==> Data is saved, file contains ' .. #tbl .. ' records.')
+		genfuncs.Print_afwlogfile( '==> Data is saved, file contains ' .. #tbl .. ' records.')
 	end
 
 	--// The Load Function
@@ -395,8 +413,4 @@ end
 	-- close do
 end
 
--- strip http(s):// from hostnames to avoid issues when specified.
-function Hostname_strip(Hostname)
-	Hostname = Hostname:gsub('[hH][tT][tT][pP][sS]-://', '')
-	return Hostname
-end
+return genfuncs

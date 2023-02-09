@@ -1,20 +1,12 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230207-1331'
+ver = '20230209-1315'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
--------------------------------------------------------
--- get script directory
-function script_path()
-	local str = debug.getinfo(2, 'S').source:sub(2)
-	return (str:match('(.*[/\\])') or './'):gsub('\\', '/')
-end
--- only include when run in separate process
-if GC_scriptpath == nil then
-   dofile(script_path() .. 'generalfuncs.lua') --
-end
+
+-- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
@@ -45,12 +37,12 @@ function Perform_Update()
 				web_garbagedate = record['Datum']
 				-- first match for each Type we save the date to capture the first next dates
 				-- get the long description from the JSON data
-				dprint(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
+				genfuncs.Print_afwlogfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
 				local dateformat = '????????'
 				-- Get days diff
-				dateformat, daysdiffdev = GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+				dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 				if daysdiffdev == nil then
-					dprint('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+					genfuncs.Print_afwlogfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 				end
 				if (daysdiffdev >= 0) then
 					garbagedata[#garbagedata + 1] = {}
@@ -59,7 +51,7 @@ function Perform_Update()
 				end
 			end
 		end
-		dprint('- Sorting records.' .. #pickuptimes)
+		genfuncs.Print_afwlogfile('- Sorting records.' .. #pickuptimes)
 		local eventcnt = 0
 		for x = 0, 60, 1 do
 			for mom in pairs(pickuptimes) do
@@ -74,7 +66,7 @@ function Perform_Update()
 		end
 	end
 	--
-	dprint('---- web update ----------------------------------------------------------------------------')
+	genfuncs.Print_afwlogfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
 	local thnr = Housenr .. Housenrsuf
 
@@ -99,18 +91,18 @@ function Perform_Update()
 	-- data required to get token
 	appId = uuid()
 	data = "{'AppId': '" .. appId .. "' , 'AppVersion': '', 'OsVersion': '', 'Platform': 'HomeAssistant'}"
-	Web_Data = perform_webquery(' -H "Content-Type: application/json" -d "' .. data .. '" "https://api-omrin.freed.nl/Account/GetToken/"')
-	dprint('---- web data stripped -------------------------------------------------------------------')
-	dprint(Web_Data)
-	dprint('---- end web data ------------------------------------------------------------------------')
+	Web_Data = genfuncs.perform_webquery(' -H "Content-Type: application/json" -d "' .. data .. '" "https://api-omrin.freed.nl/Account/GetToken/"')
+	genfuncs.Print_afwlogfile('---- web data stripped -------------------------------------------------------------------')
+	genfuncs.Print_afwlogfile(Web_Data)
+	genfuncs.Print_afwlogfile('---- end web data ------------------------------------------------------------------------')
 	jdata = JSON:decode(Web_Data)
 	-- get PublicKey
 	if type(jdata) ~= 'table' then
-		dprint('### Error: Token not received, stopping execution.')
+		genfuncs.Print_afwlogfile('### Error: Token not received, stopping execution.')
 		return
 	end
 	if not jdata.PublicKey then
-		dprint('### Error: Unable to read the PublicKey field from received data...  stopping execution.')
+		genfuncs.Print_afwlogfile('### Error: Unable to read the PublicKey field from received data...  stopping execution.')
 		return
 	end
 	PublicKey = jdata.PublicKey
@@ -131,7 +123,7 @@ function Perform_Update()
 		file:write(requestBody)
 		file:close()
 	else
-		dprint('### Error: Unable to read the encrypted data from file ' .. afwdatafile .. '_tmp_datain.tmp' .. '  ...  stopping execution.')
+		genfuncs.Print_afwlogfile('### Error: Unable to read the encrypted data from file ' .. afwdatafile .. '_tmp_datain.tmp' .. '  ...  stopping execution.')
 		return
 	end
 
@@ -148,7 +140,7 @@ function Perform_Update()
 
 	-- convert ecncrypted data to base64 and enclose in double quotes
 	encryptedRequest = '"' .. base64.encode(encryptedRequest) .. '"'
-	dprint('encryptedRequest:' .. encryptedRequest)
+	genfuncs.Print_afwlogfile('encryptedRequest:' .. encryptedRequest)
 
 	-- clean tempfiles
 	os.remove(afwdatafile .. '_tmp_token.tmp')
@@ -156,21 +148,21 @@ function Perform_Update()
 	os.remove(afwdatafile .. '_tmp_dataout.tmp')
 
 	print('--- start web query ---')
-	Web_Data = perform_webquery(" -H \"Content-Type: application/x-www-form-urlencoded\" -d '" .. encryptedRequest .. "' -X POST https://api-omrin.freed.nl/Account/FetchAccount/" .. appId .. '')
+	Web_Data = genfuncs.perform_webquery(" -H \"Content-Type: application/x-www-form-urlencoded\" -d '" .. encryptedRequest .. "' -X POST https://api-omrin.freed.nl/Account/FetchAccount/" .. appId .. '')
 
 	if (Web_Data:sub(1, 2) == '[]') then
-		dprint('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
+		genfuncs.Print_afwlogfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
 		return
 	end
 	jdata = JSON:decode(Web_Data)
 	-- check received data is JSON object table
 	if type(jdata) ~= 'table' then
-		dprint('### Error: Empty Kalender found stopping execution.')
+		genfuncs.Print_afwlogfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
 	-- check if CalendarV2 is part of the received data and is a table, as that contains the garbage collection information
 	if type(jdata['CalendarV2']) ~= 'table' then
-		dprint('### Error: Empty jdata["CalendarV2"] table in JSON data...  stopping execution.')
+		genfuncs.Print_afwlogfile('### Error: Empty jdata["CalendarV2"] table in JSON data...  stopping execution.')
 		return
 	end
 
@@ -180,50 +172,41 @@ end
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
-timenow = os.date('*t')
--- get paramters from the commandline
-Zipcode = Zipcode or arg[1]
-Housenr = Housenr or arg[2]
-Housenrsuf = Housenrsuf or arg[3] or '' -- optional
-afwdatafile = datafile or arg[4]
-afwlogfile = weblogfile or arg[5]
-Hostname = (Hostname or arg[6]) or '' -- Not needed
-Street = (Street or arg[7]) or '' -- Not needed
--- other variables
-garbagedata = {} -- array to save information to which will be written to the data file
-
-dprint('#### ' .. os.date('%c') .. ' ### Start garbagecalender module ' .. websitemodule .. ' (v' .. ver .. ')')
-if Zipcode == nil then
-   dprint('!!! Zipcode not specified!')
-elseif Housenr == nil then
-   dprint('!!! Housenr not specified!')
-elseif Housenrsuf == nil then
-   dprint('!!! Housenrsuf not specified!')
-elseif afwdatafile == nil then
-   dprint('!!! afwdatafile not specified!')
-elseif afwlogfile == nil then
-   dprint('!!! afwlogfile not specified!')
-else
+-- ================================================================================================
+-- These activated fields will be checked for being defined and the script will end when one isn't
+-- ================================================================================================
+local chkfields = {
+	'websitemodule',
+	'Zipcode',
+	'Housenr',
+	--	"Housenrsuf",
+	'afwdatafile',
+	'afwlogfile'
+	--	"Hostname",
+	--	"Street",
+	--	"companyCode"
+}
+local param_err = 0
+-- Check whether the required parameters are specified.
+for key, value in pairs(chkfields) do
+	if (_G[value] or '') == '' then
+		param_err = param_err + 1
+		genfuncs.Print_afwlogfile('!!! ' .. value .. ' not specified!', 1)
+	end
+end
+-- Get the web info when all required parameters are defined
+if param_err == 0 then
 	local Load_Success = true
-   if pcall(loaddefaultjson) then
-      dprint('Loaded JSON.lua.')
-   else
-      dprint('### Error: failed loading default JSON.lua and Domoticz JSON.lua: ' .. GC_scriptpath .. '.')
-      dprint('### Error: Please check your setup and try again.')
-		Load_Success = false
-	end
-	-- Load base64.lua
-	if pcall(loadbase64) then
-		dprint('Loaded base64.lua.')
+	status, base64 = pcall(genfuncs.loadlualib, 'base64')
+	if status then
+		genfuncs.Print_afwlogfile('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
+		Perform_Update()
+		genfuncs.Print_afwlogfile('=> Write data to ' .. afwdatafile)
+		table.save(garbagedata, afwdatafile)
 	else
-		dprint('### Error: failed loading default base64.lua: ' .. domoticzjsonpath .. '.')
-		dprint('### Error: Please check your setup and try again.')
-		Load_Success = false
+		genfuncs.Print_afwlogfile('### Error: failed loading default base64.lua: ' .. domoticzjsonpath .. '.')
+		genfuncs.Print_afwlogfile('### Error: Please check your setup and try again.')
 	end
-	if Load_Success then
-   dprint('!!! perform background update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
-   Perform_Update()
-   dprint('=> Write data to ' .. afwdatafile)
-   table.save(garbagedata, afwdatafile)
-	end
+else
+	genfuncs.Print_afwlogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end
