@@ -2,4 +2,5 @@
 _updatemainversion.lua
 VSC Github GarbageCalendar.code-workspace
 garbagecalendar/*.html
-garbagecalendar/test.lua
+garbagecalendar/*test*
+garbagecalendar/data/*
