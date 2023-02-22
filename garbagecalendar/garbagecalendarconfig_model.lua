@@ -3,12 +3,12 @@
 -----------------------------------------------------------------------------
 -- Specify your information here as needed for your needs
 myGarbageDevice = '' -- The Text devicename in Domoticz. eg 'Container'
-Zipcode = '' -- Your zipcode  eg '1234AB'
-Housenr = '' -- Your housnr. eg '99'
-Housenrsuf = '' -- Your housnr suffix  ('a', 'b'  etc)
-Hostname = '' -- m_opzet & m_opzet_api: Specify the hostname of your website. eg 'inzamelkalender.hvcgroep.nl'
-Street = '' -- Street name Only needed for: m_recycleapp
-companyCode = ''-- m_ximmio companycode. (See m_ximmio.lua on how to find this code).
+Zipcode = '' 			-- Your zipcode  eg '1234AB'
+Housenr = '' 			-- Your housnr. eg '99'
+Housenrsuf = '' 		-- Your housnr suffix  ('a', 'b'  etc)
+Hostname = '' 			-- m_opzet & m_opzet_api: Specify the hostname of your website. eg 'inzamelkalender.hvcgroep.nl'
+Street = '' 			-- Street name Only needed for: m_recycleapp
+companyCode = ''		-- m_ximmio companycode. (See m_ximmio.lua file for how to find this code).
 -- ==============================
 -- choose one of these modules ==
 -- ==============================
@@ -22,7 +22,7 @@ websitemodule = 'm_mijnafvalwijzer'
 --websitemodule = "m_opzet"
 --websitemodule = "m_recycleapp-be"
 --websitemodule = "m_rova_api"
---websitemodule = "m_ximmio"           --
+--websitemodule = "m_ximmio"
 --websitemodule = "m_zuidlimburg"
 -------------------------------------------------------------------------------------------------------
 -- When using a CSV input file uncomment the next 2 lines and specify the location and name of the file.

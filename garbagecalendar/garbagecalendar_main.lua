@@ -272,12 +272,8 @@ function garbagecalendar_main(commandArray, domoticz)
 		param.Hostname = (Hostname or '')
 		param.Street = (Street or '')
 		param.companyCode = (companyCode or param.Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
-		local S_param = string.format('%q', JSON:encode(param))
-		--print("+++>",S_param)
 		-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
 		if ((whenrun or '') ~= 'now') then
-			-- Shell _runmodule.lua as separate process in the background to perform update of the data
-			local command = 'lua "' .. GC_scriptpath .. '_runmodule.lua" "' .. S_param .. '"'
 			-- Test if lua is installed, if so submit backgrond task to update the datafile to relieve the event system
 			os.execute('lua -v >' .. datafilepath .. 'luatest.log 2>&1')
 			local ifile, ierr = io.open(datafilepath .. 'luatest.log', 'r')
@@ -288,18 +284,31 @@ function garbagecalendar_main(commandArray, domoticz)
 				ifile:close()
 				os.remove(datafilepath .. 'luatest.log')
 				luaversion = Chk_Error:match('[lL][uU][aA]%s*([%d*%.]*)[^\r\n]*') or ''
-				Print_logfile('=>Found LUA version:' .. luaversion .. '   > Lua check output:' .. Chk_Error or '?')
+				Print_logfile('=> Found LUA version:' .. luaversion .. '   > Lua check output:' .. Chk_Error or '?')
 			else
 				Print_logfile('Lua check error:' .. Chk_Error or '?')
 			end
 			-- if the testfile contain this error, it means lua is installed.
 			if luaversion ~= '' then
-				Print_logfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
-				Print_logfile(command .. ' &')
-				rc = os.execute(command .. ' &')
 				-- Run _runmodule.lua to Check the version and log warning message in case it is different.
 				OnlyCheckVersion = true
 				dofile(GC_scriptpath .. '_runmodule.lua')
+				-- Part to check if version of this script is equal to Main script when run in foreground
+				if (MainScriptVersion or '??') ~= MainRunModVersion then
+					Print_logfile('### Warning: Version of _runmodule.lua(v' .. (MainRunModVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
+				end
+				--
+
+				-- Shell _runmodule.lua as separate process in the background to perform update of the data
+				-- local S_param = string.format('%q', JSON:encode(param))
+				-- local command = 'lua "' .. GC_scriptpath .. '_runmodule.lua" \'' .. S_param .. '\''
+				local paramfile = datafilepath .. 'garbagecalendar_params.tbl'
+				table.save(param, paramfile, true)
+				local command = 'lua "' .. GC_scriptpath .. '_runmodule.lua" "' .. datafilepath .. '"'
+				Print_logfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
+				Print_logfile(command .. ' > "' .. weblogfile .. '" 2>&1  &')
+				rc = os.execute(command .. ' > "' .. weblogfile .. '" 2>&1  &')
+				--rc = os.execute(command .. '  &')
 			else
 				Print_logfile('=> check LUA not found -> Run foreground to use internal LUA.', 1)
 				whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation

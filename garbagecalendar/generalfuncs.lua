@@ -280,7 +280,8 @@ end
 	end
 
 	--// The Save Function
-	function table.save(tbl, filename)
+	function table.save(tbl, filename, skipprintresult)
+		local printresult = skipprintresult==true
 		local charS, charE = '   ', '\n'
 		local file, err = io.open(filename, 'wb')
 		if err then
@@ -356,7 +357,9 @@ end
 		end
 		file:write('}')
 		file:close()
-		Print_weblogfile('==> Data is saved, file contains ' .. #tbl .. ' records.')
+		if printresult then
+			Print_logfile('==> Data is saved, file ' .. filename .. ' contains ' .. #tbl .. ' records.')
+		end
 	end
 
 	--// The Load Function

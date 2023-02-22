@@ -5,6 +5,10 @@
 -- The information wil be logged to the garbagecalendar_we_modulename.log file.
 ----------------------------------------------------------------------------------------------------------------
 MainRunModVersion = '20230209-2000'
+-- Don't do anything when variable is set true, use for version check
+if (OnlyCheckVersion or false) then
+	return
+end
 
 -- Start Functions =========================================================================
 -------------------------------------------------------
@@ -33,7 +37,7 @@ function RunWebModule()
 	-- other variables
 	garbagedata = {} -- array to save information to which will be written to the data file
 
-	Print_weblogfile('-> Start -- ' .. mtext .. ' _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??') .. '  file:' .. (websitemodulescript or '??'))
+	-- Print_weblogfile('-> Start -- ' .. mtext .. ' _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??') .. '  file:' .. (websitemodulescript or '??'))
 	dofile(websitemodulescript)
 	datafile = datafile or arg[4] or '??'
 	return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. datafile .. '. Look at ' .. weblogfile .. ' for process details.'
@@ -41,7 +45,7 @@ end
 
 -------------------------------------------------------
 -- Print_weblogfile( function to format log records when in batch mode
-function Print_weblogfile(text, always)
+function Print_weblogfile(text, always, prefix)
 	---------------------------------
 	-- this fucntion will find the LUA filename&linenr that called this func
 	function traceback()
@@ -68,24 +72,30 @@ function Print_weblogfile(text, always)
 	text = text or 'nil'
 	local ptext = '' .. os.date('%X ') .. calledfrom .. ':'..calledline.. ": " .. (websitemodule or '?') .. ': ' .. text
 	--print(weblogfile,'||',text,'||',always)
-	if (weblogfile or '') == '' then
+
+	--if (weblogfile or '') == '' then
 		print(ptext)
+	--[[
 	else
 		local file = io.open(weblogfile, 'a')
-		file:write(ptext .. '\n')
-		file:close()
-		if (always or false) then
+		if file then
+			file:write(ptext .. '\n')
+			file:close()
+			if (always or false) then
+				print(ptext)
+			end
+		else
+			print(weblogfile)
 			print(ptext)
 		end
 	end
+	]]
 end
 
 -------------------------------------------------------
--- Print_Mainlogfile() Allows to so information in the mainlog and console when in foreground
-function Print_Mainlogfile(text, always, prefix)
-	if Print_logfile then
-		Print_logfile(text, always, prefix)
-	end
+-- use Print_weblogfile when Print_logfile from Main script isn't there. happens when in background mode
+if not Print_logfile then
+	Print_logfile = Print_weblogfile
 end
 
 -- End Functions =========================================================================
@@ -97,8 +107,20 @@ GC_scriptpath = GC_scriptpath or script_path()
 if (GC_scriptpath == '') then
 	GC_scriptpath = script_path()
 end
--- set temp log to capture the initial log messages in until the final logfile is known
-weblogfile = weblogfile or (GC_scriptpath .. 'data/garbagecalendar_web_templog.log')
+
+timenow = os.date('*t')
+
+Run_Foreground = false
+mtext = 'background'
+-- define param as global var.
+param = param
+if param then
+	Run_Foreground = true
+	mtext = 'foreground'
+end
+Print_weblogfile('-> Start -- ' .. mtext .. ' _runmodule.lua (v' .. MainRunModVersion .. ') for garbage module ' .. (websitemodule or '??') .. '  file:' .. (websitemodulescript or '??'))
+
+weblogfile = ""
 -- =======================================================
 -- Load General functions module
 -- =======================================================
@@ -120,6 +142,22 @@ if not genfuncs then
 		end
 	end
 end
+-- Get param's from the JSON parameter when in batch
+if not Run_Foreground then
+	-- string starting and ending single quote
+	-- param = JSON:decode(arg[1] or '{}')
+	datafilepath = arg[1] or (GC_scriptpath .. 'data/')
+	Print_weblogfile("datafilepath=" .. (datafilepath or "?"))
+	local paramfile = datafilepath .. 'garbagecalendar_params.tbl'
+	param, perr = table.load(paramfile)
+	if perr ~= 0 then
+		--- when file doesn't exist
+		Print_logfile('### Warning: paramfile not found:' .. paramfile .. '.')
+	else
+		Print_logfile('paramfile=' .. paramfile .. ' loaded.')
+	end
+end
+--
 -- =======================================================
 -- Load JSON module when in background mode
 -- =======================================================
@@ -132,21 +170,6 @@ end
 -- =======================================================
 -- set variable from commandline when batch
 -- =======================================================
-timenow = os.date('*t')
-
-Run_Foreground = false
-mtext = 'background'
-if param then
-	Run_Foreground = true
-	mtext = 'foreground'
-end
-
--- Get param's from the JSON parameter when in batch
-if not Run_Foreground then
-	-- string starting and ending single quote
-	param = JSON:decode(arg[1] or '{}')
-end
---
 -- list param array for debugging
 if param ~= nil then
 	Print_weblogfile('> Input param table:')
@@ -163,37 +186,10 @@ Zipcode = param.Zipcode or ''
 Housenr = param.Housenr or ''
 Housenrsuf = param.Housenrsuf or ''
 afwdatafile = param.datafile or ''
--- copy temp runlog to the provided name and remove again
-if (weblogfile == (GC_scriptpath .. 'data/garbagecalendar_web_templog.log') and (param.weblogfile or '') ~= '') then
-	local ifile, ierr = io.open(weblogfile, 'r')
-	if not ierr then
-		local loginfo = ifile:read('*all')
-		ifile:close()
-		local ofile, oerr = io.open(param.weblogfile, 'a')
-		if not oerr then
-			--print('== templog start ========================================================')
-			--print(loginfo)
-			--print('== templog end   ========================================================')
-			--print('=> copied to:', param.weblogfile)
-			ofile:write(loginfo)
-			ofile:close()
-			os.remove(GC_scriptpath .. 'data/garbagecalendar_web_templog.log')
-		end
-	end
-end
-weblogfile = param.weblogfile or ''
 Hostname = param.Hostname or ''
 Street = param.Street or ''
 companyCode = param.companyCode or ''
-
--- Part to check if version of this script is equal to Main script when run in foreground
-if Run_Foreground and (MainScriptVersion or '??') ~= MainRunModVersion then
-	Print_weblogfile('### Warning: Version of _runmodule.lua(v' .. (MainRunModVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
-end
--- Don't do anything when variable is set true, use for version check
-if OnlyCheckVersion or false then
-	return
-end
+weblogfile = param.weblogfile or '??'
 
 --
 local estatus, err, result = xpcall(RunWebModule, errhandler)
