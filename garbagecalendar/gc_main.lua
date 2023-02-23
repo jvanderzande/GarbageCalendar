@@ -199,7 +199,7 @@ function gc_main(commandArray, domoticz, batchrun)
 			datafilepath = (datafilepath .. '/'):gsub('//', '/')
 			runlogfile = datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log'
 			if (batchrun) then
-				runlogfile = datafilepath .. 'garbagecalendar_run_backgound_webupdate_' .. websitemodule .. '.log'
+				runlogfile = datafilepath .. 'garbagecalendar_run_webupdate_backgound_' .. websitemodule .. '.log'
 			end
 			datafile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data'
 			icalfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.ics'
