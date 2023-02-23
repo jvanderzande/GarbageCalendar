@@ -207,5 +207,5 @@ if param_err == 0 then
 		Print_logfile('### Error: Please check your setup and try again.')
 	end
 else
-	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
 end
