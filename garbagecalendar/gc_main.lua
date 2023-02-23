@@ -40,6 +40,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	datafile = ''
 	icalfile = ''
 	needupdate = false
+	reloaddata = false
 	backgoundjobran = false
 	timenow = os.date('*t')
 	genfuncs = {}
@@ -260,6 +261,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- perform  Web data update
 	function GetWebData(whenrun)
 		-- Modules variables
+		reloaddata = true
 		companyCode = (companyCode or Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
 
 			-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
@@ -337,22 +339,6 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile(debug.traceback())
 			end
 			Print_logfile('-< End module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
-		end
-		if not batchrun then
-			-- Save run log during webupdate so it can be checked together with the WebLog
-			local ifile = io.open(runlogfile, 'r')
-			if ifile ~= nil then
-				local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_webupdate_'), 'w')
-				if ofile ~= nil then
-					ofile:write(ifile:read('*all'))
-					ofile:close()
-				else
-					Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
-				end
-				ifile:close()
-			else
-				Print_logfile(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
-			end
 		end
 	end
 
@@ -915,28 +901,27 @@ function gc_main(commandArray, domoticz, batchrun)
 	if needupdate then
 		-- Check Data subdir
 		Perform_Data_check()
-		--
-		if backgoundjobran then
-			-- Save run log during update
-			local ifile = io.open(runlogfile, 'r')
-			if ifile ~= nil then
-				local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_update_'), 'w')
-				if ofile ~= nil then
-					ofile:write(ifile:read('*all'))
-					ofile:close()
-					Print_logfile(' saved _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '.')
-				else
-					Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '. Check for the appropriate rights.')
-				end
-				ifile:close()
-			else
-				Print_logfile(' Unable to create _run_update log file:' .. runlogfile .. '. Check for the appropriate rights.')
-			end
-		end
 	else
 		Print_logfile('Scheduled time(s) not reached yet, so nothing to do!')
 	end
+
 	Print_logfile('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
+	if not batchrun and reloaddata then
+		-- Save run log during webupdate so it can be checked together with the WebLog
+		local ifile = io.open(runlogfile, 'r')
+		if ifile ~= nil then
+			local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_webupdate_'), 'w')
+			if ofile ~= nil then
+				ofile:write(ifile:read('*all'))
+				ofile:close()
+			else
+				Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
+			end
+			ifile:close()
+		else
+			Print_logfile(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
+		end
+	end
 end
 
 -- used to run the GetWebData as batch job in the background
