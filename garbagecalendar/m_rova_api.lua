@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rova_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-2000'
+ver = '20230223-1500'
 websitemodule = 'm_rova_api'
 -- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
 --
@@ -23,12 +23,12 @@ function Perform_Update()
             web_garbagedate = record['date']
             -- first match for each Type we save the date to capture the first next dates
             -- get the long description from the JSON data
-            Print_weblogfile( i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
+            Print_logfile( i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
             local dateformat = '????????'
             -- Get days diff
             dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
             if daysdiffdev == nil then
-               Print_weblogfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+               Print_logfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
             end
             if (daysdiffdev >= 0) then
                garbagedata[#garbagedata + 1] = {}
@@ -41,16 +41,16 @@ function Perform_Update()
       end
    end
    --
-   Print_weblogfile( '---- web update ----------------------------------------------------------------------------')
+   Print_logfile( '---- web update ----------------------------------------------------------------------------')
    local Web_Data
    Web_Data = genfuncs.perform_webquery('"http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=' .. Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=' .. Housenrsuf .. '&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova"')
    if (Web_Data == '') then
-      Print_weblogfile( '### Error: Empty result from curl command. Please check whether curl.exe is installed.')
+      Print_logfile( '### Error: Empty result from curl command. Please check whether curl.exe is installed.')
       return
    end
    -- strip bulk data from "ophaaldagenNext" till the end, because this is causing some errors for some gemeentes
    if (Web_Data:find('ophaaldagenNext') == nil) then
-      Print_weblogfile( '### Error: returned information does not contain the ophaaldagenNext section. stopping process.')
+      Print_logfile( '### Error: returned information does not contain the ophaaldagenNext section. stopping process.')
       return
    end
    -- strip a larger chunk of the none used data for speed.
@@ -60,11 +60,11 @@ function Perform_Update()
    -- Get the data section
    rdata = decoded_response['data']
    if type(rdata) ~= 'table' then
-      Print_weblogfile( '### Error: Empty data table in JSON data...  stopping execution.')
+      Print_logfile( '### Error: Empty data table in JSON data...  stopping execution.')
       return
    end
    if (decoded_response['response'] == 'NOK') then
-      Print_weblogfile( '### Error: Check your Postcode and Huisnummer as we get an NOK response.')
+      Print_logfile( '### Error: Check your Postcode and Huisnummer as we get an NOK response.')
       return
    end
    -- get the description records into rdesc to retrieve the long description
@@ -73,15 +73,15 @@ function Perform_Update()
    -- get the ophaaldagen tabel for the coming scheduled pickups for this year
    rdataty = rdata['ophaaldagen']
    if type(rdataty) ~= 'table' then
-      Print_weblogfile( '### Error: Empty data.ophaaldagen table in JSON data...  stopping execution.')
+      Print_logfile( '### Error: Empty data.ophaaldagen table in JSON data...  stopping execution.')
       return
    end
    rdataty = rdataty['data']
    if type(rdataty) ~= 'table' then
-      Print_weblogfile( '### Error: Empty data.ophaaldagen.data table in JSON data...  stopping execution.')
+      Print_logfile( '### Error: Empty data.ophaaldagen.data table in JSON data...  stopping execution.')
       return
    end
-   Print_weblogfile( '- start looping through this year received data -----------------------------------------------------------')
+   Print_logfile( '- start looping through this year received data -----------------------------------------------------------')
    processdata(rdataty)
    -- only process nextyear data in case we do not have the requested number of next events
    if #garbagedata < 10 then
@@ -92,10 +92,10 @@ function Perform_Update()
       else
          rdataly = rdataly['data']
          if type(rdataly) ~= 'table' then
-            Print_weblogfile( '### Error: Empty data.ophaaldagen.data table in JSON data...  stopping execution.')
+            Print_logfile( '### Error: Empty data.ophaaldagen.data table in JSON data...  stopping execution.')
          else
             -- get the next number of ShowNextEvents
-            Print_weblogfile( '- start looping through next year received data -----------------------------------------------------------')
+            Print_logfile( '- start looping through next year received data -----------------------------------------------------------')
             processdata(rdataly)
          end
       end
@@ -111,8 +111,7 @@ local chkfields = {"websitemodule",
 	"Zipcode",
 	"Housenr",
 --	"Housenrsuf",
-	"afwdatafile",
-	"weblogfile",
+	"datafile",
 --	"Hostname",
 --	"Street",
 --	"companyCode"
@@ -122,15 +121,15 @@ local param_err=0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		Print_weblogfile('!!! '..value .. ' not specified!', 1)
+		Print_logfile('!!! '..value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
-	Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf )
 	Perform_Update()
-	Print_weblogfile('=> Write data to ' .. afwdatafile)
-	table.save(garbagedata, afwdatafile)
+	Print_logfile('=> Write data to ' .. datafile)
+	table.save(garbagedata, datafile)
 else
-	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

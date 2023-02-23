@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-2000'
+ver = '20230223-1500'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -27,9 +27,9 @@ function Perform_Update()
 			record = ophaaldata[i]
 			if type(record) == 'table' then
 				web_garbagetype = record['_pickupTypeText']
-				--Print_weblogfile( web_garbagetype)
+				--Print_logfile( web_garbagetype)
 				if (record['description'] ~= nil and record['description'] ~= 'Null') then
-					--Print_weblogfile( web_garbagedesc)
+					--Print_logfile( web_garbagedesc)
 					web_garbagedesc = record['description']
 				else
 					web_garbagedesc = ''
@@ -39,10 +39,10 @@ function Perform_Update()
 				for i = 1, #garbagedate do
 					record = garbagedate[i]
 					-- Get days diff
-					Print_weblogfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(garbagedate[i]))
+					Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(garbagedate[i]))
 					dateformat, daysdiffdev = genfuncs.GetDateFromInput(garbagedate[i], '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 					if daysdiffdev == nil then
-						Print_weblogfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. garbagedate[i])
+						Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. garbagedate[i])
 					else
 						if (daysdiffdev >= 0) then
 							pickuptimes[#pickuptimes + 1] = {}
@@ -55,7 +55,7 @@ function Perform_Update()
 				end
 			end
 		end
-		Print_weblogfile('- Sorting records.')
+		Print_logfile('- Sorting records.')
 		local eventcnt = 0
 		for x = 0, 60, 1 do
 			for mom in pairs(pickuptimes) do
@@ -68,7 +68,7 @@ function Perform_Update()
 			end
 		end
 	end
-	Print_weblogfile('---- web update ----------------------------------------------------------------------------')
+	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
 	local webhost = 'https://wasteprod2api.ximmio.com'
 	---
@@ -78,7 +78,7 @@ function Perform_Update()
 		return
 	end
 	if (Web_Data:sub(1, 2) == '[]') then
-		Print_weblogfile('### Error: Check your Zipcode and Housenr as we get an [] response.')
+		Print_logfile('### Error: Check your Zipcode and Housenr as we get an [] response.')
 		return
 	end
 	adressdata = JSON:decode(Web_Data)
@@ -89,28 +89,28 @@ function Perform_Update()
 		adressdata = JSON:decode(Web_Data)
 	end
 	if adressdata['dataList'] == nil or adressdata['dataList'][1] == nil then
-		Print_weblogfile('### Error: No UniqueId retrieved, datalist missing...  stopping execution.')
+		Print_logfile('### Error: No UniqueId retrieved, datalist missing...  stopping execution.')
 		return
 	end
 	UniqueId = adressdata['dataList'][1]['UniqueId']
 	if UniqueId == nil or UniqueId == '' then
-		Print_weblogfile('### Error: No UniqueId retrieved...  stopping execution.')
+		Print_logfile('### Error: No UniqueId retrieved...  stopping execution.')
 		return
 	end
 
-	Print_weblogfile('UniqueId:' .. UniqueId)
+	Print_logfile('UniqueId:' .. UniqueId)
 	-- set startdate to today en end date to today + 28 days
 	startDate = os.date('%Y-%m-%d')
 	endDate = os.date('%Y-%m-%d', os.time() + 28 * 24 * 60 * 60)
 	Web_Data = genfuncs.perform_webquery('--data "companyCode=' .. companyCode .. '&uniqueAddressID=' .. UniqueId .. '&startDate=' .. startDate .. '&endDate=' .. endDate .. '" "' .. webhost .. '/api/GetCalendar"')
 	if (Web_Data:sub(1, 2) == '[]') then
-		Print_weblogfile('### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
+		Print_logfile('### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
 		return
 	end
 	jdata = JSON:decode(Web_Data)
 	-- get the Datalist tabel for the coming scheduled pickups
 	if type(jdata) ~= 'table' then
-		Print_weblogfile('### Error: Empty Kalender found stopping execution.')
+		Print_logfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
 	jdata = jdata['dataList'] -- get the Datalist tabel for the coming scheduled pickups
@@ -119,13 +119,13 @@ function Perform_Update()
 		return
 	end
 	-- process the data
-	Print_weblogfile('- start looping through received data -----------------------------------------------------------')
+	Print_logfile('- start looping through received data -----------------------------------------------------------')
 	processdata(jdata)
 end
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
-Print_weblogfile('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
+Print_logfile('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
 
 -- ================================================================================================
 -- These activated fields will be checked for being defined and the script will end when one isn't
@@ -134,8 +134,7 @@ local chkfields = {"websitemodule",
 	"Zipcode",
 	"Housenr",
 --	"Housenrsuf",
-	"afwdatafile",
-	"weblogfile",
+	"datafile",
 --	"Hostname",
 --	"Street",
 	"companyCode"
@@ -145,15 +144,15 @@ local param_err=0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		Print_weblogfile('!!! '..value .. ' not specified!', 1)
+		Print_logfile('!!! '..value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
-	Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf )
 	Perform_Update()
-	Print_weblogfile('=> Write data to ' .. afwdatafile)
-	table.save(garbagedata, afwdatafile)
+	Print_logfile('=> Write data to ' .. datafile)
+	table.save(garbagedata, datafile)
 else
-	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

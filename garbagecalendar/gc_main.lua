@@ -1,8 +1,8 @@
-function garbagecalendar_main(commandArray, domoticz)
+function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230209-2000'
+	MainScriptVersion = '20230223-1500'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -17,7 +17,9 @@ function garbagecalendar_main(commandArray, domoticz)
 	-- check if ran by DzVents or regular time script
 
 	-- make domoticz a global
-	if domoticz ~= nil then
+	if batchrun then
+		RunText = 'Background run for WebData update'
+	elseif domoticz ~= nil then
 		RunbyDzVents = true
 		RunText = 'DzVents:'
 	else
@@ -32,13 +34,15 @@ function garbagecalendar_main(commandArray, domoticz)
 	websitemodule = 'unknown'
 	datafilepath = nil
 	GC_scriptpath = ''
-	weblogfile = ''
 	runlogfile = ''
+	-- set temp log to capture the initial log messages in until the final logfile is known
+	hrunlogfile = io.tmpfile()
 	datafile = ''
 	icalfile = ''
 	needupdate = false
+	backgoundjobran = false
 	timenow = os.date('*t')
-	local genfuncs
+	genfuncs = {}
 	param = {}
 
 	---====================================================================================================
@@ -51,10 +55,10 @@ function garbagecalendar_main(commandArray, domoticz)
 				if not info then
 					break
 				end
-				-- if info.what ~= 'C' and not info.short_src:match('generalfuncs.lua') then
+				-- if info.what ~= 'C' and not info.short_src:match('gc_generalfuncs.lua') then
 				if info.what ~= 'C' then
 					calledfrom = info.short_src:match('.*[/\\](.*)%.lua')
-					calledline = ("   "..(info.currentline or '?')):sub(-4,-1)
+					calledline = ('   ' .. (info.currentline or '?')):sub(-4, -1)
 					--print(string.format('[%s]:%d %s ->%s', calledfrom, info.currentline, info.name, info.short_src))
 					break
 				end
@@ -63,26 +67,30 @@ function garbagecalendar_main(commandArray, domoticz)
 		end
 		calledfrom = '??'
 		traceback()
-		ShortFileNames = {garbagecalendar_main = 'GC Main', _runmodule = 'Run Mod', generalfuncs = 'genfunc'}
+		ShortFileNames = {gc_main = 'GC_Main', gc_generalfuncs = 'GC_Func'}
 		calledfrom = ShortFileNames[calledfrom] or calledfrom
+		calledfrom = (calledfrom.."    "):sub(1,7)
 		text = text or 'nil'
 		local ptext = ''
 		if (prefix or 1) == 1 then
 			-- .. (websitemodule or '?') .. ': '
 			--ptext = '' .. os.date('%X ') .. 'GC Main: '
-			ptext = '' .. os.date('%X ') .. calledfrom .. ':'..calledline.. ": "
+			ptext = '' .. os.date('%X ') .. calledfrom .. ':' .. calledline .. ': '
 		end
 		-- Console print in case .....
 		if (mydebug or false) or ((always or 0) == 1) then
 			print(ptext .. text)
 		end
 		-- LOG Print when file is specified
-		if ((runlogfile or '')  ~= '') then
+		if ((runlogfile or '') ~= '') then
 			file = io.open(runlogfile, 'a')
 			if file ~= nil then
 				file:write(ptext .. text .. '\n')
 				file:close()
 			end
+		elseif hrunlogfile then
+			-- Write to tempfile until the runlogfile is known
+			hrunlogfile:write(ptext .. text .. '\n')
 		end
 	end
 
@@ -95,11 +103,6 @@ function garbagecalendar_main(commandArray, domoticz)
 	GC_scriptpath = script_path() or './'
 	if not (package.path):match(GC_scriptpath .. '%?.lua;') then
 		package.path = GC_scriptpath .. '?.lua;' .. package.path
-	end
-	-- set temp log to capture the initial log messages in until the final logfile is known
-	if runlogfile == '' then
-		runlogfile = (GC_scriptpath .. 'data/garbagecalendar_run_templog.log')
-		os.remove(GC_scriptpath .. 'data/garbagecalendar_run_templog.log')
 	end
 
 	Print_logfile('### ' .. RunText .. ' Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
@@ -114,29 +117,29 @@ function garbagecalendar_main(commandArray, domoticz)
 	if not status then
 		print('!!! failed loading "garbagecalendarconfig.lua" from package.path:"' .. package.path .. '"')
 		if (err:find("module 'garbagecalendarconfig' not found:")) then
-			print(' ->Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
+			Print_logfile(' ->Ensure you have copied "garbagecalendarconfig_model.lua" to "garbagecalendarconfig.lua" and modified it to your requirements.')
 		else
-			print(' ->Check your garbagecalendarconfig.lua for below error(s):')
+			Print_logfile(' ->Check your garbagecalendarconfig.lua for below error(s):')
 		end
-		print('!!! LUA Error: ' .. err)
+		Print_logfile('!!! LUA Error: ' .. err)
 		return
 	else
-		--Print_logfile('Loaded ' .. GC_scriptpath .. 'garbagecalendarconfig.lua.')
+		Print_logfile('Loaded ' .. GC_scriptpath .. 'garbagecalendarconfig.lua.')
 	end
 
 	-- ########################################################
 	-- Load General functions module
 	-- ########################################################
-	status, genfuncs = pcall(require, 'generalfuncs')
+	status, genfuncs = pcall(require, 'gc_generalfuncs')
 	if not status then
-		Print_logfile('### Error: failed loading generalfuncs.lua from : ' .. GC_scriptpath .. '', 1)
+		Print_logfile('### Error: failed loading gc_generalfuncs.lua from : ' .. GC_scriptpath .. '', 1)
 		Print_logfile('### Error: Please check the path in variable "GC_scriptpath= "  in your setup and try again.', 1)
 		Print_logfile('!!! LUA Error: ' .. genfuncs)
 		return
 	else
-		--Print_logfile('Loaded ' .. GC_scriptpath .. 'generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ')')
+		--Print_logfile('Loaded ' .. GC_scriptpath .. 'gc_generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ')')
 		if MainScriptVersion ~= MainGenUtilsVersion then
-			Print_logfile('### Warning: Version of generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
+			Print_logfile('### Warning: Version of gc_generalfuncs.lua (v' .. (MainGenUtilsVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
 		end
 	end
 
@@ -186,17 +189,18 @@ function garbagecalendar_main(commandArray, domoticz)
 			end
 
 			-- copy temp runlog content and put that in the final runlog
-			local ifile, ierr = io.open(runlogfile, 'r')
 			local loginfo = ''
-			if not ierr then
-				loginfo = ifile:read('*all')
-				ifile:close()
+			if hrunlogfile then
+				hrunlogfile:seek ("set", 0)
+				loginfo = hrunlogfile:read('*all') or ""
 			end
 
 			-- initialise the variables
 			datafilepath = (datafilepath .. '/'):gsub('//', '/')
 			runlogfile = datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log'
-			weblogfile = datafilepath .. 'garbagecalendar_web_' .. websitemodule .. '.log'
+			if (batchrun) then
+				runlogfile = datafilepath .. 'garbagecalendar_run_backgound_webupdate_' .. websitemodule .. '.log'
+			end
 			datafile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data'
 			icalfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.ics'
 
@@ -255,24 +259,10 @@ function garbagecalendar_main(commandArray, domoticz)
 	---====================================================================================================
 	-- perform  Web data update
 	function GetWebData(whenrun)
-		-- empty previous run weblogfile
-		file = io.open(weblogfile, 'w')
-		if file == nil then
-			print('!!! Error opening weblogfile ' .. weblogfile)
-		else
-			file:close()
-		end
-		-- save all params into an Array for easier/flexible processing via Batch & Foreground in _runmodule.lua
-		param.websitemodule = websitemodule
-		param.Zipcode = Zipcode
-		param.Housenr = Housenr
-		param.Housenrsuf = Housenrsuf
-		param.datafile = datafile
-		param.weblogfile = weblogfile
-		param.Hostname = (Hostname or '')
-		param.Street = (Street or '')
-		param.companyCode = (companyCode or param.Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
-		-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
+		-- Modules variables
+		companyCode = (companyCode or Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
+
+			-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
 		if ((whenrun or '') ~= 'now') then
 			-- Test if lua is installed, if so submit backgrond task to update the datafile to relieve the event system
 			os.execute('lua -v >' .. datafilepath .. 'luatest.log 2>&1')
@@ -290,50 +280,79 @@ function garbagecalendar_main(commandArray, domoticz)
 			end
 			-- if the testfile contain this error, it means lua is installed.
 			if luaversion ~= '' then
-				-- Run _runmodule.lua to Check the version and log warning message in case it is different.
-				OnlyCheckVersion = true
-				dofile(GC_scriptpath .. '_runmodule.lua')
-				-- Part to check if version of this script is equal to Main script when run in foreground
-				if (MainScriptVersion or '??') ~= MainRunModVersion then
-					Print_logfile('### Warning: Version of _runmodule.lua(v' .. (MainRunModVersion or '??') .. ') is different from the main script! (v' .. (MainScriptVersion or '??') .. ')')
-				end
 				--
-
-				-- Shell _runmodule.lua as separate process in the background to perform update of the data
-				-- local S_param = string.format('%q', JSON:encode(param))
-				-- local command = 'lua "' .. GC_scriptpath .. '_runmodule.lua" \'' .. S_param .. '\''
-				local paramfile = datafilepath .. 'garbagecalendar_params.tbl'
-				table.save(param, paramfile, true)
-				local command = 'lua "' .. GC_scriptpath .. '_runmodule.lua" "' .. datafilepath .. '"'
+				-- test resubmit gc_main.lua in batch
+				if (batchrun) then
+					Print_logfile("=> Batchrun trying to do another Batchrun...This shouldn't happen, so stopping to avoid enless loop.", 1)
+					return
+				end
+				local command = 'lua "' .. GC_scriptpath .. 'gc_main.lua" "GetDataInBatch"'
 				Print_logfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
-				Print_logfile(command .. ' > "' .. weblogfile .. '" 2>&1  &')
-				rc = os.execute(command .. ' > "' .. weblogfile .. '" 2>&1  &')
-				--rc = os.execute(command .. '  &')
+				Print_logfile(command .. ' &')
+				rc = os.execute(command .. ' &')
+				backgoundjobran = true
 			else
 				Print_logfile('=> check LUA not found -> Run foreground to use internal LUA.', 1)
 				whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
 			end
 		end
-		-- Run the Webupdate in the foreground when required. This happens in case the datafile doesn't exists or LUA can't be found.
+
+		-- ==================================================
+		-- Run the Webupdate in the foreground when required.
+		-- This happens in case the datafile doesn't exists or LUA can't be found.
 		if ((whenrun or '') == 'now') then
-			-- Fill the arg[] table with the required parameters and run the script with dofile().
-			Print_logfile('==> Start new foreground WebUpdate for module ' .. websitemodule, 1)
-			dofile(GC_scriptpath .. '_runmodule.lua')
-			Print_logfile('==< End WebUpdate.')
-		end
-		-- Save run log during webupdate so it can be checked together with the WebLog
-		local ifile = io.open(runlogfile, 'r')
-		if ifile ~= nil then
-			local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_webupdate_'), 'w')
-			if ofile ~= nil then
-				ofile:write(ifile:read('*all'))
-				ofile:close()
-			else
-				Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
+			-------------------------------------------------------
+			-- Error handling function
+			function errhandler(x)
+				return x .. '\n' .. debug.traceback()
 			end
-			ifile:close()
-		else
-			Print_logfile(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
+			-------------------------------------------------------
+			-- RunWebModule Function
+			function RunWebModule()
+				-------------------------------------------------------
+				-- Check module provided
+				if (websitemodule or '') == '' then
+					return '', '!!!! Module name not provided. Ending run.'
+				end
+				local websitemodulescript = GC_scriptpath .. websitemodule .. '.lua'
+				-- other variables
+				garbagedata = {} -- array to save information to which will be written to the data file
+				-- Run required Module
+				dofile(websitemodulescript)
+				datafile = datafile or arg[4] or '??'
+				return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. datafile .. '. Look at ' .. runlogfile .. ' for process details.'
+			end
+			Print_logfile('-> Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+			-- run module
+			local estatus, err, result = xpcall(RunWebModule, errhandler)
+			--print(estatus, '|', err, '|', result)
+			if estatus then
+				Print_logfile((err or '') .. (result or ''))
+			else
+				Print_logfile('!! Module ' .. (websitemodule or '???') .. ' had hard error. check log:' .. (runlogfile or '') .. '\n' .. (err or ''))
+				Print_logfile(runlogfile or 'no logfile')
+				Print_logfile('\n%%%%% LUA Hardcrash log %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+				Print_logfile(estatus)
+				Print_logfile(err)
+				Print_logfile(debug.traceback())
+			end
+			Print_logfile('-< End module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+		end
+		if not batchrun then
+			-- Save run log during webupdate so it can be checked together with the WebLog
+			local ifile = io.open(runlogfile, 'r')
+			if ifile ~= nil then
+				local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_webupdate_'), 'w')
+				if ofile ~= nil then
+					ofile:write(ifile:read('*all'))
+					ofile:close()
+				else
+					Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
+				end
+				ifile:close()
+			else
+				Print_logfile(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
+			end
 		end
 	end
 
@@ -622,9 +641,27 @@ function garbagecalendar_main(commandArray, domoticz)
 								garbagetype_cfg[web_garbagetype].nextdate = web_garbagedate
 								-- get the long description from the JSON data
 								if garbagetype_cfg[web_garbagetype].active ~= 'on' then
-									Print_logfile('==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because there is no record in garbagetype_cfg[]!', 0, 0)
+									Print_logfile(
+										'==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because there is no record in garbagetype_cfg[]!',
+										0,
+										0
+									)
 								else
-									Print_logfile('==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. ';  Notify: Active=' .. tostring(garbagetype_cfg[web_garbagetype].active) .. '  Time=' .. tostring(garbagetype_cfg[web_garbagetype].hour) .. ':' .. tostring(garbagetype_cfg[web_garbagetype].min) .. '   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev), 0, 0)
+									Print_logfile(
+										'==> GarbageDate:' ..
+											tostring(web_garbagedate) ..
+												' GarbageType:' ..
+													tostring(web_garbagetype) ..
+														';  Notify: Active=' ..
+															tostring(garbagetype_cfg[web_garbagetype].active) ..
+																'  Time=' ..
+																	tostring(garbagetype_cfg[web_garbagetype].hour) ..
+																		':' ..
+																			tostring(garbagetype_cfg[web_garbagetype].min) ..
+																				'   DaysBefore=' .. tostring(garbagetype_cfg[web_garbagetype].daysbefore) .. '   reminder=' .. tostring(garbagetype_cfg[web_garbagetype].reminder) .. '   Calc Days Diff=' .. tostring(daysdiffdev),
+										0,
+										0
+									)
 									-- fill the text with the next defined number of events
 									GarbageNotification(web_garbagetype, web_garbagedate, daysdiffdev) -- check notification for new found info
 								end
@@ -705,7 +742,7 @@ function garbagecalendar_main(commandArray, domoticz)
 		end
 		if txtcnt < 1 then
 			Print_logfile('### Warning: No valid records found in the datafile: ' .. datafile, 1)
-			Print_logfile('###          Please check the garbagecalendar log files for issues : ' .. weblogfile .. ' and ' .. runlogfile, 1)
+			Print_logfile('###          Please check the garbagecalendar log files for issues : ' .. runlogfile, 1)
 		end
 		Print_logfile('-< End data loop')
 		if missingrecords ~= '' then
@@ -788,10 +825,16 @@ function garbagecalendar_main(commandArray, domoticz)
 	IcalNotify = IcalNotify or 12
 	----------------------------------------------------------------------------------------------------------------
 	-- checkif testload is requested
-	if testdataload or false then
+	if (batchrun) then
+		Print_logfile('=> Batch load WebData')
+		GetWebData('now')
+		return
+	elseif (testdataload or false) then
 		GetWebData('now')
 	elseif testdataloadbatch or false then
 		GetWebData()
+		Print_logfile('=> End run because testdataloadbatch=true and job submitted.')
+		return
 	end
 
 	-- Start of logic ==============================================================================================
@@ -868,26 +911,46 @@ function garbagecalendar_main(commandArray, domoticz)
 		needupdate = true
 		Print_logfile('#> Perform update because mydebug=true.')
 	end
-	-- get information from website, update device and send notification when required
+	-- Save foreground log when backgroud Updates is ran
 	if needupdate then
 		-- Check Data subdir
 		Perform_Data_check()
-		-- Save run log during update
-		local ifile = io.open(runlogfile, 'r')
-		if ifile ~= nil then
-			local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_update_'), 'w')
-			if ofile ~= nil then
-				ofile:write(ifile:read('*all'))
-				ofile:close()
+		--
+		if backgoundjobran then
+			-- Save run log during update
+			local ifile = io.open(runlogfile, 'r')
+			if ifile ~= nil then
+				local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_update_'), 'w')
+				if ofile ~= nil then
+					ofile:write(ifile:read('*all'))
+					ofile:close()
+					Print_logfile(' saved _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '.')
+				else
+					Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '. Check for the appropriate rights.')
+				end
+				ifile:close()
 			else
-				Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_update_') .. '. Check for the appropriate rights.')
+				Print_logfile(' Unable to create _run_update log file:' .. runlogfile .. '. Check for the appropriate rights.')
 			end
-			ifile:close()
-		else
-			Print_logfile(' Unable to create _run_update log file:' .. runlogfile .. '. Check for the appropriate rights.')
 		end
 	else
 		Print_logfile('Scheduled time(s) not reached yet, so nothing to do!')
 	end
 	Print_logfile('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
+end
+
+-- used to run the GetWebData as batch job in the background
+if arg then
+	if arg[1] == 'GetDataInBatch' then
+		print('-----> Start Background process:')
+		local rc, errmsg = pcall(gc_main, commandArray, domoticz, true)
+		if not rc then
+			print('-----< Background process done with error', errmsg)
+			Print_logfile('-----< Background process done with error', errmsg)
+			Print_logfile(errmsg)
+		else
+			print('-----< Background process done  -----')
+			--Print_logfile('-----< Background process done  -----')
+		end
+	end
 end

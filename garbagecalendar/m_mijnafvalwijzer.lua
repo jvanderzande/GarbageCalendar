@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-2000'
+ver = '20230223-1500'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -13,14 +13,14 @@ function Perform_Update()
    local txt = ''
    local txtcnt = 0
    --
-   Print_weblogfile( '---- web update ----------------------------------------------------------------------------')
+   Print_logfile( '---- web update ----------------------------------------------------------------------------')
    local Web_Data
    Web_Data = genfuncs.perform_webquery('"https://www.mijnafvalwijzer.nl/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"', false)
    if Web_Data == '' then
-      Print_weblogfile( 'Error Web_Data is empty.')
+      Print_logfile( 'Error Web_Data is empty.')
       return
    elseif string.find(Web_Data, '{"error":true}') ~= nil then
-      Print_weblogfile( 'Error check postcode   Web_Data:' .. Web_Data)
+      Print_logfile( 'Error check postcode   Web_Data:' .. Web_Data)
       return
    end
    -- Retrieve part with the dates for pickup
@@ -30,9 +30,9 @@ function Perform_Update()
       return
    end
    Web_Data = Web_Data:gsub('%s+',' ')
-   Print_weblogfile( '---- web data stripped -------------------------------------------------------------------')
-   Print_weblogfile( Web_Data)
-   Print_weblogfile( '---- end web data stripped ------------------------------------------------------------------------')
+   Print_logfile( '---- web data stripped -------------------------------------------------------------------')
+   Print_logfile( Web_Data)
+   Print_logfile( '---- end web data stripped ------------------------------------------------------------------------')
    -- Process received webdata.
    local web_garbagetype = ''
    local web_garbagetype_date = ''
@@ -41,14 +41,14 @@ function Perform_Update()
    local pickuptimes = {}
    -- loop through returned result
    i = 0
-   Print_weblogfile( '- start looping through received data ----------------------------------------------------')
+   Print_logfile( '- start looping through received data ----------------------------------------------------')
    for web_garbagetype, web_garbagedesc, web_garbagedate in string.gmatch(Web_Data, '#waste.(.-)".-title="(.-)".-span.line.break">(.-)<') do
       i = i + 1
-      Print_weblogfile( i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. ' web_garbagedesc:' .. tostring(web_garbagedesc or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
+      Print_logfile( i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. ' web_garbagedesc:' .. tostring(web_garbagedesc or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
       if web_garbagetype ~= nil and web_garbagedate ~= nil then
          web_garbagedesc = web_garbagedesc or ''
          -- first match for each Type we save the date to capture the first next dates
-         --Print_weblogfile( web_garbagetype,web_garbagedate)
+         --Print_logfile( web_garbagetype,web_garbagedate)
          dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$', {'dd', 'mmm', 'yyyy'})
          -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
          if (daysdiffdev >= 0) then
@@ -61,7 +61,7 @@ function Perform_Update()
          end
       end
    end
-   Print_weblogfile( '- Sorting records.')
+   Print_logfile( '- Sorting records.')
    local eventcnt = 0
    for x = 0, 60, 1 do
       for mom in pairs(pickuptimes) do
@@ -85,8 +85,7 @@ local chkfields = {"websitemodule",
 	"Zipcode",
 	"Housenr",
 --	"Housenrsuf",
-	"afwdatafile",
-	"weblogfile",
+	"datafile",
 --	"Hostname",
 --	"Street",
 --	"companyCode"
@@ -96,15 +95,15 @@ local param_err=0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		Print_weblogfile('!!! '..value .. ' not specified!', 1)
+		Print_logfile('!!! '..value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
-	Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf )
 	Perform_Update()
-	Print_weblogfile('=> Write data to ' .. afwdatafile)
-	table.save(garbagedata, afwdatafile)
+	Print_logfile('=> Write data to ' .. datafile)
+	table.save(garbagedata, datafile)
 else
-	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

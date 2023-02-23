@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_deafvalapp.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-2000'
+ver = '20230223-1500'
 websitemodule = 'm_deafvalapp'
 -- Link to WebSite:  http://dataservice.deafvalapp.nl
 --
@@ -10,14 +10,14 @@ websitemodule = 'm_deafvalapp'
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
-   Print_weblogfile( '---- web update ----------------------------------------------------------------------------')
+   Print_logfile( '---- web update ----------------------------------------------------------------------------')
    local Web_Data
    Web_Data = genfuncs.perform_webquery('"https://dataservice.deafvalapp.nl/dataservice/DataServiceServlet?service=OPHAALSCHEMA&land=NL&postcode=' .. Zipcode .. '&straatId=0&huisnr=' .. Housenr .. '' .. Housenrsuf .. '"')
    if Web_Data == '' then
-      Print_weblogfile( 'Error Web_Data is empty.')
+      Print_logfile( 'Error Web_Data is empty.')
       return
    elseif string.find(Web_Data, '{"error":true}') ~= nil then
-      Print_weblogfile( 'Error check postcode   Web_Data:' .. Web_Data)
+      Print_logfile( 'Error check postcode   Web_Data:' .. Web_Data)
       return
    end
    -- Process received webdata.
@@ -28,13 +28,13 @@ function Perform_Update()
    local pickuptimes = {}
    -- loop through returned result
    i = 0
-   Print_weblogfile( '- start looping through received data ----------------------------------------------------')
+   Print_logfile( '- start looping through received data ----------------------------------------------------')
    for web_garbagetype, web_garbagedates in string.gmatch(Web_Data, '(.-);(.-)[\r\n|$]') do
-      Print_weblogfile( web_garbagetype)
+      Print_logfile( web_garbagetype)
       for web_garbagedate in string.gmatch(web_garbagedates, '(.-);') do
          if web_garbagetype ~= nil and web_garbagedate ~= nil then
             -- first match for each Type we save the date to capture the first next dates
-            Print_weblogfile( '  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
+            Print_logfile( '  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
             dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
             -- When days is 0 or greater the date is today or in the future. Ignore any date in the past
             if (daysdiffdev >= 0) then
@@ -48,7 +48,7 @@ function Perform_Update()
          end
       end
    end
-   Print_weblogfile( '- Sorting records.')
+   Print_logfile( '- Sorting records.')
    local eventcnt = 0
    for x = 0, 60, 1 do
       for mom in pairs(pickuptimes) do
@@ -72,8 +72,7 @@ local chkfields = {"websitemodule",
 	"Zipcode",
 	"Housenr",
 --	"Housenrsuf",
-	"afwdatafile",
-	"weblogfile",
+	"datafile",
 --	"Hostname",
 --	"Street",
 --	"companyCode"
@@ -83,15 +82,15 @@ local param_err=0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		Print_weblogfile('!!! '..value .. ' not specified!', 1)
+		Print_logfile('!!! '..value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
-	Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf )
 	Perform_Update()
-	Print_weblogfile('=> Write data to ' .. afwdatafile)
-	table.save(garbagedata, afwdatafile)
+	Print_logfile('=> Write data to ' .. datafile)
+	table.save(garbagedata, datafile)
 else
-	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230209-2000'
+MainGenUtilsVersion = '20230223-1500'
 
 local genfuncs = {}
 
@@ -92,17 +92,17 @@ function genfuncs.perform_webquery(url, logdata)
 	-- Pipe STDERR to file when defined
 	sQuery = sQuery .. ' 2>' .. errlogfile
 	-- Run Query
-	Print_weblogfile('sQuery=' .. sQuery)
+	Print_logfile('sQuery=' .. sQuery)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
 	handle:close()
 	-- Show Webdata retrieved
 	if logdata then
-		Print_weblogfile('---- web data ----------------------------------------------------------------------------')
-		Print_weblogfile(Web_Data)
+		Print_logfile('---- web data ----------------------------------------------------------------------------')
+		Print_logfile(Web_Data)
 	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
-	Print_weblogfile('---- web err ------------------------------------------------------------------------')
+	Print_logfile('---- web err ------------------------------------------------------------------------')
 	local Web_Error = ''
 	local ifile, ierr = io.open(errlogfile, 'r')
 	Web_Error = ierr or ''
@@ -110,17 +110,17 @@ function genfuncs.perform_webquery(url, logdata)
 		Web_Error = ifile:read('*all')
 		ifile:close()
 	end
-	Print_weblogfile('Web_Err=' .. Web_Error)
+	Print_logfile('Web_Err=' .. Web_Error)
 	--os.remove(errlogfile)
-	Print_weblogfile('---- end web data ------------------------------------------------------------------------')
+	Print_logfile('---- end web data ------------------------------------------------------------------------')
 	if (Web_Error:find('unsupported protocol')) then
-		Print_weblogfile('### Error: unsupported protocol.')
-		Print_weblogfile('#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
-		Print_weblogfile('#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
+		Print_logfile('### Error: unsupported protocol.')
+		Print_logfile('#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
+		Print_logfile('#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
 		return ''
 	end
 	if (Web_Data == '') then
-		Print_weblogfile('### Error: Empty result from curl command')
+		Print_logfile('### Error: Empty result from curl command')
 		return ''
 	end
 	return Web_Data
@@ -225,16 +225,16 @@ function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 		end
 	end
 	-- found this output with the provide info
-	Print_weblogfile('    input: date=' .. (i_garbagetype_date or 'nil') .. '   iregex=' .. (iregex or 'nil') .. '   podate=' .. (podate or 'nil'))
+	Print_logfile('    input: date=' .. (i_garbagetype_date or 'nil') .. '   iregex=' .. (iregex or 'nil') .. '   podate=' .. (podate or 'nil'))
 	if garbageday == nil or garbagemonth == nil or garbageyear == nil or garbageday == '??' or garbagemonth == '??' or garbageyear == '??' then
-		Print_weblogfile('    #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
-		Print_weblogfile('         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
+		Print_logfile('    #### Error: No valid date found in i_garbagetype_date: ' .. i_garbagetype_date)
+		Print_logfile('         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
 		return 0, -99
 	end
 	local garbageTime = os.time {day = garbageday, month = garbagemonth, year = garbageyear}
 	local diffdays = genfuncs.Round(os.difftime(garbageTime, curTime) / 86400, 0) -- 1 day = 86400 seconds
 	local oDate = garbageyear .. '-' .. garbagemonth .. '-' .. garbageday
-	Print_weblogfile('    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
+	Print_logfile('    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
 	-- return standard date (yyyy-mm-dd) and diffdays
 	return oDate, diffdays
 end

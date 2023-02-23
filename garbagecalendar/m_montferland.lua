@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-2000'
+ver = '20230223-1500'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -17,12 +17,12 @@ function Perform_Update()
             web_garbagetype = record['Soort']
             web_garbagedate = record['Datum']
             wnameType = ''
-            Print_weblogfile( '  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
+            Print_logfile( '  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
             local dateformat = '????????'
             -- Get days diff
             dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
             if daysdiffdev == nil then
-               Print_weblogfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+               Print_logfile( 'Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
                return
             end
             if (daysdiffdev >= 0) then
@@ -35,7 +35,7 @@ function Perform_Update()
          end
       end
    end
-   Print_weblogfile( '---- web update ----------------------------------------------------------------------------')
+   Print_logfile( '---- web update ----------------------------------------------------------------------------')
    local Web_Data
    -- Get the information for the specified address: AdresID and AdministratieID  (required for the subsequent call)
    Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&Postcode=' .. Zipcode .. '&Huisnummer=' .. Housenr .. '&Toevoeging=' .. Housenrsuf .. '"')
@@ -43,7 +43,7 @@ function Perform_Update()
       return
    end
    if (Web_Data:sub(1, 2) == '[]') then
-      Print_weblogfile( '### Error: Check your Zipcode and Housenr as we get an [] response.')
+      Print_logfile( '### Error: Check your Zipcode and Housenr as we get an [] response.')
       return
    end
    adressdata = JSON:decode(Web_Data)
@@ -51,29 +51,29 @@ function Perform_Update()
    AdresID = adressdata[1].AdresID
    AdministratieID = adressdata[1].AdministratieID
    if AdresID == nil or AdresID == '' then
-      Print_weblogfile( '### Error: No AdresID retrieved...  stopping execution.')
+      Print_logfile( '### Error: No AdresID retrieved...  stopping execution.')
       return
    end
    if AdministratieID == nil or AdministratieID == '' then
-      Print_weblogfile( '### Error: No AdministratieID retrieved...  stopping execution.')
+      Print_logfile( '### Error: No AdministratieID retrieved...  stopping execution.')
       return
    end
-   Print_weblogfile( ' AdresID:' .. AdresID .. '  AdministratieID:' .. AdministratieID)
+   Print_logfile( ' AdresID:' .. AdresID .. '  AdministratieID:' .. AdministratieID)
 
    -- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
    Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. os.date('%Y') .. '&Date=' .. os.date('%d/%m/%Y%%2001:00:00%p') .. '"')
    if (Web_Data:sub(1, 2) == '[]') then
-      Print_weblogfile( '### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
+      Print_logfile( '### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
       return
    end
    jdata = JSON:decode(Web_Data)
    -- get the ophaaldagen tabel for the coming scheduled pickups
    if type(jdata) ~= 'table' then
-      Print_weblogfile( '### Error: Empty Kalender found stopping execution.')
+      Print_logfile( '### Error: Empty Kalender found stopping execution.')
       return
    end
    -- process the data
-   Print_weblogfile( '- start looping through received data -----------------------------------------------------------')
+   Print_logfile( '- start looping through received data -----------------------------------------------------------')
    processdata(jdata)
 
    -- also get nextyears data in november/december
@@ -82,10 +82,10 @@ function Perform_Update()
       nextyear = nextyear:sub(0, 4)
       Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. nextyear .. '&Date=' .. os.date('%m/%d/%Y%%20%I:%M:%S%p') .. '"')
       if (Web_Data:sub(1, 2) == '[]') then
-         Print_weblogfile( '### Warning: no calendar data for next year.')
+         Print_logfile( '### Warning: no calendar data for next year.')
       else
          jdata = JSON:decode(Web_Data)
-         Print_weblogfile( '- start looping through next received data -----------------------------------------------------------')
+         Print_logfile( '- start looping through next received data -----------------------------------------------------------')
          processdata(jdata)
       end
    end
@@ -100,8 +100,7 @@ local chkfields = {"websitemodule",
 	"Zipcode",
 	"Housenr",
 --	"Housenrsuf",
-	"afwdatafile",
-	"weblogfile",
+	"datafile",
 --	"Hostname",
 --	"Street",
 --	"companyCode"
@@ -111,15 +110,15 @@ local param_err=0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		Print_weblogfile('!!! '..value .. ' not specified!', 1)
+		Print_logfile('!!! '..value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
-	Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. companyCode)
+	Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf )
 	Perform_Update()
-	Print_weblogfile('=> Write data to ' .. afwdatafile)
-	table.save(garbagedata, afwdatafile)
+	Print_logfile('=> Write data to ' .. datafile)
+	table.save(garbagedata, datafile)
 else
-	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end

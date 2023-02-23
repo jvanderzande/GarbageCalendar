@@ -10,7 +10,7 @@ function script_path()
 end
 print(script_path() or '')
 -- include generalfunctions library
-dofile((script_path() or '') .. 'generalfuncs.lua') --
+dofile((script_path() or '') .. 'gc_generalfuncs.lua') --
 
 -- Variables
 local domoticzurl = 'http://127.0.0.1:8080' 	-- define the url for domoticz

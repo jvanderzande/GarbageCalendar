@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230209-2000'
+ver = '20230223-1500'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -37,12 +37,12 @@ function Perform_Update()
 				web_garbagedate = record['Datum']
 				-- first match for each Type we save the date to capture the first next dates
 				-- get the long description from the JSON data
-				Print_weblogfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
+				Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
 				local dateformat = '????????'
 				-- Get days diff
 				dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 				if daysdiffdev == nil then
-					Print_weblogfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 				end
 				if (daysdiffdev >= 0) then
 					garbagedata[#garbagedata + 1] = {}
@@ -51,7 +51,7 @@ function Perform_Update()
 				end
 			end
 		end
-		Print_weblogfile('- Sorting records.' .. #pickuptimes)
+		Print_logfile('- Sorting records.' .. #pickuptimes)
 		local eventcnt = 0
 		for x = 0, 60, 1 do
 			for mom in pairs(pickuptimes) do
@@ -66,7 +66,7 @@ function Perform_Update()
 		end
 	end
 	--
-	Print_weblogfile('---- web update ----------------------------------------------------------------------------')
+	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
 	local thnr = Housenr .. Housenrsuf
 
@@ -92,23 +92,23 @@ function Perform_Update()
 	appId = uuid()
 	data = "{'AppId': '" .. appId .. "' , 'AppVersion': '', 'OsVersion': '', 'Platform': 'HomeAssistant'}"
 	Web_Data = genfuncs.perform_webquery(' -H "Content-Type: application/json" -d "' .. data .. '" "https://api-omrin.freed.nl/Account/GetToken/"')
-	Print_weblogfile('---- web data stripped -------------------------------------------------------------------')
-	Print_weblogfile(Web_Data)
-	Print_weblogfile('---- end web data ------------------------------------------------------------------------')
+	Print_logfile('---- web data stripped -------------------------------------------------------------------')
+	Print_logfile(Web_Data)
+	Print_logfile('---- end web data ------------------------------------------------------------------------')
 	jdata = JSON:decode(Web_Data)
 	-- get PublicKey
 	if type(jdata) ~= 'table' then
-		Print_weblogfile('### Error: Token not received, stopping execution.')
+		Print_logfile('### Error: Token not received, stopping execution.')
 		return
 	end
 	if not jdata.PublicKey then
-		Print_weblogfile('### Error: Unable to read the PublicKey field from received data...  stopping execution.')
+		Print_logfile('### Error: Unable to read the PublicKey field from received data...  stopping execution.')
 		return
 	end
 	PublicKey = jdata.PublicKey
 
 	-- save publickey to file
-	local file, err = io.open(afwdatafile .. '_tmp_token.tmp', 'w')
+	local file, err = io.open(datafile .. '_tmp_token.tmp', 'w')
 	if not err then
 		file:write('-----BEGIN PUBLIC KEY-----', '\n')
 		file:write(PublicKey, '\n')
@@ -118,20 +118,20 @@ function Perform_Update()
 
 	-- create data json and save to file
 	requestBody = '{"a": false, "Email": null, "Password": null, "PostalCode": "' .. Zipcode .. '", "HouseNumber": "' .. thnr .. '"}'
-	local file, err = io.open(afwdatafile .. '_tmp_datain.tmp', 'w')
+	local file, err = io.open(datafile .. '_tmp_datain.tmp', 'w')
 	if not err then
 		file:write(requestBody)
 		file:close()
 	else
-		Print_weblogfile('### Error: Unable to read the encrypted data from file ' .. afwdatafile .. '_tmp_datain.tmp' .. '  ...  stopping execution.')
+		Print_logfile('### Error: Unable to read the encrypted data from file ' .. datafile .. '_tmp_datain.tmp' .. '  ...  stopping execution.')
 		return
 	end
 
 	-- Encrypt data file with the received publickey file
-	os.execute('openssl pkeyutl -encrypt -pubin -inkey ' .. afwdatafile .. '_tmp_token.tmp -in ' .. afwdatafile .. '_tmp_datain.tmp -out ' .. afwdatafile .. '_tmp_dataout.tmp')
+	os.execute('openssl pkeyutl -encrypt -pubin -inkey ' .. datafile .. '_tmp_token.tmp -in ' .. datafile .. '_tmp_datain.tmp -out ' .. datafile .. '_tmp_dataout.tmp')
 
 	-- read the ecncrypted data for POST request
-	local ifile, ierr = io.open(afwdatafile .. '_tmp_dataout.tmp', 'rb')
+	local ifile, ierr = io.open(datafile .. '_tmp_dataout.tmp', 'rb')
 	encryptedRequest = ''
 	if not ierr then
 		encryptedRequest = ifile:read('*all')
@@ -140,29 +140,29 @@ function Perform_Update()
 
 	-- convert ecncrypted data to base64 and enclose in double quotes
 	encryptedRequest = '"' .. base64.encode(encryptedRequest) .. '"'
-	Print_weblogfile('encryptedRequest:' .. encryptedRequest)
+	Print_logfile('encryptedRequest:' .. encryptedRequest)
 
 	-- clean tempfiles
-	os.remove(afwdatafile .. '_tmp_token.tmp')
-	os.remove(afwdatafile .. '_tmp_datain.tmp')
-	os.remove(afwdatafile .. '_tmp_dataout.tmp')
+	os.remove(datafile .. '_tmp_token.tmp')
+	os.remove(datafile .. '_tmp_datain.tmp')
+	os.remove(datafile .. '_tmp_dataout.tmp')
 
 	print('--- start web query ---')
 	Web_Data = genfuncs.perform_webquery(" -H \"Content-Type: application/x-www-form-urlencoded\" -d '" .. encryptedRequest .. "' -X POST https://api-omrin.freed.nl/Account/FetchAccount/" .. appId .. '')
 
 	if (Web_Data:sub(1, 2) == '[]') then
-		Print_weblogfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
+		Print_logfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
 		return
 	end
 	jdata = JSON:decode(Web_Data)
 	-- check received data is JSON object table
 	if type(jdata) ~= 'table' then
-		Print_weblogfile('### Error: Empty Kalender found stopping execution.')
+		Print_logfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
 	-- check if CalendarV2 is part of the received data and is a table, as that contains the garbage collection information
 	if type(jdata['CalendarV2']) ~= 'table' then
-		Print_weblogfile('### Error: Empty jdata["CalendarV2"] table in JSON data...  stopping execution.')
+		Print_logfile('### Error: Empty jdata["CalendarV2"] table in JSON data...  stopping execution.')
 		return
 	end
 
@@ -180,8 +180,7 @@ local chkfields = {
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'afwdatafile',
-	'weblogfile'
+	'datafile',
 	--	"Hostname",
 	--	"Street",
 	--	"companyCode"
@@ -191,7 +190,7 @@ local param_err = 0
 for key, value in pairs(chkfields) do
 	if (_G[value] or '') == '' then
 		param_err = param_err + 1
-		Print_weblogfile('!!! ' .. value .. ' not specified!', 1)
+		Print_logfile('!!! ' .. value .. ' not specified!', 1)
 	end
 end
 -- Get the web info when all required parameters are defined
@@ -199,14 +198,14 @@ if param_err == 0 then
 	local Load_Success = true
 	status, base64 = pcall(genfuncs.loadlualib, 'base64')
 	if status then
-		Print_weblogfile('!!! perform web data update to ' .. afwdatafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
+		Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
 		Perform_Update()
-		Print_weblogfile('=> Write data to ' .. afwdatafile)
-		table.save(garbagedata, afwdatafile)
+		Print_logfile('=> Write data to ' .. datafile)
+		table.save(garbagedata, datafile)
 	else
-		Print_weblogfile('### Error: failed loading default base64.lua: ' .. domoticzjsonpath .. '.')
-		Print_weblogfile('### Error: Please check your setup and try again.')
+		Print_logfile('### Error: failed loading default base64.lua: ' .. domoticzjsonpath .. '.')
+		Print_logfile('### Error: Please check your setup and try again.')
 	end
 else
-	Print_weblogfile('!!! Webupdate cancelled due to misseng parameters!', 1)
+	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
 end
