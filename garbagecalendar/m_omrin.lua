@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230223-1500'
+ver = '20230224-1430'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -65,6 +65,7 @@ function Perform_Update()
 			end
 		end
 	end
+
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
@@ -169,6 +170,7 @@ function Perform_Update()
 	-- process the data
 	processdata(jdata['CalendarV2'])
 end
+
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================

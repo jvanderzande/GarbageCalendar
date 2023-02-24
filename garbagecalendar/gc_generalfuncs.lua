@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230223-1500'
+MainGenUtilsVersion = '20230224-1430'
 
 local genfuncs = {}
 
@@ -55,13 +55,10 @@ end
 function genfuncs.url_encode(str)
 	if (str) then
 		str =
-			string.gsub(
-			str,
-			'([^%w %-%_%.%~])',
-			function(c)
-				return string.format('%%%02X', string.byte(c))
-			end
-		)
+				string.gsub(str, '([^%w %-%_%.%~])', function(c)
+					return string.format('%%%02X', string.byte(c))
+				end
+				)
 		str = string.gsub(str, ' ', '+')
 	end
 	return str
@@ -183,7 +180,7 @@ end
 --~ genfuncs.GetDateFromInput("7 januari 2021"          ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
 function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 	local timenow = os.date('*t')
-	local curTime = os.time {day = timenow.day, month = timenow.month, year = timenow.year}
+	local curTime = os.time{day = timenow.day, month = timenow.month, year = timenow.year}
 	local garbageday = '??'
 	local garbagemonth = '??'
 	local garbageyear = timenow.year
@@ -231,13 +228,14 @@ function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 		Print_logfile('         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
 		return 0, -99
 	end
-	local garbageTime = os.time {day = garbageday, month = garbagemonth, year = garbageyear}
+	local garbageTime = os.time{day = garbageday, month = garbagemonth, year = garbageyear}
 	local diffdays = genfuncs.Round(os.difftime(garbageTime, curTime) / 86400, 0) -- 1 day = 86400 seconds
 	local oDate = garbageyear .. '-' .. garbagemonth .. '-' .. garbageday
 	Print_logfile('    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
 	-- return standard date (yyyy-mm-dd) and diffdays
 	return oDate, diffdays
 end
+
 --
 -- strip http(s):// from hostnames to avoid issues when specified.
 function genfuncs.Hostname_strip(Hostname)
@@ -271,7 +269,8 @@ end
 	----------------------------------------------------
 
 	Licensed under the same terms as Lua itself.
-]] do
+]]
+do
 	-- declare local variables
 	--// exportstring( string )
 	--// returns a "Lua" portable version of the string
@@ -281,7 +280,7 @@ end
 
 	--// The Save Function
 	function table.save(tbl, filename, skipprintresult)
-		local printresult = skipprintresult==true
+		local printresult = (skipprintresult == true)
 		local charS, charE = '   ', '\n'
 		local file, err = io.open(filename, 'wb')
 		if err then
@@ -392,6 +391,7 @@ end
 		end
 		return tables[1], 0
 	end
+
 	-- close do
 end
 
