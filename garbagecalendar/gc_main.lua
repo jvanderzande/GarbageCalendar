@@ -263,7 +263,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	function GetWebData(whenrun)
 		-- Modules variables
 		reloaddata = true
-		companyCode = (companyCode or Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
+		Companycode = (Companycode or Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
 
 		-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
 		if ((whenrun or '') ~= 'now') then

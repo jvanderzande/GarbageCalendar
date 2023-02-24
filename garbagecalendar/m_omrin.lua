@@ -185,7 +185,7 @@ local chkfields = {
 	'datafile',
 	--	"Hostname",
 	--	"Street",
-	--	"companyCode"
+	--	"Companycode"
 }
 local param_err = 0
 -- Check whether the required parameters are specified.
