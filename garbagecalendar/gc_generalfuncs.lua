@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230224-1430'
+MainGenUtilsVersion = '20230225-1050'
 
 local genfuncs = {}
 
@@ -28,7 +28,7 @@ function genfuncs.loadlualib(libname)
 		-- add defined Domoticz path to the search path
 		if not package.path:match(GC_scriptpath .. '%?.lua;') then
 			package.path = GC_scriptpath .. '?.lua;' .. package.path
-			Print_logfile('updated package.path:', package.path)
+			Print_logfile('updated package.path:'.. package.path)
 		end
 		moduleobject = require(libname)
 	end

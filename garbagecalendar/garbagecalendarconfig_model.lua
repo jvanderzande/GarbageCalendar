@@ -31,7 +31,7 @@ websitemodule = 'm_mijnafvalwijzer'
 --websitemodule = "m_csv_file"
 --input_csv_file = "c:/data/garbage_input.csv"
 --input_csv_file = "/home/pi/garbage_input.csv"
--- =====================================================================================================
+-- ============================================================================================
 
 -- Switch on mydebug in case of issues and initially and check the domoticz log for any issues or missing
 mydebug = false -- (true/false) -- run the script as it normally does when any of the scheduled times is the current time

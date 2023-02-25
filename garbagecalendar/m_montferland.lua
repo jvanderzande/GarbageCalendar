@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230224-1430'
+ver = '20230225-1050'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -97,14 +97,14 @@ end
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
--- ================================================================================================
--- These activated fields will be checked for being defined and the script will end when one isn't
--- ================================================================================================
+-- =======================================================================================
+-- Check required fields for this module. The script will end when one is missing.
+-- =======================================================================================
 local chkfields = {'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'datafile',
+	'Datafile',
 	--	"Hostname",
 	--	"Street",
 	--	"Companycode"
@@ -117,12 +117,14 @@ for key, value in pairs(chkfields) do
 		Print_logfile('!!! ' .. value .. ' not specified!', 1)
 	end
 end
+-- =======================================================================================
 -- Get the web info when all required parameters are defined
+-- =======================================================================================
 if param_err == 0 then
-	Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
+	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
 	Perform_Update()
-	Print_logfile('=> Write data to ' .. datafile)
-	table.save(garbagedata, datafile)
+	Print_logfile('=> Write data to ' .. Datafile)
+	table.save(garbagedata, Datafile)
 else
 	Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
 end

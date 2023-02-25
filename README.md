@@ -5,7 +5,7 @@ The main changes are:
   * It has a single main script called **"script_time_garbagecalendar.lua"**
   * It will run both as Time Event LUA script as DzVents script.
   * Subdirectory **"garbagecalendar"** contains all available modules for the supported municipality websites and your personal configuration file **"garbagecalendarconfig.lua"**.
-  * The selected module scripts is ran one time per day in the background to get the website data and save that to a datafile.
+  * The selected module scripts is ran one time per day in the background to get the website data and save that to a Datafile.
   * This Data file is used by the mainscript at the requested times.
   * Add your own LUA/DzVents logic for Notifications to e.g. switch on a RGB bulb in a particular color.
   * No hanging Domoticz event system, generating a "longer than 10 seconds" error when the website is unresponsive, as the Webupdate is running in the background in its own process.

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rova_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230224-1430'
+ver = '20230225-1050'
 websitemodule = 'm_rova_api'
 -- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
 --
@@ -107,14 +107,14 @@ end
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
--- ================================================================================================
--- These activated fields will be checked for being defined and the script will end when one isn't
--- ================================================================================================
+-- =======================================================================================
+-- Check required fields for this module. The script will end when one is missing.
+-- =======================================================================================
 local chkfields = {'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'datafile',
+	'Datafile',
 	--	"Hostname",
 	--	"Street",
 	--	"Companycode"
@@ -127,12 +127,14 @@ for key, value in pairs(chkfields) do
 		Print_logfile('!!! ' .. value .. ' not specified!', 1)
 	end
 end
+-- =======================================================================================
 -- Get the web info when all required parameters are defined
+-- =======================================================================================
 if param_err == 0 then
-	Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
+	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
 	Perform_Update()
-	Print_logfile('=> Write data to ' .. datafile)
-	table.save(garbagedata, datafile)
+	Print_logfile('=> Write data to ' .. Datafile)
+	table.save(garbagedata, Datafile)
 else
 	Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
 end

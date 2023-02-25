@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230224-1430'
+ver = '20230225-1050'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -109,7 +109,7 @@ function Perform_Update()
 	PublicKey = jdata.PublicKey
 
 	-- save publickey to file
-	local file, err = io.open(datafile .. '_tmp_token.tmp', 'w')
+	local file, err = io.open(Datafile .. '_tmp_token.tmp', 'w')
 	if not err then
 		file:write('-----BEGIN PUBLIC KEY-----', '\n')
 		file:write(PublicKey, '\n')
@@ -119,20 +119,20 @@ function Perform_Update()
 
 	-- create data json and save to file
 	requestBody = '{"a": false, "Email": null, "Password": null, "PostalCode": "' .. Zipcode .. '", "HouseNumber": "' .. thnr .. '"}'
-	local file, err = io.open(datafile .. '_tmp_datain.tmp', 'w')
+	local file, err = io.open(Datafile .. '_tmp_datain.tmp', 'w')
 	if not err then
 		file:write(requestBody)
 		file:close()
 	else
-		Print_logfile('### Error: Unable to read the encrypted data from file ' .. datafile .. '_tmp_datain.tmp' .. '  ...  stopping execution.')
+		Print_logfile('### Error: Unable to read the encrypted data from file ' .. Datafile .. '_tmp_datain.tmp' .. '  ...  stopping execution.')
 		return
 	end
 
 	-- Encrypt data file with the received publickey file
-	os.execute('openssl pkeyutl -encrypt -pubin -inkey ' .. datafile .. '_tmp_token.tmp -in ' .. datafile .. '_tmp_datain.tmp -out ' .. datafile .. '_tmp_dataout.tmp')
+	os.execute('openssl pkeyutl -encrypt -pubin -inkey ' .. Datafile .. '_tmp_token.tmp -in ' .. Datafile .. '_tmp_datain.tmp -out ' .. Datafile .. '_tmp_dataout.tmp')
 
 	-- read the ecncrypted data for POST request
-	local ifile, ierr = io.open(datafile .. '_tmp_dataout.tmp', 'rb')
+	local ifile, ierr = io.open(Datafile .. '_tmp_dataout.tmp', 'rb')
 	encryptedRequest = ''
 	if not ierr then
 		encryptedRequest = ifile:read('*all')
@@ -144,9 +144,9 @@ function Perform_Update()
 	Print_logfile('encryptedRequest:' .. encryptedRequest)
 
 	-- clean tempfiles
-	os.remove(datafile .. '_tmp_token.tmp')
-	os.remove(datafile .. '_tmp_datain.tmp')
-	os.remove(datafile .. '_tmp_dataout.tmp')
+	os.remove(Datafile .. '_tmp_token.tmp')
+	os.remove(Datafile .. '_tmp_datain.tmp')
+	os.remove(Datafile .. '_tmp_dataout.tmp')
 
 	print('--- start web query ---')
 	Web_Data = genfuncs.perform_webquery(" -H \"Content-Type: application/x-www-form-urlencoded\" -d '" .. encryptedRequest .. "' -X POST https://api-omrin.freed.nl/Account/FetchAccount/" .. appId .. '')
@@ -174,15 +174,15 @@ end
 -- End Functions =========================================================================
 
 -- Start of logic ========================================================================
--- ================================================================================================
--- These activated fields will be checked for being defined and the script will end when one isn't
--- ================================================================================================
+-- =======================================================================================
+-- Check required fields for this module. The script will end when one is missing.
+-- =======================================================================================
 local chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'datafile',
+	'Datafile',
 	--	"Hostname",
 	--	"Street",
 	--	"Companycode"
@@ -195,15 +195,17 @@ for key, value in pairs(chkfields) do
 		Print_logfile('!!! ' .. value .. ' not specified!', 1)
 	end
 end
+-- =======================================================================================
 -- Get the web info when all required parameters are defined
+-- =======================================================================================
 if param_err == 0 then
 	local Load_Success = true
 	status, base64 = pcall(genfuncs.loadlualib, 'base64')
 	if status then
-		Print_logfile('!!! perform web data update to ' .. datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
+		Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
 		Perform_Update()
-		Print_logfile('=> Write data to ' .. datafile)
-		table.save(garbagedata, datafile)
+		Print_logfile('=> Write data to ' .. Datafile)
+		table.save(garbagedata, Datafile)
 	else
 		Print_logfile('### Error: failed loading default base64.lua: ' .. domoticzjsonpath .. '.')
 		Print_logfile('### Error: Please check your setup and try again.')

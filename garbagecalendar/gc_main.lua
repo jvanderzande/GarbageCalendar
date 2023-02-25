@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230224-1430'
+	MainScriptVersion = '20230225-1050'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -34,14 +34,13 @@ function gc_main(commandArray, domoticz, batchrun)
 	websitemodule = 'unknown'
 	datafilepath = nil
 	GC_scriptpath = ''
-	runlogfile = ''
+	RunLogfile = ''
 	-- set temp log to capture the initial log messages in until the final logfile is known
-	hrunlogfile = io.tmpfile()
-	datafile = ''
+	HRunLogfile = io.tmpfile()
+	Datafile = ''
 	icalfile = ''
-	needupdate = false
-	reloaddata = false
-	backgoundjobran = false
+	UpdateDevRun = false
+	UpdateDataRun = false
 	timenow = os.date('*t')
 	genfuncs = {}
 	param = {}
@@ -81,19 +80,19 @@ function gc_main(commandArray, domoticz, batchrun)
 			ptext = os.date('%X ') .. calledfrom .. ':' .. calledline .. ': ' .. ptext
 		end
 		-- Console print in case .....
-		if (mydebug or false) or (toconsole or false) then
+		if (mydebug or false) or ((toconsole or 0) == 1) then
 			print(ptext)
 		end
 		-- LOG Print when file is specified
-		if ((runlogfile or '') ~= '') then
-			local file = io.open(runlogfile, 'a')
+		if ((RunLogfile or '') ~= '') then
+			local file = io.open(RunLogfile, 'a')
 			if file ~= nil then
 				file:write(ptext .. '\n')
 				file:close()
 			end
-		elseif hrunlogfile then
-			-- Write to tempfile until the runlogfile is known
-			hrunlogfile:write(ptext .. '\n')
+		elseif HRunLogfile then
+			-- Write to tempfile until the RunLogfile is known
+			HRunLogfile:write(ptext .. '\n')
 		end
 	end
 
@@ -192,24 +191,24 @@ function gc_main(commandArray, domoticz, batchrun)
 
 		-- copy temp runlog content and put that in the final runlog
 		local loginfo = ''
-		if hrunlogfile then
-			hrunlogfile:seek('set', 0)
-			loginfo = hrunlogfile:read('*all') or ''
+		if HRunLogfile then
+			HRunLogfile:seek('set', 0)
+			loginfo = HRunLogfile:read('*all') or ''
 		end
 
 		-- initialise the variables
 		datafilepath = (datafilepath .. '/'):gsub('//', '/')
-		runlogfile = datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log'
+		RunLogfile = datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log'
 		if (batchrun) then
-			runlogfile = datafilepath .. 'garbagecalendar_run_webupdate_backgound_' .. websitemodule .. '.log'
+			RunLogfile = datafilepath .. 'garbagecalendar_run_webupdate_backgound_' .. websitemodule .. '.log'
 		end
-		datafile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data'
+		Datafile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data'
 		icalfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.ics'
 
-		-- empty previous run runlogfile and add the temp log
-		local file = io.open(runlogfile, 'w')
+		-- empty previous run RunLogfile and add the temp log
+		local file = io.open(RunLogfile, 'w')
 		if file == nil then
-			print('!!! Error opening runlogfile ' .. runlogfile)
+			print('!!! Error opening RunLogfile ' .. RunLogfile)
 		else
 			file:write(loginfo)
 			file:close()
@@ -262,12 +261,12 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- perform  Web data update
 	function GetWebData(whenrun)
 		-- Modules variables
-		reloaddata = true
+		UpdateDataRun = true
 		Companycode = (Companycode or Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
 
 		-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
 		if ((whenrun or '') ~= 'now') then
-			-- Test if lua is installed, if so submit backgrond task to update the datafile to relieve the event system
+			-- Test if lua is installed, if so submit backgrond task to update the Datafile to relieve the event system
 			os.execute('lua -v >' .. datafilepath .. 'luatest.log 2>&1')
 			local ifile, ierr = io.open(datafilepath .. 'luatest.log', 'r')
 			local Chk_Error = ierr or ''
@@ -277,9 +276,9 @@ function gc_main(commandArray, domoticz, batchrun)
 				ifile:close()
 				os.remove(datafilepath .. 'luatest.log')
 				luaversion = Chk_Error:match('[lL][uU][aA]%s*([%d*%.]*)[^\r\n]*') or ''
-				Print_logfile('=> Found LUA version:' .. luaversion .. '   > Lua check output:' .. Chk_Error or '?')
+				Print_logfile('=> Found LUA version:' .. luaversion .. '   > Lua check output:' .. (Chk_Error or '?'))
 			else
-				Print_logfile('Lua check error:' .. Chk_Error or '?')
+				Print_logfile('Lua check error:' .. (Chk_Error or '?'))
 			end
 			-- if the testfile contain this error, it means lua is installed.
 			if luaversion ~= '' then
@@ -290,10 +289,9 @@ function gc_main(commandArray, domoticz, batchrun)
 					return
 				end
 				local command = 'lua "' .. GC_scriptpath .. 'gc_main.lua" "GetDataInBatch"'
-				Print_logfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. datafile, 1)
+				Print_logfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. Datafile, 1)
 				Print_logfile(command .. ' &')
 				rc = os.execute(command .. ' &')
-				backgoundjobran = true
 			else
 				Print_logfile('=> check LUA not found -> Run foreground to use internal LUA.', 1)
 				whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
@@ -302,7 +300,7 @@ function gc_main(commandArray, domoticz, batchrun)
 
 		-- ==================================================
 		-- Run the Webupdate in the foreground when required.
-		-- This happens in case the datafile doesn't exists or LUA can't be found.
+		-- This happens in case the Datafile doesn't exists or LUA can't be found.
 		if ((whenrun or '') == 'now') then
 			-------------------------------------------------------
 			-- Error handling function
@@ -323,8 +321,8 @@ function gc_main(commandArray, domoticz, batchrun)
 				garbagedata = {} -- array to save information to which will be written to the data file
 				-- Run required Module
 				dofile(websitemodulescript)
-				datafile = datafile or arg[4] or '??'
-				return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. datafile .. '. Look at ' .. runlogfile .. ' for process details.'
+				Datafile = Datafile or arg[4] or '??'
+				return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
 			end
 
 			Print_logfile('-> Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
@@ -334,8 +332,8 @@ function gc_main(commandArray, domoticz, batchrun)
 			if estatus then
 				Print_logfile((err or '') .. (result or ''))
 			else
-				Print_logfile('!! Module ' .. (websitemodule or '???') .. ' had hard error. check log:' .. (runlogfile or '') .. '\n' .. (err or ''))
-				Print_logfile(runlogfile or 'no logfile')
+				Print_logfile('!! Module ' .. (websitemodule or '???') .. ' had hard error. check log:' .. (RunLogfile or '') .. '\n' .. (err or ''))
+				Print_logfile(RunLogfile or 'no logfile')
 				Print_logfile('\n%%%%% LUA Hardcrash log %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
 				Print_logfile(estatus)
 				Print_logfile(err)
@@ -551,33 +549,33 @@ function gc_main(commandArray, domoticz, batchrun)
 
 		-- Read previous saved calendar information
 		Print_logfile('=> Start update for GarbageCalendar text device "' .. (myGarbageDevice or '') .. '"', 1)
-		local garbagedata, perr = table.load(datafile)
-		-- try reload data when datafile is missing
+		local garbagedata, perr = table.load(Datafile)
+		-- try reload data when Datafile is missing
 		if perr ~= 0 then
 			--- when file doesn't exist
-			Print_logfile('### Warning: Datafile not found:' .. datafile .. ' . Start webupdate now.')
+			Print_logfile('### Warning: Datafile not found:' .. Datafile .. ' . Start webupdate now.')
 			GetWebData('now')
-			garbagedata, perr = table.load(datafile)
+			garbagedata, perr = table.load(Datafile)
 		else
-			-- try reload data when the number of records are 0 in the datafile
+			-- try reload data when the number of records are 0 in the Datafile
 			if (#garbagedata or 0) == 0 then
 				--- when file doesn't exist
 				Print_logfile('### Warning: Datafile contains ' .. (#garbagedata or '?') .. ' datarecords. Start webupdate now.')
 				GetWebData('now')
-				garbagedata, perr = table.load(datafile)
+				garbagedata, perr = table.load(Datafile)
 			end
 		end
 		-- Check validity of the garbagecalendar data
 		if perr ~= 0 then
 			--- when file doesn't exist
-			Print_logfile('#### Error: Unable to load the data. please check your setup and runlogfile :' .. runlogfile)
+			Print_logfile('#### Error: Unable to load the data. please check your setup and RunLogfile :' .. RunLogfile)
 			return
 		elseif (#garbagedata or 0) == 0 then
-			Print_logfile('#### Error: There are ' .. (#garbagedata or '?') .. ' data records in datafile:' .. datafile)
+			Print_logfile('#### Error: There are ' .. (#garbagedata or '?') .. ' data records in Datafile:' .. Datafile)
 			return
 		end
 		-- process the garbagecalendar data
-		Print_logfile('   ' .. (#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '?') .. ' from datafile:' .. datafile)
+		Print_logfile('   ' .. (#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '?') .. ' from Datafile:' .. Datafile)
 		-- create ICS file when requested
 		if (IcalEnable) then
 			hIcal = io.open(icalfile, 'w')
@@ -731,8 +729,8 @@ function gc_main(commandArray, domoticz, batchrun)
 			end
 		end
 		if txtcnt < 1 then
-			Print_logfile('### Warning: No valid records found in the datafile: ' .. datafile, 1)
-			Print_logfile('###          Please check the garbagecalendar log files for issues : ' .. runlogfile, 1)
+			Print_logfile('### Warning: No valid records found in the Datafile: ' .. Datafile, 1)
+			Print_logfile('###          Please check the garbagecalendar log files for issues : ' .. RunLogfile, 1)
 		end
 		Print_logfile('-< End data loop')
 		if missingrecords ~= '' then
@@ -890,52 +888,58 @@ function gc_main(commandArray, domoticz, batchrun)
 				-- perform background data updates
 				GetWebData()
 			else
-				needupdate = true
+				UpdateDevRun = true
 			end
 		else
 			Print_logfile('-  NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
 		end
 	end
-	-- Always update when mydebugging
+	-- Always update when mydebug is enabled
 	if mydebug then
-		needupdate = true
+		UpdateDevRun = true
 		Print_logfile('#> Perform update because mydebug=true.')
 	end
-	-- Save foreground log when backgroud Updates is ran
-	if needupdate then
-		-- Check Data subdir
+	-- Perform GarbageCalendar Date check and Send Notification/update Domoticz TXT device when required
+	if UpdateDevRun then
 		Perform_Data_check()
 	else
 		Print_logfile('Scheduled time(s) not reached yet, so nothing to do!')
 	end
-
+	-- End of process run
 	Print_logfile('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
-	if not batchrun and reloaddata then
-		-- Save run log during webupdate so it can be checked together with the WebLog
-		local ifile = io.open(runlogfile, 'r')
+
+	-- Save logfile when Webupdate or Device update run is done.
+	if not batchrun and (UpdateDataRun or UpdateDevRun) then
+		-- Determine which file needs to be created
+		local nrunlogfile = string.gsub(RunLogfile, '_run_', '_run__update_')
+		if UpdateDataRun then
+			nrunlogfile = string.gsub(RunLogfile, '_run_', '_run_webupdate_')
+		end
+		-- Open current logfile and write to save log
+		local ifile = io.open(RunLogfile, 'r')
 		if ifile ~= nil then
-			local ofile = io.open(string.gsub(runlogfile, '_run_', '_run_webupdate_'), 'w')
+			local ofile = io.open(nrunlogfile, 'w')
 			if ofile ~= nil then
 				ofile:write(ifile:read('*all'))
 				ofile:close()
 			else
-				Print_logfile(' Unable to create _run_ log file:' .. string.gsub(runlogfile, '_run_', '_run_webupdate_') .. '. Check for the appropriate rights.')
+				Print_logfile(' Unable to create _run_ log file:' .. nrunlogfile .. '. Check for the appropriate rights.')
 			end
 			ifile:close()
 		else
-			Print_logfile(' Unable to create _run_webupdate log file:' .. runlogfile .. '. Check for the appropriate rights.')
+			Print_logfile(' Unable to read current log file:' .. RunLogfile .. '. Check for the appropriate rights.')
 		end
 	end
 end
 
--- used to run the GetWebData as batch job in the background
+-- Used to run the GetWebData as batch job in the background
 if arg then
 	if arg[1] == 'GetDataInBatch' then
 		print('-----> Start Background process:')
-		local rc, errmsg = pcall(gc_main, commandArray, domoticz, true)
+		local rc, errmsg = pcall(gc_main, {}, {}, true)
 		if not rc then
 			print('-----< Background process done with error', errmsg)
-			Print_logfile('-----< Background process done with error', errmsg)
+			Print_logfile('-----< Background process done with error:' .. errmsg)
 			Print_logfile(errmsg)
 		else
 			--Print_logfile('-----< Background process done  -----')
