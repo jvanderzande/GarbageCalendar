@@ -135,7 +135,6 @@ function gc_main(commandArray, domoticz, batchrun)
 	status, genfuncs = pcall(require, 'gc_generalfuncs')
 	if not status then
 		Print_logfile('### Error: failed loading gc_generalfuncs.lua from : ' .. GC_scriptpath .. '', 1)
-		Print_logfile('### Error: Please check the path in variable "GC_scriptpath= "  in your setup and try again.', 1)
 		Print_logfile('!!! LUA Error: ' .. genfuncs)
 		return
 	else
@@ -483,7 +482,7 @@ function gc_main(commandArray, domoticz, batchrun)
 					-- User event script function to capture any errors seperately
 					function run_notification_event(RunbyDzVents, commandArray, domoticz)
 						dofile(GC_scriptpath .. '' .. EventNotificationscript)
-						notification_event(RunbyDzVents, commandArray, domoticz)
+						Notification_Event(RunbyDzVents, commandArray, domoticz)
 					end
 
 					-- run the extra function
@@ -747,7 +746,7 @@ function gc_main(commandArray, domoticz, batchrun)
 		Print_logfile('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
 		if RunbyDzVents then
 			if domoticz.devices(myGarbageDevice).idx == nil then
-				Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
+				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
 			else
 				if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
 					Print_logfile('Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
@@ -911,7 +910,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- Save logfile when Webupdate or Device update run is done.
 	if not batchrun and (UpdateDataRun or UpdateDevRun) then
 		-- Determine which file needs to be created
-		local nrunlogfile = string.gsub(RunLogfile, '_run_', '_run__update_')
+		local nrunlogfile = string.gsub(RunLogfile, '_run_', '_run_update_')
 		if UpdateDataRun then
 			nrunlogfile = string.gsub(RunLogfile, '_run_', '_run_webupdate_')
 		end

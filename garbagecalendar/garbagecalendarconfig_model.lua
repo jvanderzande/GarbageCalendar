@@ -1,6 +1,6 @@
------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 -- garbagecalendarconfig.lua
------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 -- Specify your information here as needed for your needs
 myGarbageDevice = '' -- The Text devicename in Domoticz. eg 'Container'
 Zipcode = '' 			-- Your zipcode  eg '1234AB'
@@ -25,18 +25,20 @@ websitemodule = 'm_mijnafvalwijzer'
 --websitemodule = "m_rova_api"
 --websitemodule = "m_ximmio"
 --websitemodule = "m_zuidlimburg"
--------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 -- When using a CSV input file uncomment the next 2 lines and specify the location and name of the file.
 -- check the m_csv_file.lua file for the appropriate format.
 --websitemodule = "m_csv_file"
 --input_csv_file = "c:/data/garbage_input.csv"
 --input_csv_file = "/home/pi/garbage_input.csv"
--- ============================================================================================
+-- =================================================================================================================================
 
 -- Switch on mydebug in case of issues and initially and check the domoticz log for any issues or missing
-mydebug = false -- (true/false) -- run the script as it normally does when any of the scheduled times is the current time
-testdataload = false -- (true/false) -- run the web update module with each run for testing/debugging purposes
-testnotification = false -- (true/false) -- this will trigger a test notification for the first record for testing the notification system
+-- set to true or false
+mydebug = false            -- run the script as it normally does when any of the scheduled times is the current time
+testdataload = false       -- run the web update module in the foreground with each run for debugging.
+testdataloadbatch = false  -- run the web update module in the background with each run for debugging. (testdataload takes presedence)
+testnotification = false   -- trigger a test notification each run for the first record for testing the notification system
 
 -- Specify the directoy used for the Data and Log files.
 -- It will default to the gabagecalendar/data directory when invalid or missing.
@@ -156,19 +158,18 @@ garbagetype_cfg = {
 	['dummy'] = {hour = 02, min = 31, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice after Webupdate ran'}
 }
 
--------------------------------------------------------------------------
--- Language options Dutch
--- Date/day info:
--- used by getdate for formats "mmm" & "mm"
---
--- Pas deze tabellen aan indien de afvalverwerker andere afkortingen gebruikt.
+------------------------------------------------------------------------------------------------------------------------------------
+-- Taal opties Nederlands
+-- Datum / dag informatie:
+-- Gebruikt door functie getdate voor formats "mmmm" & "mmm"
 daysoftheweek = {'zon', 'maa', 'din', 'woe', 'don', 'vri', 'zat'}
 Longdaysoftheweek = {'zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'}
 ShortMonth = {'jan', 'feb', 'maa', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'}
 LongMonth = {'januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'}
 -- Wordt gebruikt om de maand afkorting van de ontvangen kalender data te vertalen naar het maandnummer. Meerder opties mogelijk.
+-- Pas deze tabellen aan indien de afvalverwerker andere afkortingen gebruikt.
 InputMonth = {jan = 1, feb = 2, mrt = 3, maa = 3, apr = 4, mei = 5, jun = 6, jul = 7, aug = 8, sep = 9, okt = 10, nov = 11, dec = 12}
--------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
 -- Language options English
 -- Date/day info:
 --~ daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
@@ -176,4 +177,5 @@ InputMonth = {jan = 1, feb = 2, mrt = 3, maa = 3, apr = 4, mei = 5, jun = 6, jul
 --~ ShortMonth={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
 --~ LongMonth={"January","February","March","April","May","June","July","August","September","October","November","December"}
 -- Used to translate the month abbreviation back to the month number. Can contain multiple options for abbreviations.
+-- Adapt when your GarbageCollector is using different abbreviations.
 --~ InputMonth={jan = 1, feb = 2, mar = 3, apr = 4, may = 5, jun = 6, jul = 7, aug = 8, sep = 9, oct = 10, nov = 11, dec = 12}

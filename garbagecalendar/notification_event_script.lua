@@ -20,17 +20,18 @@ function notification_event(RunbyDzVents, commandArray, domoticz)
 	Notify_date = Notify_date or ""
 	Notify_mtitle = Notify_mtitle or ""
 	Notify_mtext = Notify_mtext or ""
-	Notify_reminder = Notify_Reminder or ""
+	Notify_reminder = Notify_reminder or ""
 	-----------------------------------------------------------------------------------------------------------------
 	-- Start you logic here in the appropriate section
 	-----------------------------------------------------------------------------------------------------------------
 	local lamp = 'TestLight'
 	local ontime = 30
 	-- Start logic
+
+	-- ##############################################################
+	-- DzVents logic part will only run when implemented in DzVents
+	-- ##############################################################
 	if RunbyDzVents then
-		-- ##############################################################
-		-- DzVents logic part will only run when implemented in DzVents
-		-- ##############################################################
 		print('DzVents Type:' .. Notify_type ..
 		' text:' .. Notify_text ..
 		' Date:' .. Notify_date ..
@@ -62,10 +63,13 @@ function notification_event(RunbyDzVents, commandArray, domoticz)
 		if domoticz.devices(lamp).state == "Off" then
 			domoticz.devices(lamp).switchOff().afterSec(ontime+1)
 		end
-	else
-		-- ##############################################################
-		-- LUA Time Event script, will only run when Lua Time Script
-		-- ##############################################################
+		return
+	end
+
+	-- ##############################################################
+	-- LUA TimeEvent script logic
+	-- ##############################################################
+	if not RunbyDzVents then
 		print('LUA Time:' .. Notify_type ..
 		' text:' .. Notify_text ..
 		' Date:' .. Notify_date ..
