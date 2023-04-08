@@ -44,17 +44,17 @@ function Perform_Update()
 	-- Get Access token
 	-- step 1: Get main js name from home page: <script src="/static/js/main.0b66adb4.chunk.js">
 	local Web_Data
-	Web_Data = genfuncs.perform_webquery('https://recycleapp.be')
+	Web_Data = genfuncs.perform_webquery('https://www.recycleapp.be')
 	MainScript = Web_Data:match('<script src="(/static/js/main.-)">')
 	Print_logfile(' MainScript:' .. (MainScript or '?')) -- MainScript:/static/js/main.0b66adb4.chunk.js
 	-- step 2: retrieve main js and get code from source:
 	--          var n="8a9pIQlfYpgmJZD15KdK70MCTR2xyD0EAvOmi9HCBfiBUY4n34ytxQmqo3AP2OET6tssYy6R4Be6N2M2GtiX3AcbiNxR8G7pOalN45dXPZ4emKE2c1nimx9B1YFciutJwFZHYHI2Qpzo0E0GCDHkg5",c="/api/v1/assets/<script src="/static/js/main.0b66adb4.chunk.js">
-	Web_Data = genfuncs.perform_webquery('https://recycleapp.be' .. MainScript)
+	Web_Data = genfuncs.perform_webquery('https://www.recycleapp.be' .. MainScript)
 	secret = Web_Data:match('.+var n="(.-)",')
 	Print_logfile(' secret:' .. (secret or '?'))
 	headerdata = ' -H "x-secret: ' .. secret .. '"' .. ' -H "x-consumer: recycleapp.be"'
 	-- step 3: Get access token:
-	Web_Data = genfuncs.perform_webquery(headerdata .. ' https://recycleapp.be/api/app/v1/access-token')
+	Web_Data = genfuncs.perform_webquery(headerdata .. ' https://www.recycleapp.be/api/app/v1/access-token')
 	webdata = JSON:decode(Web_Data)
 	accessToken = webdata.accessToken or ''
 	if accessToken == '' then
@@ -65,7 +65,7 @@ function Perform_Update()
 	headerdata = headerdata .. ' -H "Authorization:' .. accessToken .. '"'
 
 	-- Step 4: Get zipcodeid
-	Web_Data = genfuncs.perform_webquery(headerdata .. ' "https://recycleapp.be/api/app/v1/zipcodes?q=' .. Zipcode .. '"')
+	Web_Data = genfuncs.perform_webquery(headerdata .. ' "https://www.recycleapp.be/api/app/v1/zipcodes?q=' .. Zipcode .. '"')
 	Web_Data = JSON:decode(Web_Data)
 	postcode_id = Web_Data.items[1].id or ''
 	if postcode_id == '' then
@@ -75,7 +75,7 @@ function Perform_Update()
 	Print_logfile('postcode_id:' .. postcode_id)
 
 	-- Step 5: Get streetid
-	Web_Data = genfuncs.perform_webquery(headerdata .. ' "https://recycleapp.be/api/app/v1/streets?q=' .. genfuncs.url_encode(Street) .. '&zipcodes=' .. postcode_id .. '"')
+	Web_Data = genfuncs.perform_webquery(headerdata .. ' "https://www.recycleapp.be/api/app/v1/streets?q=' .. genfuncs.url_encode(Street) .. '&zipcodes=' .. postcode_id .. '"')
 	Web_Data = JSON:decode(Web_Data)
 
 	street_id = Web_Data.items[1].id or ''
@@ -89,7 +89,7 @@ function Perform_Update()
 	startDate = os.date('%Y-%m-%d')
 	endDate = os.date('%Y-%m-%d', os.time() + 28 * 24 * 60 * 60) -- 4 weken
 	Web_Data = genfuncs.perform_webquery(headerdata ..
-	' "https://recycleapp.be/api/app/v1/collections?zipcodeId=' .. postcode_id .. '&streetId=' .. street_id .. '&houseNumber=' .. Housenr .. '&fromDate=' .. startDate .. '&untilDate=' .. endDate .. '&size=100"')
+	' "https://www.recycleapp.be/api/app/v1/collections?zipcodeId=' .. postcode_id .. '&streetId=' .. street_id .. '&houseNumber=' .. Housenr .. '&fromDate=' .. startDate .. '&untilDate=' .. endDate .. '&size=100"')
 	Web_Data = JSON:decode(Web_Data)
 	-- get the ophaaldagen tabel for the coming scheduled pickups
 	if type(Web_Data) ~= 'table' then
