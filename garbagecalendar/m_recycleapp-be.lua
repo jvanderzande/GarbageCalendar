@@ -50,7 +50,7 @@ function Perform_Update()
    -- Get Access token
    -- step 1: Get main js name from home page: <script src="/static/js/main.0b66adb4.chunk.js">
    local Web_Data
-   Web_Data = perform_webquery('https://recycleapp.be')
+   Web_Data = perform_webquery('https://www.recycleapp.be')
    MainScript = Web_Data:match('<script src="(/static/js/main.-)">')
    dprint(' MainScript:' .. (MainScript or '?')) -- MainScript:/static/js/main.0b66adb4.chunk.js
    -- step 2: retrieve main js and get code from source:
