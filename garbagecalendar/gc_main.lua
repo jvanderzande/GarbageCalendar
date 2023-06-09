@@ -634,7 +634,7 @@ function gc_main(commandArray, domoticz, batchrun)
 							--print(">>>>"..web_garbagetype)
                      if not FirstGType then
                         FirstGType = web_garbagetype
-                        FirstGTypeIcon = garbagetype_cfg[web_garbagetype].icon or 0
+                        FirstGTypeIcon = garbagetype_cfg[web_garbagetype].icon
 								--print("######:"..(FirstGTypeIcon or "nil"))
                      end
 							-- get the long description from the JSON data
@@ -754,9 +754,12 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 		-- always update the domoticz device so one can see it is updating and when it was ran last.
 		Print_logfile('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
-		Print_logfile('==> FirstGTypeIcon:'..(FirstGTypeIcon or "?"))
-		FirstGTypeIconIdx = genfuncs.getdeviceiconidx(FirstGTypeIcon)
-		Print_logfile('==> FirstGTypeIconIdx:'..(FirstGTypeIconIdx or "?"))
+      -- Check the for the customicon idx for our defined icon in config (if defined)
+      if FirstGTypeIcon then
+   		Print_logfile('==> FirstGTypeIcon:'..(FirstGTypeIcon or "?"))
+   		FirstGTypeIconIdx = genfuncs.getdeviceiconidx(FirstGTypeIcon)
+   		Print_logfile('==> FirstGTypeIconIdx:'..(FirstGTypeIconIdx or "?"))
+      end
 		if RunbyDzVents then
 			if domoticz.devices(myGarbageDevice).idx == nil then
 				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
