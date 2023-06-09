@@ -148,10 +148,10 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 
 garbagetype_cfg = {
 	-- Add any missing records below this line -----------------------------------------------------
-	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'plastic bak'},
-	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'groene bak'},
-	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'blauwe bak'},
-	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'grijze bak'},
+	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'plastic bak', icon = 'garbagecalendar_yellow'},
+	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'groene bak', icon = 'garbagecalendar_green'},
+	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'blauwe bak', icon = 'garbagecalendar_blue'},
+	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'grijze bak', icon = 'garbagecalendar_grey'},
 	-- Add any missing records above this line -----------------------------------------------------
 	--  "reloaddata" is used to start the background update process at this given time.
 	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},

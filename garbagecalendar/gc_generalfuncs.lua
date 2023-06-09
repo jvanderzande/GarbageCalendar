@@ -5,6 +5,25 @@ MainGenUtilsVersion = '20230225-1050'
 
 local genfuncs = {}
 
+-- Get Domoticz Version used
+function genfuncs.getdomoticzversion()
+	DomoticzRevision = 0
+	DomoticzVersion = 0
+	url = "http://127.0.0.1:8080/json.htm?type=command&param=getversion"
+	local sQuery = 'curl  "' .. url .. '"'
+	--print(sQuery)
+	local handle = assert(io.popen(sQuery))
+	local Web_Data = handle:read("*all")
+	if Web_Data ~= nil then
+		decoded_response = JSON:decode(Web_Data)
+		-- Set the Global variables for Domoticz version and revision
+		DomoticzRevision = (decoded_response["Revision"] or 0)
+		DomoticzVersion = (decoded_response["version"] or 0)
+	end
+	Print_logfile('-> DomoticzVersion ' .. (DomoticzVersion or 'nil'))
+	Print_logfile('-> DomoticzRevision ' .. (DomoticzRevision or 'nil'))
+end
+
 -- addlogmessage function sends messages to Domoticz log
 function genfuncs.addlogmessage(text, level)
 	text = text or 'nil'
@@ -14,6 +33,140 @@ function genfuncs.addlogmessage(text, level)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
 	handle:close()
+end
+
+function genfuncs.file_exists(name)
+   local f=io.open(name,"r")
+   if f~=nil then io.close(f) return true else return false end
+end
+
+-- ---------------------------------------------------------
+-- Get available Domoticz device icons
+function genfuncs.getdeviceiconidx(GTypeIcon)
+	if not GTypeIcon then
+		Print_logfile("No GTypeIcon specified.",1)
+		return nil
+	end
+	-- Check if icon exists in Domoticz and get its idx
+	iidx = genfuncs.getcustom_light_icons(GTypeIcon)
+	if iidx then
+		Print_logfile(GTypeIcon.." idx "..iidx.." found in Domoticz custom icons")
+		return iidx
+	end
+
+	-- else try uploading it outself when it is a standard available.
+	-- lua/garbagecalendar//garbagecalendar/icons
+	iconfile = GC_scriptpath.."icons/"..GTypeIcon..".zip"
+	if not genfuncs.file_exists(iconfile) then
+		-- not a standard iconset
+		Print_logfile(iconfile .. " not found so won't try upload.")
+		return nil
+	end
+
+	Print_logfile(GTypeIcon.." not found in Domoticz custom icons")
+	Print_logfile("Trying to upload the found default:"..iconfile)
+
+	if (DomoticzRevision or 0) > 15325 then
+		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
+      url = "http://127.0.0.1:8080/json.htm?type=command&param=uploadcustomicon"
+	else
+		--OLD:
+		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
+      url = "http://127.0.0.1:8080/uploadcustomicon"
+	end
+	local sQuery = 'curl -F file="@' .. iconfile .. '" "' .. url .. '"';
+	local handle = assert(io.popen(sQuery))
+	local Web_Data = handle:read("*all")
+	Print_logfile("sQuery:"..(sQuery or ""))
+   -- Check if upload was successfull
+	if Web_Data ~= nil then
+		data = JSON:decode(Web_Data)
+      if (data == nil or data["status"] ~= 'OK') then
+			-- upload must have failed
+			Print_logfile("Upload iconf file failed:")
+			Print_logfile(Web_Data)
+         return nil
+      end
+   end
+	Print_logfile("Upload icons done.")
+	-- Icons uploaded so try to get the IDX again
+	-- Check if icon exists in Domoticz and get its idx
+	iidx = genfuncs.getcustom_light_icons(GTypeIcon)
+	if iidx then
+		Print_logfile(GTypeIcon.." idx "..iidx.." found in Domoticz custom icons")
+		return iidx
+	end
+	-- idx still not found. We shoul never get here
+	Print_logfile(GTypeIcon.." idx still not found in Domoticz custom icons, even after upload?")
+	return nil
+end
+
+-- Get available Domoticz device icons
+function genfuncs.getcustom_light_icons(GTypeIcon)
+	if not GTypeIcon then
+		Print_logfile("getdeviceiconidx No GTypeIcon")
+		return nil
+	end
+	if (DomoticzRevision or 0) > 15325 then
+      url = "http://127.0.0.1:8080/json.htm?type=command&param=custom_light_icons"
+	else
+      url = "http://127.0.0.1:8080/json.htm?type=custom_light_icons"
+	end
+	local sQuery = 'curl  "' .. url .. '"'
+	local handle = assert(io.popen(sQuery))
+	local Web_Data = handle:read("*all")
+	--print("result:",Web_Data)
+
+	if Web_Data ~= nil then
+		decoded_response = JSON:decode(Web_Data)
+		result = decoded_response["result"]
+		for i = 1, #result do
+			local record = result[i]
+			if type(record) == "table" then
+				--[[
+				description: "Used by Garbagecalendar",
+				idx: 104,
+				imageSrc: "garbagecalendar_blue",
+				text: "Garbagecalendar blauwe bak"
+				]]
+				gicontype=record["imageSrc"]:match("^garbagecalendar_(.*)")
+				--print(gicontype)
+				if record["imageSrc"]:lower() == GTypeIcon:lower() then
+					--print("found:",GTypeIcon,record["idx"],record["imageSrc"])
+					return record["idx"]
+				end
+			end
+		end
+	end
+	return nil
+end
+
+
+-- Set Domoticz device icon
+function genfuncs.setdeviceicon(idx, devname, iconidx)
+	--print("setdeviceicon",idx, devname, iconidx)
+	if DomoticzRevision == 0 then
+		genfuncs.getdomoticzversion()
+	end
+	if (DomoticzRevision or 0) > 15325 then
+		url = 'http://127.0.0.1:8080/json.htm?type=command&param=setused&used=true&name='.. (devname:gsub(" ", "%%20")) ..'&idx='.. idx ..'&switchtype=0&customimage='..iconidx
+	else
+		url = 'http://127.0.0.1:8080/json.htm?type=setused&used=true&name='.. (devname:gsub(" ", "%%20")) ..'&idx='.. idx ..'&switchtype=0&customimage='..iconidx
+	end
+	--print(url)
+	local sQuery = 'curl -k "' .. url .. '"'
+	local handle = assert(io.popen(sQuery))
+	local Web_Data = handle:read('*all')
+	handle:close()
+	if Web_Data ~= nil then
+		--print(Web_Data)
+		record = JSON:decode(Web_Data)
+		if record and (record['status'] or '') == 'OK' then
+			Print_logfile("> Icon updated")
+		else
+			Print_logfile("!! Icon update failed")
+		end
+	end
 end
 
 -------------------------------------------------------
