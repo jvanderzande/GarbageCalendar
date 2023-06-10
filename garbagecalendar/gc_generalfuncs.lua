@@ -162,7 +162,7 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 		--print(Web_Data)
 		record = JSON:decode(Web_Data)
 		if record and (record['status'] or '') == 'OK' then
-			Print_logfile("> Icon updated")
+			Print_logfile("> Icon updated to idx:"..iconidx)
 		else
 			Print_logfile("!! Icon update failed")
 		end

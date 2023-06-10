@@ -759,30 +759,30 @@ function gc_main(commandArray, domoticz, batchrun)
    		Print_logfile('==> FirstGTypeIcon:'..(FirstGTypeIcon or "?"))
    		FirstGTypeIconIdx = genfuncs.getdeviceiconidx(FirstGTypeIcon)
    		Print_logfile('==> FirstGTypeIconIdx:'..(FirstGTypeIconIdx or "?"))
-      end
+		else
+			FirstGTypeIconIdx = 0
+		end
 		if RunbyDzVents then
 			if domoticz.devices(myGarbageDevice).idx == nil then
 				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
 			else
 				if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
 					Print_logfile('Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
-               if FirstGTypeIcon and FirstGTypeIconIdx then
-                  domoticz.devices(myGarbageDevice).updateText(devtxt).setIcon(FirstGTypeIconIdx)
-               else
-                  domoticz.devices(myGarbageDevice).updateText(devtxt)
-               end
 				else
 					Print_logfile('No updated text for TxtDevice.')
 				end
 			end
+			-- update the domoticz device text & icon
+			domoticz.devices(myGarbageDevice).updateText(devtxt)
+			domoticz.devices(myGarbageDevice).setIcon(FirstGTypeIconIdx)
 		else
 			if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
 				Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
 			else
+            -- update the domoticz device text
 				commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
-            if FirstGTypeIcon and FirstGTypeIconIdx then
-               genfuncs.setdeviceicon(otherdevices_idx[myGarbageDevice], myGarbageDevice, FirstGTypeIconIdx)
-            end
+            -- update the domoticz device icon
+				genfuncs.setdeviceicon(otherdevices_idx[myGarbageDevice], myGarbageDevice, FirstGTypeIconIdx)
 
             if (otherdevices[myGarbageDevice] ~= devtxt) then
 					Print_logfile('Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
