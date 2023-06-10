@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230610-1043'
+	MainScriptVersion = '20230610-2317'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -613,8 +613,8 @@ function gc_main(commandArray, domoticz, batchrun)
 					if web_garbagedesc == '???' then
 						web_garbagedesc = web_garbagetype
 					end
-					missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower() .. '"]' .. string.rep(' ', 32 - string.len(web_garbagetype)) .. ' ={hour=19,min=02,daysbefore=1,reminder=0,text="' .. web_garbagedesc .. '"},\n'
-					garbagetype_cfg[web_garbagetype] = {hour = 0, min = 0, daysbefore = 0, reminder = 0, text = 'dummy'}
+					missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower() .. '"]' .. string.rep(' ', 32 - string.len(web_garbagetype)) .. ' ={hour=19,min=02,daysbefore=1,reminder=0,text="' .. web_garbagedesc .. '", icon=""},\n'
+					garbagetype_cfg[web_garbagetype] = {hour = 0, min = 0, daysbefore = 0, reminder = 0, text = 'dummy', icon = ""}
 					garbagetype_cfg[web_garbagetype].text = web_garbagetype
 					garbagetype_cfg[web_garbagetype].missing = true
 				end
@@ -755,13 +755,14 @@ function gc_main(commandArray, domoticz, batchrun)
 		-- always update the domoticz device so one can see it is updating and when it was ran last.
 		Print_logfile('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
       -- Check the for the customicon idx for our defined icon in config (if defined)
-      if FirstGTypeIcon then
+      if (FirstGTypeIcon or "") ~= "" then
    		Print_logfile('==> FirstGTypeIcon:'..(FirstGTypeIcon or "?"))
    		FirstGTypeIconIdx = genfuncs.getdeviceiconidx(FirstGTypeIcon)
    		Print_logfile('==> FirstGTypeIconIdx:'..(FirstGTypeIconIdx or "?"))
 		else
 			FirstGTypeIconIdx = 0
 		end
+		Print_logfile('==> Set FirstGTypeIcon:'..(FirstGTypeIcon or "?"))
 		if RunbyDzVents then
 			if domoticz.devices(myGarbageDevice).idx == nil then
 				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)

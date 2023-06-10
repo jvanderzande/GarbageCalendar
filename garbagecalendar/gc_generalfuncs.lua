@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230610-1043'
+MainGenUtilsVersion = '20230610-2317'
 
 local genfuncs = {}
 
@@ -145,6 +145,10 @@ end
 -- Set Domoticz device icon
 function genfuncs.setdeviceicon(idx, devname, iconidx)
 	--print("setdeviceicon",idx, devname, iconidx)
+	if not iconidx then
+			Print_logfile("!! Icon not update, idx = nil")
+		return
+	end
 	if DomoticzRevision == 0 then
 		genfuncs.getdomoticzversion()
 	end
@@ -153,7 +157,7 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 	else
 		url = 'http://127.0.0.1:8080/json.htm?type=setused&used=true&name='.. (devname:gsub(" ", "%%20")) ..'&idx='.. idx ..'&switchtype=0&customimage='..iconidx
 	end
-	--print(url)
+	Print_logfile(url)
 	local sQuery = 'curl -k "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
