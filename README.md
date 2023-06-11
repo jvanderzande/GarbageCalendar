@@ -1,3 +1,7 @@
+# GarbageCalendar
+
+![Domotics text device](../../wiki/domotextdevice.png)
+
 This is a project to retrieve the Garbage calendar information for your home address by means of  a Domoticz time script which will update a Domoticz TEXT device and optionally send you a notification at the specified time(s) 0-x days before the event.<br>
 This repository is a replacement for the initial repository I started: https://github.com/jvanderzande/mijnafvalwijzer.<br>
 The main changes are:
@@ -11,13 +15,14 @@ The main changes are:
   * No hanging Domoticz event system, generating a "longer than 10 seconds" error when the website is unresponsive, as the Webupdate is running in the background in its own process.
   * The script has much more error checking and standard logging to make problem solving much simpler.
   * The main script can optionally create an ics calendar file which can be used by a calendar application.
+  * It now also has the option to show an custom icon for the text device for the first upcomming garbage type.
 
 ## Check the Wiki for:
-  * [How does it all work](../../wiki/x_Process)
-  * [Modules](../../wiki/x_Available_modules)
-  * [**Setup instructions**](../../wiki/x_Setup)
-  * [Add own notification code](../../wiki/x_Notifications)
-  * [**Test and Debugging instructions**](../../wiki/x_Testing)
+  * [How does it all work](../../wiki/Process)
+  * [Modules](../../wiki/Available_modules)
+  * [**Setup instructions**](../../wiki/Setup)
+  * [Add own notification code](../../wiki/Notifications)
+  * [**Test and Debugging instructions**](../../wiki/Testing)
 
 
 **More information can be found or questions can asked here**:  
