@@ -45,8 +45,9 @@ function gc_main(commandArray, domoticz, batchrun)
 	genfuncs = {}
 	param = {}
 
-   DomoticzVersion=0
-   DomoticzRevision=0
+	genfuncs.DomoticzVersion = nil
+	genfuncs.DomoticzRevision = nil
+
 	---====================================================================================================
 	-- mydebug print
 	function Print_logfile(text, toconsole, prefix)
@@ -593,8 +594,8 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 
 		Print_logfile('-> Start looping through data to find the first ' .. ShowNextEvents .. ' events to show: ')
-      FirstGType = nil
-      FirstGTypeIcon = nil
+		FirstGType = nil
+		FirstGTypeIcon = nil
 		for i = 1, #garbagedata do
 			if garbagedata[i].garbagetype ~= nil then
 				-- change all table entries to lower to make the script case insensitive
@@ -632,11 +633,11 @@ function gc_main(commandArray, domoticz, batchrun)
 							-- Set the nextdate for this garbagetype
 							garbagetype_cfg[web_garbagetype].nextdate = web_garbagedate
 							--print(">>>>"..web_garbagetype)
-                     if not FirstGType then
-                        FirstGType = web_garbagetype
-                        FirstGTypeIcon = garbagetype_cfg[web_garbagetype].icon
+							if not FirstGType then
+								FirstGType = web_garbagetype
+								FirstGTypeIcon = garbagetype_cfg[web_garbagetype].icon
 								--print("######:"..(FirstGTypeIcon or "nil"))
-                     end
+							end
 							-- get the long description from the JSON data
 							if garbagetype_cfg[web_garbagetype].active ~= 'on' then
 								Print_logfile(
@@ -754,11 +755,11 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 		-- always update the domoticz device so one can see it is updating and when it was ran last.
 		Print_logfile('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
-      -- Check the for the customicon idx for our defined icon in config (if defined)
-      if (FirstGTypeIcon or "") ~= "" then
-   		Print_logfile('==> FirstGTypeIcon:'..(FirstGTypeIcon or "?"))
-   		FirstGTypeIconIdx = genfuncs.getdeviceiconidx(FirstGTypeIcon)
-   		Print_logfile('==> FirstGTypeIconIdx:'..(FirstGTypeIconIdx or "?"))
+		-- Check the for the customicon idx for our defined icon in config (if defined)
+		if (FirstGTypeIcon or "") ~= "" then
+			Print_logfile('==> FirstGTypeIcon:'..(FirstGTypeIcon or "?"))
+			FirstGTypeIconIdx = genfuncs.getdeviceiconidx(FirstGTypeIcon)
+			Print_logfile('==> FirstGTypeIconIdx:'..(FirstGTypeIconIdx or "?"))
 		else
 			FirstGTypeIconIdx = 0
 		end
@@ -780,12 +781,12 @@ function gc_main(commandArray, domoticz, batchrun)
 			if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
 				Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
 			else
-            -- update the domoticz device text
+				-- update the domoticz device text
 				commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
-            -- update the domoticz device icon
+				-- update the domoticz device icon
 				genfuncs.setdeviceicon(otherdevices_idx[myGarbageDevice], myGarbageDevice, FirstGTypeIconIdx)
 
-            if (otherdevices[myGarbageDevice] ~= devtxt) then
+				if (otherdevices[myGarbageDevice] ~= devtxt) then
 					Print_logfile('Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
 				else
 					Print_logfile('No updated text for TxtDevice.')
