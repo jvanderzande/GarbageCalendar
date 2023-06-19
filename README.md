@@ -7,7 +7,7 @@ This repository is a replacement for the initial repository I started: https://g
 The main changes are:
   * This repository is modular making it easier to maintain and add new website modules for other municipalities.
   * It has a single main script called **"script_time_garbagecalendar.lua"**
-  * It will run both as Time Event LUA script as DzVents script.
+  * It will run both as Time Event LUA script or as DzVents script.
   * Subdirectory **"garbagecalendar"** contains all available modules for the supported municipality websites and your personal configuration file **"garbagecalendarconfig.lua"**.
   * The selected module scripts is ran one time per day in the background to get the website data and save that to a Datafile.
   * This Data file is used by the mainscript at the requested times.
