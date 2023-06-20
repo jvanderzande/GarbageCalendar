@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_rmn.lua
 ----------------------------------------------------------------------------------------------------------------
 ver = '20230620-1400'
-websitemodule = 'rmn'
+websitemodule = 'm_rmn'
 -- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
 --
 
@@ -14,8 +14,7 @@ function Perform_Update()
 	function processdata(ophaaldata)
 		local i = 0
 		local pickuptimes = {}
-		print(#ophaaldata)
-
+      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
 		--[[
 				[
 				{
@@ -45,11 +44,12 @@ function Perform_Update()
 					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 				end
 				if (daysdiffdev >= 0) then
-					garbagedata[#garbagedata + 1] = {}
-					garbagedata[#garbagedata].garbagetype = web_garbagetype
-					garbagedata[#garbagedata].garbagedate = dateformat
+					pickuptimes[#pickuptimes + 1] = {}
+					pickuptimes[#pickuptimes].garbagetype = web_garbagetype
+					pickuptimes[#pickuptimes].garbagedate = dateformat
+               pickuptimes[#pickuptimes].diff = daysdiffdev
 				-- field to be used when WebData contains a description
-				-- garbagedata[#garbagedata].wdesc = ....
+				-- pickuptimes[#pickuptimes].wdesc = ....
 				end
 			end
 		end
@@ -76,7 +76,8 @@ function Perform_Update()
 	local idToken = ''
 
 	-- read previous found refresh token
-	local ifile, ierr = io.open(Datafile .. '_refresh_token.txt', 'rb')
+   local tokenfilename = datafilepath .. 'garbagecalendar_' .. websitemodule .. '_refresh_token.txt'
+	local ifile, ierr = io.open(tokenfilename, 'rb')
 	if ifile and not ierr then
 		refreshToken = ifile:read('*all')
 		ifile:close()
@@ -114,7 +115,7 @@ function Perform_Update()
 		idToken = jdata.idToken
 		refreshToken = jdata.refreshToken
 		-- save refreshToken to file
-		local file, err = io.open(Datafile .. '_refresh_token.txt', 'w')
+		local file, err = io.open(tokenfilename, 'w')
 		if not err then
 			file:write(refreshToken)
 			file:close()
@@ -212,7 +213,6 @@ end
 -- These activated fields will be checked for being defined and the script will end when one isn't
 -- ===========================================Print_logfile((Datafile=====================================================
 local chkfields = {
-	'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
