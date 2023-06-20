@@ -1,11 +1,10 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230221-2200'
+ver = '20230620-1400'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
-
 -- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
@@ -128,8 +127,8 @@ function Perform_Update()
 	end
 
 	-- Encrypt data file with the received publickey file
-	Print_logfile('openssl pkeyutl -encrypt -pubin -inkey ' .. Datafile .. '_tmp_token.tmp -in ' .. Datafile .. '_tmp_datain.tmp -out ' .. Datafile .. '_tmp_dataout.tmp')
-	Print_logfile(os.execute('openssl pkeyutl -encrypt -pubin -inkey ' .. Datafile .. '_tmp_token.tmp -in ' .. Datafile .. '_tmp_datain.tmp -out ' .. Datafile .. '_tmp_dataout.tmp'))
+	Print_logfile('openssl pkeyutl -encrypt -pubin -inkey "' .. Datafile .. '_tmp_token.tmp" -in "' .. Datafile .. '_tmp_datain.tmp" -out "' .. Datafile .. '_tmp_dataout.tmp"')
+	os.execute('openssl pkeyutl -encrypt -pubin -inkey "' .. Datafile .. '_tmp_token.tmp" -in "' .. Datafile .. '_tmp_datain.tmp" -out "' .. Datafile .. '_tmp_dataout.tmp"')
 
 	-- read the ecncrypted data for POST request
 	local ifile, ierr = io.open(Datafile .. '_tmp_dataout.tmp', 'rb')
