@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230225-1050'
+ver = '20230620-1630'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -11,6 +11,7 @@ websitemodule = 'm_montferland'
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	function processdata(ophaaldata)
+      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
 		for i = 1, #ophaaldata do
 			record = ophaaldata[i]
 			if type(record) == 'table' then

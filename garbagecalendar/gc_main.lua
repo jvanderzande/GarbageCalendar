@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230610-2317'
+	MainScriptVersion = '20230620-1630'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -200,9 +200,9 @@ function gc_main(commandArray, domoticz, batchrun)
 
 		-- initialise the variables
 		datafilepath = (datafilepath .. '/'):gsub('//', '/')
-		RunLogfile = datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log'
+		RunLogfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '_run.log'
 		if (batchrun) then
-			RunLogfile = datafilepath .. 'garbagecalendar_run_webupdate_backgound_' .. websitemodule .. '.log'
+			RunLogfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '_run_webupdate_backgound.log'
 		end
 		Datafile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data'
 		icalfile = datafilepath .. 'garbagecalendar_' .. websitemodule .. '.ics'
@@ -527,14 +527,11 @@ function gc_main(commandArray, domoticz, batchrun)
 		if mydebug or false then
 			ListAccess(datafilepath .. 'garbagecal*' .. websitemodule .. '*')
 		end
-		-- Check for access to logfiles
-		if not Perform_Rights_check(datafilepath .. 'garbagecalendar_' .. websitemodule .. '.data') then
+		-- Check for access to data & logfiles
+		if not Perform_Rights_check(Datafile) then
 			return
 		end
-		if not Perform_Rights_check(datafilepath .. 'garbagecalendar_run_' .. websitemodule .. '.log') then
-			return
-		end
-		if not Perform_Rights_check(datafilepath .. 'garbagecalendar_web_' .. websitemodule .. '.log') then
+		if not Perform_Rights_check(RunLogfile) then
 			return
 		end
 
@@ -936,9 +933,9 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- Save logfile when Webupdate or Device update run is done.
 	if not batchrun and (UpdateDataRun or UpdateDevRun) then
 		-- Determine which file needs to be created
-		local nrunlogfile = string.gsub(RunLogfile, '_run_', '_run_update_')
+		local nrunlogfile = string.gsub(RunLogfile, '_run', '_run_update')
 		if UpdateDataRun then
-			nrunlogfile = string.gsub(RunLogfile, '_run_', '_run_webupdate_')
+			nrunlogfile = string.gsub(RunLogfile, '_run', '_run_webupdate')
 		end
 		-- Open current logfile and write to save log
 		local ifile = io.open(RunLogfile, 'r')

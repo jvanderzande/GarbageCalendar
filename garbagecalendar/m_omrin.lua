@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1400'
+ver = '20230620-1630'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -13,7 +13,7 @@ function Perform_Update()
 	function processdata(ophaaldata)
 		local i = 0
 		local pickuptimes = {}
-		print(#ophaaldata)
+		Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
 		for i = 1, #ophaaldata do
 			record = ophaaldata[i]
 			if type(record) == 'table' then
@@ -44,9 +44,10 @@ function Perform_Update()
 					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 				end
 				if (daysdiffdev >= 0) then
-					garbagedata[#garbagedata + 1] = {}
-					garbagedata[#garbagedata].garbagetype = web_garbagetype
-					garbagedata[#garbagedata].garbagedate = dateformat
+					pickuptimes[#pickuptimes + 1] = {}
+					pickuptimes[#pickuptimes].garbagetype = web_garbagetype
+					pickuptimes[#pickuptimes].garbagedate = dateformat
+               pickuptimes[#pickuptimes].diff = daysdiffdev
 				end
 			end
 		end

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230225-1050'
+ver = '20230620-1630'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -12,6 +12,7 @@ websitemodule = 'm_opzet_api'
 function Perform_Update()
 	function processdata(ophaaldata)
 		local pickuptimes = {}
+      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
 		for record, data in pairs(ophaaldata) do
 			if type(data) == 'table' then
 				local web_garbagetype = data.title

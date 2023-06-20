@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1200'
+ver = '20230620-1630'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
@@ -15,6 +15,7 @@ function Perform_Update()
    function processdata(ophaaldata)
       aantal = ophaaldata.total
       ophaaldata = ophaaldata['items'] -- get the Datalist tabel for the coming scheduled pickups
+      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
       for i = 1, #ophaaldata do
          record = ophaaldata[i]
          if type(record) == 'table' then

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230224-1430'
+ver = '20230620-1630'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -23,6 +23,7 @@ websitemodule = 'm_ximmio'
 function Perform_Update()
 	function processdata(ophaaldata)
 		local pickuptimes = {}
+      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
 		for i = 1, #ophaaldata do
 			record = ophaaldata[i]
 			if type(record) == 'table' then
