@@ -327,7 +327,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
 			end
 
-			Print_logfile('-> Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+			Print_logfile('-> Start module ' .. (websitemodule or '??') .. '.lua')
 			-- run module
 			local estatus, err, result = xpcall(RunWebModule, errhandler)
 			--print(estatus, '|', err, '|', result)

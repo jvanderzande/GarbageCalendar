@@ -22,6 +22,7 @@ websitemodule = 'm_mijnafvalwijzer'
 --websitemodule = "m_opzet_api"
 --websitemodule = "m_opzet"
 --websitemodule = "m_recycleapp-be"
+--websitemodule = "m_rmn_api"
 --websitemodule = "m_rova_api"
 --websitemodule = "m_ximmio"
 --websitemodule = "m_zuidlimburg"
