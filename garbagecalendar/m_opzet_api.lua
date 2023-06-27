@@ -78,42 +78,6 @@ function Perform_Update()
 		return
 	end
 
-   --[[ used for debugging
-   function writedata(filename, txt)
-      local file = io.open(filename, 'w')
-      if file ~= nil then
-         file:write(txt .. '\n')
-         file:close()
-      end
-   end
-   --writedata('webdata.txt',Web_Data)
-	]]
-   --
-	-- Strip Icon info as that contains much data which is giving JSON lexing problems.
-	Web_Data = Web_Data:gsub('(,"icon_data":".-",)', ',')
-	Print_logfile('==== Stripped 1 ========================================================')
-	Print_logfile(Web_Data)
-   --writedata('webdata1.txt',Web_Data)
-	--
-	-- Strip \ infront of " to ensure the content stripping will work
-	Web_Data = Web_Data:gsub('(\\")', '"')
-	Print_logfile('==== Stripped 2 ========================================================')
-	Print_logfile(Web_Data)
-   --writedata('webdata2.txt',Web_Data)
-	--
-	-- Strip any <!--[ xxxxx ]--> to ensure the content stripping will work
-	Web_Data = Web_Data:gsub('(<!%-%-%[.*%]%-%->)', '')
-	Print_logfile('==== Stripped 3 ========================================================')
-	Print_logfile(Web_Data)
-   --writedata('webdata3.txt',Web_Data)
-	--
-	-- Strip content field as that contains much data which is giving JSON lexing problems.
-	Web_Data = Web_Data:gsub('(,"content":".-",)', ',')
-	Print_logfile('==== Stripped 4 ========================================================')
-	Print_logfile(Web_Data)
-	Print_logfile('============================================================')
-   --writedata('webdata4.txt',Web_Data)
-
 	-- process the data
 	Print_logfile('- start looping through received data -----------------------------------------------------------')
 	local igarbagedata = processdata(JSON:decode(Web_Data))
