@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rmn.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230628-1627'
 websitemodule = 'm_rmn'
 -- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
 --
@@ -13,8 +13,7 @@ function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	function processdata(ophaaldata)
 		local i = 0
-		local pickuptimes = {}
-      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
+		Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 		--[[
 				[
 				{
@@ -44,25 +43,12 @@ function Perform_Update()
 					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 				end
 				if (daysdiffdev >= 0) then
-					pickuptimes[#pickuptimes + 1] = {}
-					pickuptimes[#pickuptimes].garbagetype = web_garbagetype
-					pickuptimes[#pickuptimes].garbagedate = dateformat
-               pickuptimes[#pickuptimes].diff = daysdiffdev
-				-- field to be used when WebData contains a description
-				-- pickuptimes[#pickuptimes].wdesc = ....
-				end
-			end
-		end
-		Print_logfile('- Sorting records.' .. #pickuptimes)
-		local eventcnt = 0
-		for x = 0, 60, 1 do
-			for mom in pairs(pickuptimes) do
-				if pickuptimes[mom].diff == x then
 					garbagedata[#garbagedata + 1] = {}
-					garbagedata[#garbagedata].garbagetype = pickuptimes[mom].garbagetype
-					garbagedata[#garbagedata].garbagedate = pickuptimes[mom].garbagedate
-					-- field to be used when Web_Data contains a description
-					garbagedata[#garbagedata].wdesc = pickuptimes[mom].wdesc
+					garbagedata[#garbagedata].garbagetype = web_garbagetype
+					garbagedata[#garbagedata].garbagedate = dateformat
+					garbagedata[#garbagedata].diff = daysdiffdev
+				-- field to be used when WebData contains a description
+				-- garbagedata[#garbagedata].wdesc = ....
 				end
 			end
 		end
@@ -76,7 +62,7 @@ function Perform_Update()
 	local idToken = ''
 
 	-- read previous found refresh token
-   local tokenfilename = datafilepath .. 'garbagecalendar_' .. websitemodule .. '_refresh_token.txt'
+	local tokenfilename = datafilepath .. 'garbagecalendar_' .. websitemodule .. '_refresh_token.txt'
 	local ifile, ierr = io.open(tokenfilename, 'rb')
 	if ifile and not ierr then
 		refreshToken = ifile:read('*all')
@@ -232,6 +218,7 @@ end
 -- Get the web info when all required parameters are defined
 if param_err == 0 then
 	Perform_Update()
+	genfuncs.SortGarbagedata()
 	Print_logfile('=> Write data to ' .. Datafile)
 	table.save(garbagedata, Datafile)
 else

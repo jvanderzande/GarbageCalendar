@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230628-1627'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -10,8 +10,6 @@ websitemodule = 'm_mijnafvalwijzer'
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
-	local txt = ''
-	local txtcnt = 0
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
@@ -34,13 +32,8 @@ function Perform_Update()
 	Print_logfile(Web_Data)
 	Print_logfile('---- end web data stripped ------------------------------------------------------------------------')
 	-- Process received webdata.
-	local web_garbagetype = ''
-	local web_garbagetype_date = ''
-	local web_garbagetype_changed = ''
 	local i = 0
-	local pickuptimes = {}
 	-- loop through returned result
-	i = 0
 	Print_logfile('- start looping through received data ----------------------------------------------------')
 	for web_garbagetype, web_garbagedesc, web_garbagedate in string.gmatch(Web_Data, '#waste.(.-)".-title="(.-)".-span.line.break">(.-)<') do
 		i = i + 1
@@ -52,25 +45,12 @@ function Perform_Update()
 			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$', {'dd', 'mmm', 'yyyy'})
 			-- When days is 0 or greater the date is today or in the future. Ignore any date in the past
 			if (daysdiffdev >= 0) then
-				pickuptimes[#pickuptimes + 1] = {}
-				pickuptimes[#pickuptimes].garbagetype = web_garbagetype
-				pickuptimes[#pickuptimes].garbagedate = dateformat
-				pickuptimes[#pickuptimes].diff = daysdiffdev
-				-- field to be used when Web_Data contains a description
-				pickuptimes[#pickuptimes].wdesc = web_garbagedesc
-			end
-		end
-	end
-	Print_logfile('- Sorting records.')
-	local eventcnt = 0
-	for x = 0, 60, 1 do
-		for mom in pairs(pickuptimes) do
-			if pickuptimes[mom].diff == x then
 				garbagedata[#garbagedata + 1] = {}
-				garbagedata[#garbagedata].garbagetype = pickuptimes[mom].garbagetype
-				garbagedata[#garbagedata].garbagedate = pickuptimes[mom].garbagedate
+				garbagedata[#garbagedata].garbagetype = web_garbagetype
+				garbagedata[#garbagedata].garbagedate = dateformat
+				garbagedata[#garbagedata].diff = daysdiffdev
 				-- field to be used when Web_Data contains a description
-				garbagedata[#garbagedata].wdesc = pickuptimes[mom].wdesc
+				garbagedata[#garbagedata].wdesc = web_garbagedesc
 			end
 		end
 	end
@@ -82,11 +62,12 @@ end
 -- =======================================================================================
 -- Check required fields for this module. The script will end when one is missing.
 -- =======================================================================================
-local chkfields = {'websitemodule',
+local chkfields = {
+	'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'Datafile',
+	'Datafile'
 	--	"Hostname",
 	--	"Street",
 	--	"Companycode"
@@ -105,6 +86,7 @@ end
 if param_err == 0 then
 	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
 	Perform_Update()
+	genfuncs.SortGarbagedata()
 	Print_logfile('=> Write data to ' .. Datafile)
 	table.save(garbagedata, Datafile)
 else

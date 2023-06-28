@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230628-1627'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -11,7 +11,7 @@ websitemodule = 'm_montferland'
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	function processdata(ophaaldata)
-      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
+		Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 		for i = 1, #ophaaldata do
 			record = ophaaldata[i]
 			if type(record) == 'table' then
@@ -30,8 +30,9 @@ function Perform_Update()
 					garbagedata[#garbagedata + 1] = {}
 					garbagedata[#garbagedata].garbagetype = web_garbagetype
 					garbagedata[#garbagedata].garbagedate = dateformat
-					-- field to be used when WebData contains a description
-					-- garbagedata[#garbagedata].wdesc = ....
+					garbagedata[#garbagedata].diff = daysdiffdev
+				-- field to be used when WebData contains a description
+				-- garbagedata[#garbagedata].wdesc = ....
 				end
 			end
 		end
@@ -63,8 +64,7 @@ function Perform_Update()
 	Print_logfile(' AdresID:' .. AdresID .. '  AdministratieID:' .. AdministratieID)
 
 	-- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
-	Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' ..
-	AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. os.date('%Y') .. '&Date=' .. os.date('%d/%m/%Y%%2001:00:00%p') .. '"')
+	Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. os.date('%Y') .. '&Date=' .. os.date('%d/%m/%Y%%2001:00:00%p') .. '"')
 	if (Web_Data:sub(1, 2) == '[]') then
 		Print_logfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
 		return
@@ -83,8 +83,7 @@ function Perform_Update()
 	if tonumber(os.date('%m')) >= 11 then
 		local nextyear = tostring(tonumber(os.date('%Y')) + 1)
 		nextyear = nextyear:sub(0, 4)
-		Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' ..
-		AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. nextyear .. '&Date=' .. os.date('%m/%d/%Y%%20%I:%M:%S%p') .. '"')
+		Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. nextyear .. '&Date=' .. os.date('%m/%d/%Y%%20%I:%M:%S%p') .. '"')
 		if (Web_Data:sub(1, 2) == '[]') then
 			Print_logfile('### Warning: no calendar data for next year.')
 		else
@@ -101,11 +100,12 @@ end
 -- =======================================================================================
 -- Check required fields for this module. The script will end when one is missing.
 -- =======================================================================================
-local chkfields = {'websitemodule',
+local chkfields = {
+	'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'Datafile',
+	'Datafile'
 	--	"Hostname",
 	--	"Street",
 	--	"Companycode"
@@ -124,6 +124,7 @@ end
 if param_err == 0 then
 	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
 	Perform_Update()
+	genfuncs.SortGarbagedata()
 	Print_logfile('=> Write data to ' .. Datafile)
 	table.save(garbagedata, Datafile)
 else

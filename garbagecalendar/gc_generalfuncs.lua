@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230620-1630'
+MainGenUtilsVersion = '20230628-1627'
 
 local genfuncs = {}
 
@@ -406,6 +406,24 @@ function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 	Print_logfile('    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
 	-- return standard date (yyyy-mm-dd) and diffdays
 	return oDate, diffdays
+end
+
+
+function genfuncs.SortGarbagedata()
+   i_garbagedata = garbagedata
+   Print_logfile('- Gen Sorting records.' .. #i_garbagedata)
+   garbagedata = {}
+   for x = 0, 60, 1 do
+      for mom in pairs(i_garbagedata) do
+         if i_garbagedata[mom].diff == x then
+            garbagedata[#garbagedata + 1] = {}
+            garbagedata[#garbagedata].garbagetype = i_garbagedata[mom].garbagetype
+            garbagedata[#garbagedata].garbagedate = i_garbagedata[mom].garbagedate
+            -- field to be used when Web_Data contains a description
+            garbagedata[#garbagedata].wdesc = i_garbagedata[mom].wdesc
+         end
+      end
+   end
 end
 
 --

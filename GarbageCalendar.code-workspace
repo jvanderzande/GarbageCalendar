@@ -5,7 +5,8 @@
 		}
 	],
 	"settings": {
-		"xmlTools.xqueryExecutionInputLimit": 500,
+      "xmlTools.xqueryExecutionInputLimit": 500,
+      "editor.tabSize": 3,
    },
    "launch": {
       "version": "0.2.0",

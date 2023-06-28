@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer_API.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230628-1627'
 websitemodule = 'm_mijnafvalwijzer_API'
 -- Link to WebSite: https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=1234AB&street=&huisnummer=1&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=2021-01-01&version=58&langs=nl
 --
@@ -10,16 +10,9 @@ websitemodule = 'm_mijnafvalwijzer_API'
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
-	local function longGarbageName(str) -- Use descriptive strings
-		str = tostring(str)
-		str = str:gsub('plastic', ' Plastic verpakkingen, blik en drinkpakken ')
-		str = str:gsub('papier', ' Papier en kartonnen verpakkingen ')
-		str = str:gsub('gft', ' Groente-, fruit- en tuin afval ')
-		return str
-	end
 	-- function to process ThisYear and Lastyear JSON data
 	function processdata(ophaaldata)
-      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
+		Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 		for i = 1, #ophaaldata do
 			record = ophaaldata[i]
 			if type(record) == 'table' then
@@ -39,18 +32,21 @@ function Perform_Update()
 					garbagedata[#garbagedata + 1] = {}
 					garbagedata[#garbagedata].garbagetype = web_garbagetype
 					garbagedata[#garbagedata].garbagedate = dateformat
-					-- field to be used when WebData contains a description
-					-- garbagedata[#garbagedata].wdesc = ....
+					garbagedata[#garbagedata].diff = daysdiffdev
+				-- field to be used when WebData contains a description
+				-- garbagedata[#garbagedata].wdesc = ....
 				end
 			end
 		end
 	end
-
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
-	Web_Data = genfuncs.perform_webquery('"https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=' ..
-	Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=' .. tostring(os.date('*t').year) .. '-01-01&version=58&langs=nl"')
+	Web_Data =
+		genfuncs.perform_webquery(
+		'"https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=' ..
+			Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=' .. tostring(os.date('*t').year) .. '-01-01&version=58&langs=nl"'
+	)
 	if (Web_Data == '') then
 		Print_logfile('### Error: Empty result from curl command. Please check whether curl.exe is installed.')
 		return
@@ -106,11 +102,12 @@ end
 -- =======================================================================================
 -- Check required fields for this module. The script will end when one is missing.
 -- =======================================================================================
-local chkfields = {'websitemodule',
+local chkfields = {
+	'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'Datafile',
+	'Datafile'
 	--	"Hostname",
 	--	"Street",
 	--	"Companycode"
@@ -129,6 +126,7 @@ end
 if param_err == 0 then
 	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
 	Perform_Update()
+	genfuncs.SortGarbagedata()
 	Print_logfile('=> Write data to ' .. Datafile)
 	table.save(garbagedata, Datafile)
 else

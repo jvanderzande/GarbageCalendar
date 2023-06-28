@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230628-1627'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -11,9 +11,7 @@ websitemodule = 'm_omrin'
 function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	function processdata(ophaaldata)
-		local i = 0
-		local pickuptimes = {}
-		Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
+		Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 		for i = 1, #ophaaldata do
 			record = ophaaldata[i]
 			if type(record) == 'table' then
@@ -44,23 +42,10 @@ function Perform_Update()
 					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 				end
 				if (daysdiffdev >= 0) then
-					pickuptimes[#pickuptimes + 1] = {}
-					pickuptimes[#pickuptimes].garbagetype = web_garbagetype
-					pickuptimes[#pickuptimes].garbagedate = dateformat
-               pickuptimes[#pickuptimes].diff = daysdiffdev
-				end
-			end
-		end
-		Print_logfile('- Sorting records.' .. #pickuptimes)
-		local eventcnt = 0
-		for x = 0, 60, 1 do
-			for mom in pairs(pickuptimes) do
-				if pickuptimes[mom].diff == x then
 					garbagedata[#garbagedata + 1] = {}
-					garbagedata[#garbagedata].garbagetype = pickuptimes[mom].garbagetype
-					garbagedata[#garbagedata].garbagedate = pickuptimes[mom].garbagedate
-					-- field to be used when Web_Data contains a description
-					garbagedata[#garbagedata].wdesc = pickuptimes[mom].wdesc
+					garbagedata[#garbagedata].garbagetype = web_garbagetype
+					garbagedata[#garbagedata].garbagedate = dateformat
+					garbagedata[#garbagedata].diff = daysdiffdev
 				end
 			end
 		end
@@ -176,14 +161,15 @@ end
 -- ================================================================================================
 -- These activated fields will be checked for being defined and the script will end when one isn't
 -- ===========================================Print_logfile((Datafile=====================================================
-local chkfields = {"websitemodule",
-	"Zipcode",
-	"Housenr",
---	"Housenrsuf",
-	"Datafile",
---	"Hostname",
---	"Street",
---	"Companycode"
+local chkfields = {
+	'websitemodule',
+	'Zipcode',
+	'Housenr',
+	--	"Housenrsuf",
+	'Datafile'
+	--	"Hostname",
+	--	"Street",
+	--	"Companycode"
 }
 local param_err = 0
 -- Check whether the required parameters are specified.
@@ -200,6 +186,7 @@ if param_err == 0 then
 	if status then
 		Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf .. '  (optional) Hostname:' .. Hostname)
 		Perform_Update()
+		genfuncs.SortGarbagedata()
 		Print_logfile('=> Write data to ' .. Datafile)
 		table.save(garbagedata, Datafile)
 	else

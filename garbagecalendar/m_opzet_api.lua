@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230627-1500'
+ver = '20230628-1627'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -11,8 +11,7 @@ websitemodule = 'm_opzet_api'
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	function processdata(ophaaldata)
-		local pickuptimes = {}
-      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
+		Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 		for record, data in pairs(ophaaldata) do
 			if type(data) == 'table' then
 				local web_garbagetype = data.title
@@ -30,15 +29,14 @@ function Perform_Update()
 						return
 					end
 					if (daysdiffdev >= 0) then
-						pickuptimes[#pickuptimes + 1] = {}
-						pickuptimes[#pickuptimes].garbagetype = web_garbagetype
-						pickuptimes[#pickuptimes].garbagedate = dateformat
-						pickuptimes[#pickuptimes].diff = daysdiffdev
+						garbagedata[#garbagedata + 1] = {}
+						garbagedata[#garbagedata].garbagetype = web_garbagetype
+						garbagedata[#garbagedata].garbagedate = dateformat
+						garbagedata[#garbagedata].diff = daysdiffdev
 					end
 				end
 			end
 		end
-		return pickuptimes
 	end
 
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
@@ -80,17 +78,7 @@ function Perform_Update()
 
 	-- process the data
 	Print_logfile('- start looping through received data -----------------------------------------------------------')
-	local igarbagedata = processdata(JSON:decode(Web_Data))
-	Print_logfile('- Sorting records.')
-	for x = 0, 60, 1 do
-		for mom in pairs(igarbagedata) do
-			if igarbagedata[mom].diff == x then
-				garbagedata[#garbagedata + 1] = {}
-				garbagedata[#garbagedata].garbagetype = igarbagedata[mom].garbagetype
-				garbagedata[#garbagedata].garbagedate = igarbagedata[mom].garbagedate
-			end
-		end
-	end
+	processdata(JSON:decode(Web_Data))
 end
 
 -- End Functions =========================================================================
@@ -99,12 +87,13 @@ end
 -- =======================================================================================
 -- Check required fields for this module. The script will end when one is missing.
 -- =======================================================================================
-local chkfields = {'websitemodule',
+local chkfields = {
+	'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
 	'Datafile',
-	'Hostname',
+	'Hostname'
 	--	"Street",
 	--	"Companycode"
 }
@@ -122,6 +111,7 @@ end
 if param_err == 0 then
 	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
 	Perform_Update()
+	genfuncs.SortGarbagedata()
 	Print_logfile('=> Write data to ' .. Datafile)
 	table.save(garbagedata, Datafile)
 else

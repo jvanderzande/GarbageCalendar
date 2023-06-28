@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230628-1627'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -22,7 +22,6 @@ websitemodule = 'm_ximmio'
 -- Perform the actual update process for the given address
 function Perform_Update()
 	function processdata(ophaaldata)
-		local pickuptimes = {}
       Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
 		for i = 1, #ophaaldata do
 			record = ophaaldata[i]
@@ -46,25 +45,13 @@ function Perform_Update()
 						Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. garbagedate[i])
 					else
 						if (daysdiffdev >= 0) then
-							pickuptimes[#pickuptimes + 1] = {}
-							pickuptimes[#pickuptimes].garbagetype = web_garbagetype
-							pickuptimes[#pickuptimes].garbagedate = dateformat
-							pickuptimes[#pickuptimes].diff = daysdiffdev
-							pickuptimes[#pickuptimes].wdesc = web_garbagedesc
+							garbagedata[#garbagedata + 1] = {}
+							garbagedata[#garbagedata].garbagetype = web_garbagetype
+							garbagedata[#garbagedata].garbagedate = dateformat
+							garbagedata[#garbagedata].diff = daysdiffdev
+							garbagedata[#garbagedata].wdesc = web_garbagedesc
 						end
 					end
-				end
-			end
-		end
-		Print_logfile('- Sorting records.')
-		local eventcnt = 0
-		for x = 0, 60, 1 do
-			for mom in pairs(pickuptimes) do
-				if pickuptimes[mom].diff == x then
-					garbagedata[#garbagedata + 1] = {}
-					garbagedata[#garbagedata].garbagetype = pickuptimes[mom].garbagetype
-					garbagedata[#garbagedata].garbagedate = pickuptimes[mom].garbagedate
-					garbagedata[#garbagedata].wdesc = pickuptimes[mom].wdesc
 				end
 			end
 		end
@@ -154,6 +141,7 @@ end
 if param_err == 0 then
 	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf )
 	Perform_Update()
+   genfuncs.SortGarbagedata()
 	Print_logfile('=> Write data to ' .. Datafile)
 	table.save(garbagedata, Datafile)
 else

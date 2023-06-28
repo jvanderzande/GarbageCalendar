@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_zuidlimburg.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230628-1627'
 websitemodule = 'm_zuidlimburg'
 -- Link to WebSite:  https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc=AAAA99&nr=999&t
 --
@@ -62,11 +62,12 @@ end
 -- =======================================================================================
 -- Check required fields for this module. The script will end when one is missing.
 -- =======================================================================================
-local chkfields = {'websitemodule',
+local chkfields = {
+	'websitemodule',
 	'Zipcode',
 	'Housenr',
 	--	"Housenrsuf",
-	'Datafile',
+	'Datafile'
 	--	"Hostname",
 	--	"Street",
 	--	"Companycode"
