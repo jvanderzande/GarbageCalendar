@@ -329,7 +329,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile('-> Load module ' .. (websitemodule or '??'))
 				dofile(websitemodulescript)
 				-- Check whether the required parameters are specified.
-				Print_logfile('>> Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+				Print_logfile('>> ========== Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
 				local param_err = 0
 				local chkfields = {}
 				for key, value in pairs(chkfields) do
@@ -366,7 +366,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile(err)
 				Print_logfile(debug.traceback())
 			end
-			Print_logfile('<< End module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+			Print_logfile('<< ========== End module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
 		end
 	end
 
