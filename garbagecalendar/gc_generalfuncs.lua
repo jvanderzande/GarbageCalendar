@@ -199,7 +199,7 @@ function genfuncs.CopyFile(old_path, new_path)
 	local new_file = io.open(new_path, 'wb')
 	local old_file_sz, new_file_sz = 0, 0
 	if not old_file or not new_file then
-		print('Copy error opening input or output')
+		Print_logfile('Copy error opening input or output')
 		return false
 	end
 	while true do
@@ -213,7 +213,7 @@ function genfuncs.CopyFile(old_path, new_path)
 	old_file:close()
 	new_file_sz = new_file:seek('end')
 	new_file:close()
-	print('File copied:' .. old_path .. ' to ' .. new_path)
+	Print_logfile('File copied:' .. old_path .. ' to ' .. new_path)
 	return (new_file_sz == old_file_sz)
 end
 
@@ -451,15 +451,15 @@ function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 	-- get information from the input garbagedate using the provided regex
 	local d = {}
 	if i_garbagetype_date == nil then
-		print('   ### Error: inputdate i_garbagetype_date is nil')
+		Print_logfile('   ### Error: inputdate i_garbagetype_date is nil')
 		return 0, -99
 	end
 	if iregex == nil then
-		print('   ### Error: iregex is nil')
+		Print_logfile('   ### Error: iregex is nil')
 		return 0, -99
 	end
 	if idatev == nil then
-		print('   ### Error: idatev is nil')
+		Print_logfile('   ### Error: idatev is nil')
 		return 0, -99
 	end
 	d[1], d[2], d[3], d[4] = i_garbagetype_date:match(iregex)

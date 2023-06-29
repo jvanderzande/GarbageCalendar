@@ -293,7 +293,8 @@ function gc_main(commandArray, domoticz, batchrun)
 					return
 				end
 				local command = 'lua "' .. GC_scriptpath .. 'gc_main.lua" "GetDataInBatch"'
-				Print_logfile('=> start background webupdate for module ' .. websitemodule .. ' of file ' .. Datafile, 1)
+				Print_logfile('=> start background webupdate for module ' .. websitemodule, 1)
+				Print_logfile('   datafile:' .. Datafile, 1)
 				Print_logfile(command .. ' &')
 				rc = os.execute(command .. ' &')
 			else
@@ -917,16 +918,18 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 		-- create dummy entry to update the domoticz device 1 minute after the webupdate background task was scheduled
 		if tbl_garbagetype == 'reloaddata' then
-			if gtdata.min + 1 > 59 then
-				gtdata.min = 0
-				gtdata.hour = gtdata.hour + 1
-				if gtdata.hour > 24 then
-					gtdata.hour = 1
+			local smin = gtdata.min + 1
+			local shour = gtdata.hour
+			if smin > 59 then
+				smin = 0
+				shour = shour + 1
+				if shour > 24 then
+					shour = 1
 				end
 			end
 			garbagetype_cfg['updatedomoticzdevice'] = {
-				hour = gtdata.hour,
-				min = gtdata.min,
+				hour = shour,
+				min = smin,
 				daysbefore = gtdata.daysbefore,
 				reminder = gtdata.reminder,
 				text = 'Dummy to trigger device update 1 minute after WebDataUpdate ran'
