@@ -1,11 +1,23 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_zuidlimburg.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230628-1627'
+ver = '20230629-1930'
 websitemodule = 'm_zuidlimburg'
 -- Link to WebSite:  https://www.rd4info.nl/NSI/Burger/Aspx/afvalkalender_public_text.aspx?pc=AAAA99&nr=999&t
 --
-
+-- =======================================================================================
+-- Check required fields for this module. The script will end when one is missing.
+-- =======================================================================================
+chkfields = {
+	'websitemodule',
+	'Zipcode',
+	'Housenr',
+	--	"Housenrsuf",
+	'Datafile'
+	--	"Hostname",
+	--	"Street",
+	--	"Companycode"
+}
 -- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
@@ -55,39 +67,4 @@ function Perform_Update()
 		end
 	end
 end
-
 -- End Functions =========================================================================
-
--- Start of logic ========================================================================
--- =======================================================================================
--- Check required fields for this module. The script will end when one is missing.
--- =======================================================================================
-local chkfields = {
-	'websitemodule',
-	'Zipcode',
-	'Housenr',
-	--	"Housenrsuf",
-	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
-}
-local param_err = 0
--- Check whether the required parameters are specified.
-for key, value in pairs(chkfields) do
-	if (_G[value] or '') == '' then
-		param_err = param_err + 1
-		Print_logfile('!!! ' .. value .. ' not specified!', 1)
-	end
-end
--- =======================================================================================
--- Get the web info when all required parameters are defined
--- =======================================================================================
-if param_err == 0 then
-	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
-	Perform_Update()
-	Print_logfile('=> Write data to ' .. Datafile)
-	table.save(garbagedata, Datafile)
-else
-	Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
-end

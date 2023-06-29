@@ -1,52 +1,39 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rova_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230628-1627'
+ver = '20230629-1930'
 websitemodule = 'm_rova_api'
 -- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
 --
--- This module tries to access the API that teh Rova App uses. I'm not sure if the api key wil work forever...
--- Originally copied form m_mijnafvalwijzer.lua
--------------------------------------------------------
+-- This module tries to access the API that the Rova App uses.
+--
+-- =======================================================================================
+-- Check required fields for this module. The script will end when one is missing.
+-- =======================================================================================
+chkfields = {
+	'websitemodule',
+	'Zipcode',
+	'Housenr',
+	--	"Housenrsuf",
+	'Datafile'
+	--	"Hostname",
+	--	"Street",
+	--	"Companycode"
+}
 
 -- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
-	function processdata(ophaaldata)
-      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
-		for i = 1, #ophaaldata do
-			record = ophaaldata[i]
-			if type(record) == 'table' then
-				wnameType = record['nameType']
-				web_garbagetype = record['type']
-				web_garbagedate = record['date']
-				-- first match for each Type we save the date to capture the first next dates
-				-- get the long description from the JSON data
-				Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
-				local dateformat = '????????'
-				-- Get days diff
-				dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
-				if daysdiffdev == nil then
-					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
-				end
-				if (daysdiffdev >= 0) then
-					garbagedata[#garbagedata + 1] = {}
-					garbagedata[#garbagedata].garbagetype = web_garbagetype
-					garbagedata[#garbagedata].garbagedate = dateformat
-					-- field to be used when WebData contains a description
-					garbagedata[#garbagedata].wdesc = rdesc[web_garbagetype:upper() .. '_L']
-				end
-			end
-		end
-	end
-
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
-	Web_Data = genfuncs.perform_webquery('"http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=' ..
-	Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=' .. Housenrsuf .. '&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova"')
+	Web_Data =
+		genfuncs.perform_webquery(
+		'"http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=' ..
+			Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=' .. Housenrsuf .. '&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova"'
+	)
 	if (Web_Data == '') then
 		Print_logfile('### Error: Empty result from curl command. Please check whether curl.exe is installed.')
 		return
@@ -105,37 +92,32 @@ function Perform_Update()
 	end
 end
 
--- End Functions =========================================================================
-
--- Start of logic ========================================================================
--- =======================================================================================
--- Check required fields for this module. The script will end when one is missing.
--- =======================================================================================
-local chkfields = {'websitemodule',
-	'Zipcode',
-	'Housenr',
-	--	"Housenrsuf",
-	'Datafile',
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
-}
-local param_err = 0
--- Check whether the required parameters are specified.
-for key, value in pairs(chkfields) do
-	if (_G[value] or '') == '' then
-		param_err = param_err + 1
-		Print_logfile('!!! ' .. value .. ' not specified!', 1)
+function processdata(ophaaldata)
+	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
+	for i = 1, #ophaaldata do
+		record = ophaaldata[i]
+		if type(record) == 'table' then
+			wnameType = record['nameType']
+			web_garbagetype = record['type']
+			web_garbagedate = record['date']
+			-- first match for each Type we save the date to capture the first next dates
+			-- get the long description from the JSON data
+			Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
+			local dateformat = '????????'
+			-- Get days diff
+			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+			if daysdiffdev == nil then
+				Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+			end
+			if (daysdiffdev >= 0) then
+				garbagedata[#garbagedata + 1] = {}
+				garbagedata[#garbagedata].garbagetype = web_garbagetype
+				garbagedata[#garbagedata].garbagedate = dateformat
+				garbagedata[#garbagedata].diff = daysdiffdev
+				-- field to be used when WebData contains a description
+				garbagedata[#garbagedata].wdesc = rdesc[web_garbagetype:upper() .. '_L']
+			end
+		end
 	end
 end
--- =======================================================================================
--- Get the web info when all required parameters are defined
--- =======================================================================================
-if param_err == 0 then
-	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
-	Perform_Update()
-	Print_logfile('=> Write data to ' .. Datafile)
-	table.save(garbagedata, Datafile)
-else
-	Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
-end
+-- End Functions =========================================================================

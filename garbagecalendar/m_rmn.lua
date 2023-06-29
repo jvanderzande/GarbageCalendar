@@ -1,60 +1,28 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rmn.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230628-1627'
+ver = '20230629-1930'
 websitemodule = 'm_rmn'
 -- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
 --
+-- ================================================================================================
+-- These activated fields will be checked for being defined and the script will end when one isn't
+-- ===========================================Print_logfile((Datafile=====================================================
+chkfields = {
+	'Zipcode',
+	'Housenr',
+	--	"Housenrsuf",
+	'Datafile'
+	--	"Hostname",
+	--	"Street",
+	--	"Companycode"
+}
 
 -- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
-	function processdata(ophaaldata)
-		local i = 0
-		Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
-		--[[
-				[
-				{
-				  "year": 2023,
-				  "month": 12,
-				  "day": 13,
-				  "collectionDate": "2023-12-11T00:00:00.000Z",
-				  "fraction": "GFT",
-				  "placementPeriod": "",
-				  "placementDescription": "",
-				  "uuid": "XXXGFT"
-				},
-			]]
-		for i = 1, #ophaaldata do
-			record = ophaaldata[i]
-			if type(record) == 'table' then
-				wnameType = record['fraction']
-				web_garbagetype = record['fraction']
-				web_garbagedate = record['collectionDate']
-				-- first match for each Type we save the date to capture the first next dates
-				-- get the long description from the JSON data
-				Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
-				local dateformat = '????????'
-				-- Get days diff
-				dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
-				if daysdiffdev == nil then
-					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
-				end
-				if (daysdiffdev >= 0) then
-					garbagedata[#garbagedata + 1] = {}
-					garbagedata[#garbagedata].garbagetype = web_garbagetype
-					garbagedata[#garbagedata].garbagedate = dateformat
-					garbagedata[#garbagedata].diff = daysdiffdev
-				-- field to be used when WebData contains a description
-				-- garbagedata[#garbagedata].wdesc = ....
-				end
-			end
-		end
-	end
-	--
-
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
 	local thnr = Housenr .. Housenrsuf
@@ -192,35 +160,47 @@ function Perform_Update()
 	-- process the data
 	processdata(jdata)
 end
--- End Functions =========================================================================
 
--- Start of logic ========================================================================
--- ================================================================================================
--- These activated fields will be checked for being defined and the script will end when one isn't
--- ===========================================Print_logfile((Datafile=====================================================
-local chkfields = {
-	'Zipcode',
-	'Housenr',
-	--	"Housenrsuf",
-	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
-}
-local param_err = 0
--- Check whether the required parameters are specified.
-for key, value in pairs(chkfields) do
-	if (_G[value] or '') == '' then
-		param_err = param_err + 1
-		Print_logfile('!!! ' .. value .. ' not specified!', 1)
+function processdata(ophaaldata)
+	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
+	--[[
+			[
+			{
+			  "year": 2023,
+			  "month": 12,
+			  "day": 13,
+			  "collectionDate": "2023-12-11T00:00:00.000Z",
+			  "fraction": "GFT",
+			  "placementPeriod": "",
+			  "placementDescription": "",
+			  "uuid": "XXXGFT"
+			},
+		]]
+	for i = 1, #ophaaldata do
+		record = ophaaldata[i]
+		if type(record) == 'table' then
+			wnameType = record['fraction']
+			web_garbagetype = record['fraction']
+			web_garbagedate = record['collectionDate']
+			-- first match for each Type we save the date to capture the first next dates
+			-- get the long description from the JSON data
+			Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
+			local dateformat = '????????'
+			-- Get days diff
+			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+			if daysdiffdev == nil then
+				Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
+			end
+			if (daysdiffdev >= 0) then
+				garbagedata[#garbagedata + 1] = {}
+				garbagedata[#garbagedata].garbagetype = web_garbagetype
+				garbagedata[#garbagedata].garbagedate = dateformat
+				garbagedata[#garbagedata].diff = daysdiffdev
+			-- field to be used when WebData contains a description
+			-- garbagedata[#garbagedata].wdesc = ....
+			end
+		end
 	end
 end
--- Get the web info when all required parameters are defined
-if param_err == 0 then
-	Perform_Update()
-	genfuncs.SortGarbagedata()
-	Print_logfile('=> Write data to ' .. Datafile)
-	table.save(garbagedata, Datafile)
-else
-	Print_logfile('!!! Webupdate cancelled due to misseng parameters!', 1)
-end
+
+-- End Functions =========================================================================

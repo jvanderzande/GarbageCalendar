@@ -1,22 +1,22 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230628-1627'
+MainGenUtilsVersion = '20230629-1930'
 
 local genfuncs = {}
 
 -- Get Domoticz Version used
 function genfuncs.getdomoticzversion()
-	url = "http://127.0.0.1:8080/json.htm?type=command&param=getversion"
+	url = 'http://127.0.0.1:8080/json.htm?type=command&param=getversion'
 	local sQuery = 'curl  "' .. url .. '"'
 	--print(sQuery)
 	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read("*all")
+	local Web_Data = handle:read('*all')
 	if Web_Data ~= nil then
 		decoded_response = JSON:decode(Web_Data)
 		-- Set the Global variables for Domoticz version and revision
-		genfuncs.DomoticzRevision = (decoded_response["Revision"] or 0)
-		genfuncs.DomoticzVersion = (decoded_response["version"] or 0)
+		genfuncs.DomoticzRevision = (decoded_response['Revision'] or 0)
+		genfuncs.DomoticzVersion = (decoded_response['version'] or 0)
 	end
 	Print_logfile('-> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
 	Print_logfile('-> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
@@ -34,15 +34,20 @@ function genfuncs.addlogmessage(text, level)
 end
 
 function genfuncs.file_exists(name)
-	local f=io.open(name,"r")
-	if f~=nil then io.close(f) return true else return false end
+	local f = io.open(name, 'r')
+	if f ~= nil then
+		io.close(f)
+		return true
+	else
+		return false
+	end
 end
 
 -- ---------------------------------------------------------
 -- Get available Domoticz device icons
 function genfuncs.getdeviceiconidx(GTypeIcon)
 	if not GTypeIcon then
-		Print_logfile("No GTypeIcon specified.",1)
+		Print_logfile('No GTypeIcon specified.', 1)
 		return nil
 	end
 
@@ -52,61 +57,59 @@ function genfuncs.getdeviceiconidx(GTypeIcon)
 	-- Check if icon exists in Domoticz and get its idx
 	iidx = genfuncs.getcustom_light_icons(GTypeIcon)
 	if iidx then
-		Print_logfile(GTypeIcon.." idx "..iidx.." found in Domoticz custom icons")
+		Print_logfile(GTypeIcon .. ' idx ' .. iidx .. ' found in Domoticz custom icons')
 		return iidx
 	end
 
 	-- else try uploading it outself when it is a standard available.
 	-- lua/garbagecalendar//garbagecalendar/icons
-	iconfile = GC_scriptpath.."icons/"..GTypeIcon..".zip"
-	if not genfuncs.file_exists(iconfile) then
-		-- not a standard iconset
-		Print_logfile(iconfile .. " not found so won't try upload.")
+	local iconzipfile = GC_scriptpath .. 'icons/' .. GTypeIcon .. '.zip'
+	if not genfuncs.file_exists(iconzipfile) then
+		Print_logfile(iconzipfile .. '  not available for upload.')
 		return nil
 	end
-
-	Print_logfile(GTypeIcon.." not found in Domoticz custom icons")
-	Print_logfile("Trying to upload the found default:"..iconfile)
+	Print_logfile(GTypeIcon .. ' not found in Domoticz custom icons')
+	Print_logfile('Trying to upload the found default:' .. iconzipfile)
 
 	if (genfuncs.DomoticzRevision or 0) > 15325 then
 		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
-		url = "http://127.0.0.1:8080/json.htm?type=command&param=uploadcustomicon"
+		url = 'http://127.0.0.1:8080/json.htm?type=command&param=uploadcustomicon'
 	else
 		--OLD:
 		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
-		url = "http://127.0.0.1:8080/uploadcustomicon"
+		url = 'http://127.0.0.1:8080/uploadcustomicon'
 	end
-	local sQuery = 'curl -F file="@' .. iconfile .. '" "' .. url .. '"';
+	local sQuery = 'curl -F file="@' .. iconzipfile .. '" "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read("*all")
-	Print_logfile("sQuery:"..(sQuery or ""))
+	local Web_Data = handle:read('*all')
+	Print_logfile('sQuery:' .. (sQuery or ''))
 	-- Check if upload was successfull
 	if Web_Data ~= nil then
 		data = JSON:decode(Web_Data)
-		if (data == nil or data["status"] ~= 'OK') then
+		if (data == nil or data['status'] ~= 'OK') then
 			-- upload must have failed
-			Print_logfile("Upload iconf file failed:")
+			Print_logfile('Upload icon file failed:')
 			Print_logfile(Web_Data)
 			return nil
 		end
 	end
-	Print_logfile("Upload icons done.")
+	Print_logfile('Upload icons done.')
 	-- Icons uploaded so try to get the IDX again
 	-- Check if icon exists in Domoticz and get its idx
 	iidx = genfuncs.getcustom_light_icons(GTypeIcon)
 	if iidx then
-		Print_logfile(GTypeIcon.." idx "..iidx.." found in Domoticz custom icons")
+		Print_logfile(GTypeIcon .. ' idx ' .. iidx .. ' found in Domoticz custom icons')
 		return iidx
 	end
 	-- idx still not found. We shoul never get here
-	Print_logfile(GTypeIcon.." idx still not found in Domoticz custom icons, even after upload?")
+	Print_logfile(GTypeIcon .. ' idx still not found in Domoticz custom icons, even after upload?')
 	return nil
 end
 
 -- Get available Domoticz device icons
 function genfuncs.getcustom_light_icons(GTypeIcon)
 	if not GTypeIcon then
-		Print_logfile("getdeviceiconidx No GTypeIcon")
+		Print_logfile('getdeviceiconidx No GTypeIcon')
 		return nil
 	end
 
@@ -118,33 +121,33 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 	Print_logfile('1-> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
 
 	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = "http://127.0.0.1:8080/json.htm?type=command&param=custom_light_icons"
+		url = 'http://127.0.0.1:8080/json.htm?type=command&param=custom_light_icons'
 	else
-		url = "http://127.0.0.1:8080/json.htm?type=custom_light_icons"
+		url = 'http://127.0.0.1:8080/json.htm?type=custom_light_icons'
 	end
 	local sQuery = 'curl  "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read("*all")
-	Print_logfile("url:" .. (url or "?"), 0)
-	Print_logfile("result:" .. (Web_Data or "?"), 0)
+	local Web_Data = handle:read('*all')
+	Print_logfile('url:' .. (url or '?'), 0)
+	Print_logfile('result:' .. (Web_Data or '?'), 0)
 
 	if Web_Data ~= nil then
 		decoded_response = JSON:decode(Web_Data)
-		result = decoded_response["result"]
+		result = decoded_response['result']
 		for i = 1, #result do
 			local record = result[i]
-			if type(record) == "table" then
+			if type(record) == 'table' then
 				--[[
 				description: "Used by Garbagecalendar",
 				idx: 104,
 				imageSrc: "garbagecalendar_blue",
 				text: "Garbagecalendar blauwe bak"
 				]]
-				gicontype=record["imageSrc"]:match("^garbagecalendar_(.*)")
+				gicontype = record['imageSrc']:match('^garbagecalendar_(.*)')
 				--print(gicontype)
-				if record["imageSrc"]:lower() == GTypeIcon:lower() then
+				if record['imageSrc']:lower() == GTypeIcon:lower() then
 					--print("found:",GTypeIcon,record["idx"],record["imageSrc"])
-					return record["idx"]
+					return record['idx']
 				end
 			end
 		end
@@ -152,12 +155,11 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 	return nil
 end
 
-
 -- Set Domoticz device icon
 function genfuncs.setdeviceicon(idx, devname, iconidx)
 	--print("setdeviceicon",idx, devname, iconidx)
 	if not iconidx then
-			Print_logfile("!! Icon not update, idx = nil")
+		Print_logfile('!! Icon not update, idx = nil')
 		return
 	end
 	if not genfuncs.DomoticzRevision then
@@ -168,9 +170,9 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 	Print_logfile('2-> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
 
 	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = 'http://127.0.0.1:8080/json.htm?type=command&param=setused&used=true&name='.. (devname:gsub(" ", "%%20")) ..'&idx='.. idx ..'&switchtype=0&customimage='..iconidx
+		url = 'http://127.0.0.1:8080/json.htm?type=command&param=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
 	else
-		url = 'http://127.0.0.1:8080/json.htm?type=setused&used=true&name='.. (devname:gsub(" ", "%%20")) ..'&idx='.. idx ..'&switchtype=0&customimage='..iconidx
+		url = 'http://127.0.0.1:8080/json.htm?type=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
 	end
 	Print_logfile(url)
 	local sQuery = 'curl -k "' .. url .. '"'
@@ -181,13 +183,95 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 		--print(Web_Data)
 		record = JSON:decode(Web_Data)
 		if record and (record['status'] or '') == 'OK' then
-			Print_logfile("> Icon updated to idx:"..iconidx)
+			Print_logfile('> Icon updated to idx:' .. iconidx)
 		else
-			Print_logfile("!! Icon update failed")
+			Print_logfile('!! Icon update failed')
 		end
 	end
 end
 
+--[[
+-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--  Maybe use later to create the required ZIP file for a custom icon, but doesn't work with tar only
+-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+function genfuncs.CopyFile(old_path, new_path)
+	local old_file = io.open(old_path, 'rb')
+	local new_file = io.open(new_path, 'wb')
+	local old_file_sz, new_file_sz = 0, 0
+	if not old_file or not new_file then
+		print('Copy error opening input or output')
+		return false
+	end
+	while true do
+		local block = old_file:read(2 ^ 13)
+		if not block then
+			old_file_sz = old_file:seek('end')
+			break
+		end
+		new_file:write(block)
+	end
+	old_file:close()
+	new_file_sz = new_file:seek('end')
+	new_file:close()
+	print('File copied:' .. old_path .. ' to ' .. new_path)
+	return (new_file_sz == old_file_sz)
+end
+
+-------------------------------------------------------
+-- Create zip file required for custom icons in Domoticz
+function genfuncs.CreateDeviceIconZip(iconfile)
+	local ICONS_path = GC_scriptpath .. 'icons/'
+	local ZipTempPath = ICONS_path .. 'ziptemp/'
+
+	if (not genfuncs.isdir(ZipTempPath)) then
+		-- Try creating subdir ziptemp in the garbagecalendar/icons subdirectory.
+		os.execute('mkdir "' .. ZipTempPath .. '"')
+		if (not genfuncs.isdir(ZipTempPath)) then
+			Print_logfile('### Info: Failed creating temp Subdir for ZIP creation:"' .. ZipTempPath .. '"')
+			return nil
+		end
+		Print_logfile('### Info: created temp Subdir for ZIP creation:"' .. ZipTempPath .. '"')
+	end
+
+	-- Process input filename
+	local iconname = iconfile:gsub('%.png', '')
+	-- Copy the png icon file to the required names in the ziptemp directory
+	ICONS_path = ICONS_path .. '/'
+	ZipTempPath = ZipTempPath .. '/'
+	genfuncs.CopyFile(ICONS_path .. iconfile, ZipTempPath .. iconfile:gsub('.png', '48_On.png'))
+	genfuncs.CopyFile(ICONS_path .. iconfile, ZipTempPath .. iconfile:gsub('.png', '48_Off.png'))
+
+	-- Create nul file for the small icon in the ziptemp directory
+	local file = io.open(ZipTempPath .. iconfile, 'w')
+	if file == nil then
+		Print_logfile('!!! Error creating '..ZipTempPath .. iconfile)
+		return nil
+	end
+	file:close()
+
+	-- create icons.txt file
+	local file = io.open(ZipTempPath .. 'icons.txt', 'w')
+	if file == nil then
+		Print_logfile('!!! Error opening icons.txt ')
+		return nil
+	end
+	file:write(iconname .. ';' .. iconname:gsub('_', ' ') .. ';Used by Garbagecalendar')
+	file:close()
+
+	-- create a new zip file
+	os.remove(ZipTempPath .. iconname .. '.zip')
+	os.execute('cd "' .. ZipTempPath .. '" & tar -rv  -f "' .. iconname .. '.zip" "' .. iconname .. '.png" "' .. iconname .. '48_On.png" "' .. iconname .. '48_Off.png" "' .. 'icons.txt"')
+	-- Copy the created zip file to the icon directory
+	genfuncs.CopyFile(ZipTempPath .. iconname .. '.zip', ICONS_path .. iconname .. '.zip')
+
+	-- delete temp files
+	os.remove(ZipTempPath .. iconname .. '.zip')
+	os.remove(ZipTempPath .. iconname .. '.png')
+	os.remove(ZipTempPath .. iconname .. '48_On.png')
+	os.remove(ZipTempPath .. iconname .. '48_Off.png')
+	os.remove(ZipTempPath .. 'icons.txt')
+end
+]]
 -------------------------------------------------------
 -- try to load module/library
 function genfuncs.loadlualib(libname)
@@ -200,7 +284,7 @@ function genfuncs.loadlualib(libname)
 		-- add defined Domoticz path to the search path
 		if not package.path:match(GC_scriptpath .. '%?.lua;') then
 			package.path = GC_scriptpath .. '?.lua;' .. package.path
-			Print_logfile('updated package.path:'.. package.path)
+			Print_logfile('updated package.path:' .. package.path)
 		end
 		moduleobject = require(libname)
 	end
@@ -227,10 +311,13 @@ end
 function genfuncs.url_encode(str)
 	if (str) then
 		str =
-				string.gsub(str, '([^%w %-%_%.%~])', function(c)
-					return string.format('%%%02X', string.byte(c))
-				end
-				)
+			string.gsub(
+			str,
+			'([^%w %-%_%.%~])',
+			function(c)
+				return string.format('%%%02X', string.byte(c))
+			end
+		)
 		str = string.gsub(str, ' ', '+')
 	end
 	return str
@@ -336,7 +423,10 @@ end
 --- Check if a directory exists in this path
 function genfuncs.isdir(path)
 	-- "/" works on both Unix and Windows
-	return genfuncs.exists(path .. '/')
+	if not path:find('/$') then
+		path = path .. '/'
+	end
+	return genfuncs.exists(path)
 end
 
 --------------------------------------------------------------------------
@@ -352,7 +442,7 @@ end
 --~ genfuncs.GetDateFromInput("7 januari 2021"          ,"([%d]+)%s+([^%s]+)%s-(%d-)$"          ,{"dd","mmm","yyyy"})
 function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 	local timenow = os.date('*t')
-	local curTime = os.time{day = timenow.day, month = timenow.month, year = timenow.year}
+	local curTime = os.time {day = timenow.day, month = timenow.month, year = timenow.year}
 	local garbageday = '??'
 	local garbagemonth = '??'
 	local garbageyear = timenow.year
@@ -400,7 +490,7 @@ function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 		Print_logfile('         garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday)) --
 		return 0, -99
 	end
-	local garbageTime = os.time{day = garbageday, month = garbagemonth, year = garbageyear}
+	local garbageTime = os.time {day = garbageday, month = garbagemonth, year = garbageyear}
 	local diffdays = genfuncs.Round(os.difftime(garbageTime, curTime) / 86400, 0) -- 1 day = 86400 seconds
 	local oDate = garbageyear .. '-' .. garbagemonth .. '-' .. garbageday
 	Print_logfile('    output: date=' .. oDate .. '  -> diff:' .. diffdays .. '  (garbageyear:' .. tostring(garbageyear) .. '  garbagemonth:' .. tostring(garbagemonth) .. '  garbageday:' .. tostring(garbageday) .. ')') --
@@ -408,22 +498,24 @@ function genfuncs.GetDateFromInput(i_garbagetype_date, iregex, idatev)
 	return oDate, diffdays
 end
 
-
+----------------------------------------------------------------
+--- Sort/Select the garbge collection data for to coming 60 days
+--- This is ran after each Web update
 function genfuncs.SortGarbagedata()
-   i_garbagedata = garbagedata
-   Print_logfile('- Gen Sorting records.' .. #i_garbagedata)
-   garbagedata = {}
-   for x = 0, 60, 1 do
-      for mom in pairs(i_garbagedata) do
-         if i_garbagedata[mom].diff == x then
-            garbagedata[#garbagedata + 1] = {}
-            garbagedata[#garbagedata].garbagetype = i_garbagedata[mom].garbagetype
-            garbagedata[#garbagedata].garbagedate = i_garbagedata[mom].garbagedate
-            -- field to be used when Web_Data contains a description
-            garbagedata[#garbagedata].wdesc = i_garbagedata[mom].wdesc
-         end
-      end
-   end
+	i_garbagedata = garbagedata
+	Print_logfile('- Gen Sorting records.' .. #i_garbagedata)
+	garbagedata = {}
+	for x = 0, 60, 1 do
+		for mom in pairs(i_garbagedata) do
+			if i_garbagedata[mom].diff == x then
+				garbagedata[#garbagedata + 1] = {}
+				garbagedata[#garbagedata].garbagetype = i_garbagedata[mom].garbagetype
+				garbagedata[#garbagedata].garbagedate = i_garbagedata[mom].garbagedate
+				-- field to be used when Web_Data contains a description
+				garbagedata[#garbagedata].wdesc = i_garbagedata[mom].wdesc
+			end
+		end
+	end
 end
 
 --

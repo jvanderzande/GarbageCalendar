@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230628-1627'
+ver = '20230629-1930'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -17,45 +17,60 @@ websitemodule = 'm_ximmio'
 -- Copy the found Companycode value and paste it into the Companycode field in your garbagecalendarconfig.lua
 -- to make this module work!
 
+-- =======================================================================================
+-- Check required fields for this module. The script will end when one is missing.
+-- =======================================================================================
+chkfields = {
+	'websitemodule',
+	'Zipcode',
+	'Housenr',
+	--	"Housenrsuf",
+	'Datafile',
+	--	"Hostname",
+	--	"Street",
+	'Companycode'
+}
+
 -- Start Functions =========================================================================
 --------------------------------------------------------------------------
 -- Perform the actual update process for the given address
-function Perform_Update()
-	function processdata(ophaaldata)
-      Print_logfile("ophaaldata records:"..(#ophaaldata or "??"))
-		for i = 1, #ophaaldata do
-			record = ophaaldata[i]
-			if type(record) == 'table' then
-				web_garbagetype = record['_pickupTypeText']
-				--Print_logfile( web_garbagetype)
-				if (record['description'] ~= nil and record['description'] ~= 'Null') then
-					--Print_logfile( web_garbagedesc)
-					web_garbagedesc = record['description']
+local function processdata(ophaaldata)
+	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
+	for i = 1, #ophaaldata do
+		record = ophaaldata[i]
+		if type(record) == 'table' then
+			web_garbagetype = record['_pickupTypeText']
+			--Print_logfile( web_garbagetype)
+			if (record['description'] ~= nil and record['description'] ~= 'Null') then
+				--Print_logfile( web_garbagedesc)
+				web_garbagedesc = record['description']
+			else
+				web_garbagedesc = ''
+			end
+			garbagedate = record['pickupDates']
+			local dateformat = '????????'
+			for i = 1, #garbagedate do
+				record = garbagedate[i]
+				-- Get days diff
+				Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(garbagedate[i]))
+				dateformat, daysdiffdev = genfuncs.GetDateFromInput(garbagedate[i], '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+				if daysdiffdev == nil then
+					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. garbagedate[i])
 				else
-					web_garbagedesc = ''
-				end
-				garbagedate = record['pickupDates']
-				local dateformat = '????????'
-				for i = 1, #garbagedate do
-					record = garbagedate[i]
-					-- Get days diff
-					Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(garbagedate[i]))
-					dateformat, daysdiffdev = genfuncs.GetDateFromInput(garbagedate[i], '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
-					if daysdiffdev == nil then
-						Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. garbagedate[i])
-					else
-						if (daysdiffdev >= 0) then
-							garbagedata[#garbagedata + 1] = {}
-							garbagedata[#garbagedata].garbagetype = web_garbagetype
-							garbagedata[#garbagedata].garbagedate = dateformat
-							garbagedata[#garbagedata].diff = daysdiffdev
-							garbagedata[#garbagedata].wdesc = web_garbagedesc
-						end
+					if (daysdiffdev >= 0) then
+						garbagedata[#garbagedata + 1] = {}
+						garbagedata[#garbagedata].garbagetype = web_garbagetype
+						garbagedata[#garbagedata].garbagedate = dateformat
+						garbagedata[#garbagedata].diff = daysdiffdev
+						garbagedata[#garbagedata].wdesc = web_garbagedesc
 					end
 				end
 			end
 		end
 	end
+end
+
+function Perform_Update()
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	local Web_Data
 	local webhost = 'https://wasteprod2api.ximmio.com'
@@ -111,39 +126,3 @@ function Perform_Update()
 	processdata(jdata)
 end
 -- End Functions =========================================================================
-
--- Start of logic ========================================================================
-Print_logfile('#### ' .. os.date('%c') .. ' ### Start garbagecalendar module ' .. websitemodule .. ' (v' .. ver .. ')')
-
--- =======================================================================================
--- Check required fields for this module. The script will end when one is missing.
--- =======================================================================================
-local chkfields = {"websitemodule",
-	"Zipcode",
-	"Housenr",
---	"Housenrsuf",
-	"Datafile",
---	"Hostname",
---	"Street",
-	"Companycode"
-}
-local param_err=0
--- Check whether the required parameters are specified.
-for key, value in pairs(chkfields) do
-	if (_G[value] or '') == '' then
-		param_err = param_err + 1
-		Print_logfile('!!! '..value .. ' not specified!', 1)
-	end
-end
--- =======================================================================================
--- Get the web info when all required parameters are defined
--- =======================================================================================
-if param_err == 0 then
-	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf )
-	Perform_Update()
-   genfuncs.SortGarbagedata()
-	Print_logfile('=> Write data to ' .. Datafile)
-	table.save(garbagedata, Datafile)
-else
-	Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
-end
