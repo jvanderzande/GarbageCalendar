@@ -44,7 +44,7 @@ function create_ico_collection($name, $text)
         exit("File missing: <${name}.png>\n");
     }
     $zip->addFromString("icons.txt", "$name;garbagecalendar $text bak;Used by Garbagecalendar");
-    $zip->addFile("empty.png", "${name}.png");
+    $zip->addFromString("${name}.png", "");
     $zip->addFile("${name}.png", "${name}48_Off.png");
     $zip->addFile("${name}.png", "${name}48_On.png");
     $zip->close();
