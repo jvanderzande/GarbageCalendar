@@ -371,8 +371,8 @@ function genfuncs.perform_webquery(url, logdata)
 	Print_logfile('---- end web data ------------------------------------------------------------------------')
 	if (Web_Error:find('unsupported protocol')) then
 		Print_logfile('### Error: unsupported protocol.')
-		Print_logfile('#### This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
-		Print_logfile('#### To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
+		Print_logfile('###  This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
+		Print_logfile('###  To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
 		return ''
 	end
 	if (Web_Data == '') then
