@@ -814,9 +814,9 @@ function gc_main(commandArray, domoticz, batchrun)
 					Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
 				else
 					if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
-						Print_logfile('Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
+						Print_logfile('> Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
 					else
-						Print_logfile('No updated text for TxtDevice.')
+						Print_logfile('> No updated text for TxtDevice.')
 					end
 				end
 				-- update the domoticz device text & icon
@@ -832,9 +832,9 @@ function gc_main(commandArray, domoticz, batchrun)
 					genfuncs.setdeviceicon(otherdevices_idx[myGarbageDevice], myGarbageDevice, FirstGTypeIconIdx)
 
 					if (otherdevices[myGarbageDevice] ~= devtxt) then
-						Print_logfile('Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
+						Print_logfile('> Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
 					else
-						Print_logfile('No updated text for TxtDevice.')
+						Print_logfile('> No updated text for TxtDevice.')
 					end
 				end
 			end
