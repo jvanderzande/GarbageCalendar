@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230630-1600'
+	MainScriptVersion = '20230630-2050'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -18,7 +18,7 @@ function gc_main(commandArray, domoticz, batchrun)
 
 	-- make domoticz a global
 	if batchrun then
-		RunText = 'Background run for WebData update'
+		RunText = 'Background run for WebData update:'
 	elseif domoticz ~= nil then
 		RunbyDzVents = true
 		RunText = 'DzVents:'
@@ -114,8 +114,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	if not (package.path):match(GC_scriptpath .. '%?.lua;') then
 		package.path = GC_scriptpath .. '?.lua;' .. package.path
 	end
-
-	Print_logfile('### ' .. RunText .. ' Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
+	Print_logfile('-> ### ' .. RunText .. ' Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
 
 	-- ########################################################
 	-- First Load garbagecalendarconfig.lua
@@ -222,7 +221,6 @@ function gc_main(commandArray, domoticz, batchrun)
 				file:write(loginfo)
 				file:close()
 			end
-			--Print_logfile('### ' .. RunText .. ' Start garbagecalendar script v' .. MainScriptVersion .. '   ' .. os.date('%c'))
 			if testdataload then
 				Print_logfile('!> Debuging dataload each cycle in the foreground because "testdataload=true" in garbagecalendarconfig.lua')
 				Print_logfile('!>    please change it back to "testdataload=false" when done testing to avoid growing a big domoticz log and slowing down the event system.')
@@ -298,8 +296,8 @@ function gc_main(commandArray, domoticz, batchrun)
 					return
 				end
 				local command = 'lua "' .. GC_scriptpath .. 'gc_main.lua" "GetDataInBatch"'
-				Print_logfile('=> start background webupdate for module ' .. websitemodule, 1)
-				Print_logfile('   datafile:' .. Datafile, 1)
+				Print_logfile('-> garbagecalendar: Start background webupdate for module ' .. websitemodule, 1)
+				Print_logfile('datafile:' .. Datafile)
 				Print_logfile(command .. ' &')
 				rc = os.execute(command .. ' &')
 			else
@@ -354,12 +352,12 @@ function gc_main(commandArray, domoticz, batchrun)
 					genfuncs.SortGarbagedata()
 					Print_logfile('> Write data to ' .. Datafile)
 					table.save(garbagedata, Datafile)
-					return '', '- Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
+					return '', '-> Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
 				else
 					Print_logfile('!!! ==============================================', 1)
 					Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
 					Print_logfile('!!! ==============================================', 1)
-					return '', '  - Module ' .. (websitemodule or '') .. ' stopped! Look at ' .. RunLogfile .. ' for more information.'
+					return '', '-> Module ' .. (websitemodule or '') .. ' stopped! Look at ' .. RunLogfile .. ' for more information.'
 				end
 			end
 
@@ -793,7 +791,7 @@ function gc_main(commandArray, domoticz, batchrun)
 		do_iconupdate = true
 		if (FirstGTypeIcon or '') ~= '' then
 			Print_logfile('-> FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
-			FirstGTypeIconIdx, ierr = genfuncs.getdeviceiconidx(FirstGTypeIcon)
+			FirstGTypeIconIdx, ierr = genfuncs.getcustomiconidx(FirstGTypeIcon)
 			if ierr then
 				Print_logfile('##  Icon update stopped with rc:' .. (ierr or '?'))
 				do_iconupdate = nil
@@ -806,7 +804,11 @@ function gc_main(commandArray, domoticz, batchrun)
 
 		if do_iconupdate then
 			FirstGTypeIconIdx = FirstGTypeIconIdx or 0
-			Print_logfile('>> Set device to FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
+			if FirstGTypeIconIdx == 0 then
+				Print_logfile('>> FirstGTypeIcon "' .. (FirstGTypeIcon or '?') .. '" not found so settting textdevice to DefaultTextIcon:0')
+			else
+				Print_logfile('>> Set textdevice to FirstGTypeIcon:' .. (FirstGTypeIcon or '?') .. '=>' .. FirstGTypeIconIdx)
+			end
 			if RunbyDzVents then
 				if domoticz.devices(myGarbageDevice).idx == nil then
 					Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
@@ -877,14 +879,15 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- checkif testload is requested
 	if (batchrun) then
-		Print_logfile('=> Batch load WebData')
+		Print_logfile('-> Batch load WebData')
 		GetWebData('now')
+		Print_logfile('-< ### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
 		return
 	elseif (testdataload or false) then
 		GetWebData('now')
 	elseif testdataloadbatch or false then
 		GetWebData()
-		Print_logfile('=> End run because testdataloadbatch=true and job submitted.')
+		Print_logfile('-< ### End run because testdataloadbatch=true and job submitted.')
 		return
 	end
 
@@ -892,7 +895,7 @@ function gc_main(commandArray, domoticz, batchrun)
 
 	-- check for notification times and run update only when we are at one of these defined times
 	if RunbyDzVents then
-		Print_logfile('-> DzVents: Start checking garbagetype_cfg table whether an action is needed:')
+		Print_logfile('-> Start checking garbagetype_cfg table whether an action is needed:')
 	else
 		Print_logfile('-> Time: Start checking garbagetype_cfg table whether an action is needed:')
 	end
@@ -988,7 +991,7 @@ function gc_main(commandArray, domoticz, batchrun)
 		Print_logfile('Scheduled time(s) not reached yet, so nothing to do!')
 	end
 	-- End of process run
-	Print_logfile('### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
+	Print_logfile('-< ### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
 
 	-- Save logfile when Webupdate or Device update run is done.
 	if not batchrun and (UpdateDataRun or UpdateDevRun) then
