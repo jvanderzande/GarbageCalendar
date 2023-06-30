@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1300'
+ver = '20230630-1600'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --

@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230630-1300'
+	MainScriptVersion = '20230630-1600'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -47,6 +47,7 @@ function gc_main(commandArray, domoticz, batchrun)
 
 	genfuncs.DomoticzVersion = nil
 	genfuncs.DomoticzRevision = nil
+	domoticz_url = domoticz_url or 'http://127.0.0.1:8080'
 
 	---====================================================================================================
 	-- mydebug print
@@ -77,8 +78,12 @@ function gc_main(commandArray, domoticz, batchrun)
 		ShortFileNames = {gc_generalfuncs = 'gc_func'}
 		calledfrom = ShortFileNames[calledfrom] or calledfrom
 		calledfrom = (calledfrom .. '    '):sub(1, 7)
-		--
+		-- intent text
 		local ptext = text or 'nil?'
+		if ptext:sub(1, 3) ~= '-> ' and ptext:sub(1, 3) ~= '-< ' and ptext:sub(1, 3) ~= '#> ' and ptext:sub(1, 3) ~= '<< ' then
+			ptext = '   ' .. ptext
+		end
+		--
 		if (prefix or 1) == 1 then
 			ptext = os.date('%X ') .. calledfrom .. ':' .. calledline .. ': ' .. ptext
 		end
@@ -329,7 +334,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile('-> Load module ' .. (websitemodule or '??'))
 				dofile(websitemodulescript)
 				-- Check whether the required parameters are specified.
-				Print_logfile('>> ========== Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+				Print_logfile('-> ========== Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
 				chkfields = chkfields or {}
 				local param_err = 0
 				for key, value in pairs(chkfields) do
@@ -347,9 +352,9 @@ function gc_main(commandArray, domoticz, batchrun)
 					Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
 					Perform_Update()
 					genfuncs.SortGarbagedata()
-					Print_logfile('=> Write data to ' .. Datafile)
+					Print_logfile('> Write data to ' .. Datafile)
 					table.save(garbagedata, Datafile)
-					return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
+					return '', '- Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
 				else
 					Print_logfile('!!! ==============================================', 1)
 					Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
@@ -371,7 +376,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile(err)
 				Print_logfile(debug.traceback())
 			end
-			Print_logfile('<< ========== End module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+			Print_logfile('-< ========== End module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
 		end
 	end
 
@@ -541,7 +546,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- Do the actual update retrieving data from the website and processing it
 	function Perform_Data_check()
 		-- ensure the access is set correctly for data
-		Print_logfile('=> Action starting, First check access to required files:')
+		Print_logfile('-> Action starting, First check access to required files:')
 		function ListAccess(name)
 			local sCMD = 'ls -l ' .. name
 			Print_logfile('   Run command:\n' .. sCMD .. ':')
@@ -577,7 +582,7 @@ function gc_main(commandArray, domoticz, batchrun)
 		local txtdev_prevdate = ''
 
 		-- Read previous saved calendar information
-		Print_logfile('=> Start update for GarbageCalendar text device "' .. (myGarbageDevice or '') .. '"', 1)
+		Print_logfile('-> Start update for GarbageCalendar text device "' .. (myGarbageDevice or '') .. '"', 1)
 		local garbagedata, perr = table.load(Datafile)
 		-- try reload data when Datafile is missing
 		if perr ~= 0 then
@@ -604,7 +609,7 @@ function gc_main(commandArray, domoticz, batchrun)
 			return
 		end
 		-- process the garbagecalendar data
-		Print_logfile('   ' .. (#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '?') .. ' from Datafile:' .. Datafile)
+		Print_logfile((#garbagedata or '?') .. ' data records loaded, updated at ' .. (garbagedata['Garbage_LastUpdate'] or '?') .. ' from Datafile:' .. Datafile)
 		-- create ICS file when requested
 		if (IcalEnable) then
 			hIcal = io.open(icalfile, 'w')
@@ -667,10 +672,10 @@ function gc_main(commandArray, domoticz, batchrun)
 							end
 							-- get the long description from the JSON data
 							if garbagetype_cfg[web_garbagetype].active ~= 'on' then
-								Print_logfile('==> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because there is no record in garbagetype_cfg[]!', 0, 0)
+								Print_logfile('>> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because there is no record in garbagetype_cfg[]!', 0, 0)
 							else
 								Print_logfile(
-									'==> GarbageDate:' ..
+									'>> GarbageDate:' ..
 										tostring(web_garbagedate) ..
 											' GarbageType:' ..
 												tostring(web_garbagetype) ..
@@ -720,7 +725,7 @@ function gc_main(commandArray, domoticz, batchrun)
 					-- only warn once for a skip this type setting
 					if (garbagetype_cfg[web_garbagetype].missing == nil and garbagetype_cfg[web_garbagetype].active == 'skip') then
 						garbagetype_cfg[web_garbagetype].skipwarning = true
-						Print_logfile('==> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype) .. '  GarbageDate:' .. tostring(web_garbagedate), 0, 0)
+						Print_logfile('>>> skipping because active="skip" for GarbageType:' .. tostring(web_garbagetype) .. '  GarbageDate:' .. tostring(web_garbagedate), 0, 0)
 					end
 				end
 				-- create ICAL file when requested
@@ -775,50 +780,62 @@ function gc_main(commandArray, domoticz, batchrun)
 			return
 		end
 		-- always update the domoticz device so one can see it is updating and when it was ran last.
-		Print_logfile('==> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
-		-- Check the for the customicon idx for our defined icon in config (if defined)
-		if (FirstGTypeIcon or '') ~= '' then
-			Print_logfile('==> FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
-			FirstGTypeIconIdx = genfuncs.getdeviceiconidx(FirstGTypeIcon) or 0
-			Print_logfile('==> FirstGTypeIconIdx:' .. (FirstGTypeIconIdx or '?'))
-		else
-			FirstGTypeIconIdx = 0
-		end
-		Print_logfile('==> Set FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
-		if RunbyDzVents then
-			if domoticz.devices(myGarbageDevice).idx == nil then
-				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
-			else
-				if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
-					Print_logfile('Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
-				else
-					Print_logfile('No updated text for TxtDevice.')
-				end
-			end
-			-- update the domoticz device text & icon
-			domoticz.devices(myGarbageDevice).updateText(devtxt)
-			domoticz.devices(myGarbageDevice).setIcon(FirstGTypeIconIdx)
-		else
-			if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
-				Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
-			else
-				-- update the domoticz device text
-				commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
-				-- update the domoticz device icon
-				genfuncs.setdeviceicon(otherdevices_idx[myGarbageDevice], myGarbageDevice, FirstGTypeIconIdx)
+		Print_logfile('-> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
 
-				if (otherdevices[myGarbageDevice] ~= devtxt) then
-					Print_logfile('Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
-				else
-					Print_logfile('No updated text for TxtDevice.')
-				end
-			end
-		end
 		-- close ICAL file when requested
 		if IcalEnable then
 			hIcal:write('END:VCALENDAR')
 			hIcal:close()
 			Print_logfile('=> Created an ICS file with ' .. icalcnt .. ' Garbage collection events entries in file: ' .. icalfile)
+		end
+
+		-- Check the for the customicon idx for our defined icon in config (if defined)
+		do_iconupdate = true
+		if (FirstGTypeIcon or '') ~= '' then
+			Print_logfile('-> FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
+			FirstGTypeIconIdx, ierr = genfuncs.getdeviceiconidx(FirstGTypeIcon)
+			if ierr then
+				Print_logfile('##  Icon update stopped with rc:' .. (ierr or '?'))
+				do_iconupdate = nil
+			else
+				Print_logfile('>> FirstGTypeIconIdx:' .. (FirstGTypeIconIdx or '?'))
+			end
+		else
+			FirstGTypeIconIdx = 0
+		end
+
+		if do_iconupdate then
+			FirstGTypeIconIdx = FirstGTypeIconIdx or 0
+			Print_logfile('>> Set device to FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
+			if RunbyDzVents then
+				if domoticz.devices(myGarbageDevice).idx == nil then
+					Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
+				else
+					if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
+						Print_logfile('Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
+					else
+						Print_logfile('No updated text for TxtDevice.')
+					end
+				end
+				-- update the domoticz device text & icon
+				domoticz.devices(myGarbageDevice).updateText(devtxt)
+				domoticz.devices(myGarbageDevice).setIcon(FirstGTypeIconIdx)
+			else
+				if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
+					Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
+				else
+					-- update the domoticz device text
+					commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
+					-- update the domoticz device icon
+					genfuncs.setdeviceicon(otherdevices_idx[myGarbageDevice], myGarbageDevice, FirstGTypeIconIdx)
+
+					if (otherdevices[myGarbageDevice] ~= devtxt) then
+						Print_logfile('Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
+					else
+						Print_logfile('No updated text for TxtDevice.')
+					end
+				end
+			end
 		end
 	end
 
@@ -875,9 +892,9 @@ function gc_main(commandArray, domoticz, batchrun)
 
 	-- check for notification times and run update only when we are at one of these defined times
 	if RunbyDzVents then
-		Print_logfile('=> DzVents: Start checking garbagetype_cfg table whether an action is needed:')
+		Print_logfile('-> DzVents: Start checking garbagetype_cfg table whether an action is needed:')
 	else
-		Print_logfile('=> Time: Start checking garbagetype_cfg table whether an action is needed:')
+		Print_logfile('-> Time: Start checking garbagetype_cfg table whether an action is needed:')
 	end
 	if garbagetype_cfg == nil then
 		Print_logfile('### Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.', 1)

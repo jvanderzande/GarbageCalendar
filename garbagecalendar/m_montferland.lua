@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1300'
+ver = '20230630-1600'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
