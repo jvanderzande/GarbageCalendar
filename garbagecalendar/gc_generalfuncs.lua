@@ -359,7 +359,7 @@ function genfuncs.perform_webquery(url, logdata)
 		logdata = mydebug
 	end
 	-- Define Web Query
-	local sQuery = 'curl -s -k ' .. url
+	local sQuery = 'curl -k ' .. url
 	errlogfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'webquery_err.log'
 	-- Pipe STDERR to file when defined
 	sQuery = sQuery .. ' 2>' .. errlogfile
