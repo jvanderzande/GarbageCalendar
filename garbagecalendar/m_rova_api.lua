@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rova_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_rova_api'
 -- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
 --
@@ -14,11 +14,11 @@ chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
 }
 
 -- Start Functions =========================================================================
@@ -28,8 +28,7 @@ function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data
-	Web_Data =
+	local Web_Data =
 		genfuncs.perform_webquery(
 		'"http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=' ..
 			Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=' .. Housenrsuf .. '&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova"'
@@ -46,9 +45,9 @@ function Perform_Update()
 	-- strip a larger chunk of the none used data for speed.
 	Web_Data = Web_Data:match('(.-),"mededelingen":') .. '}}'
 	-- Decode JSON table
-	decoded_response = JSON:decode(Web_Data)
+	local decoded_response = JSON:decode(Web_Data)
 	-- Get the data section
-	rdata = decoded_response['data']
+	local rdata = decoded_response['data']
 	if type(rdata) ~= 'table' then
 		Print_logfile('### Error: Empty data table in JSON data...  stopping execution.')
 		return
@@ -58,10 +57,10 @@ function Perform_Update()
 		return
 	end
 	-- get the description records into rdesc to retrieve the long description
-	rdesc = rdata['langs']
+	local rdesc = rdata['langs']
 	rdesc = rdesc['data']
 	-- get the ophaaldagen tabel for the coming scheduled pickups for this year
-	rdataty = rdata['ophaaldagen']
+	local rdataty = rdata['ophaaldagen']
 	if type(rdataty) ~= 'table' then
 		Print_logfile('### Error: Empty data.ophaaldagen table in JSON data...  stopping execution.')
 		return
@@ -76,7 +75,7 @@ function Perform_Update()
 	-- only process nextyear data in case we do not have the requested number of next events
 	if #garbagedata < 10 then
 		-- get the ophaaldagen tabel for next year when needed
-		rdataly = rdata['ophaaldagenNext']
+		local rdataly = rdata['ophaaldagenNext']
 		if type(rdataly) ~= 'table' then
 			print('@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.')
 		else
@@ -95,17 +94,16 @@ end
 function processdata(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
-		record = ophaaldata[i]
+		local record = ophaaldata[i]
 		if type(record) == 'table' then
-			wnameType = record['nameType']
-			web_garbagetype = record['type']
-			web_garbagedate = record['date']
+			local wnameType = record['nameType']
+			local web_garbagetype = record['type']
+			local web_garbagedate = record['date']
 			-- first match for each Type we save the date to capture the first next dates
 			-- get the long description from the JSON data
 			Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
-			local dateformat = '????????'
 			-- Get days diff
-			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+			local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 			if daysdiffdev == nil then
 				Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 			end

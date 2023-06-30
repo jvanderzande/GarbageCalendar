@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -12,11 +12,11 @@ chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
 }
 
 -- Start Functions =========================================================================
@@ -24,9 +24,8 @@ chkfields = {
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data
 	-- Get the information for the specified address: AdresID and AdministratieID  (required for the subsequent call)
-	Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&Postcode=' .. Zipcode .. '&Huisnummer=' .. Housenr .. '&Toevoeging=' .. Housenrsuf .. '"')
+	local Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/Login.ashx?Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&Postcode=' .. Zipcode .. '&Huisnummer=' .. Housenr .. '&Toevoeging=' .. Housenrsuf .. '"')
 	if Web_Data == '' then
 		return
 	end
@@ -34,10 +33,10 @@ function Perform_Update()
 		Print_logfile('### Error: Check your Zipcode and Housenr as we get an [] response.')
 		return
 	end
-	adressdata = JSON:decode(Web_Data)
+	local adressdata = JSON:decode(Web_Data)
 	-- Decode JSON table and find the appropriate address when there are multiple options when toevoeging is used like 10a
-	AdresID = adressdata[1].AdresID
-	AdministratieID = adressdata[1].AdministratieID
+	local AdresID = adressdata[1].AdresID
+	local AdministratieID = adressdata[1].AdministratieID
 	if AdresID == nil or AdresID == '' then
 		Print_logfile('### Error: No AdresID retrieved...  stopping execution.')
 		return
@@ -54,7 +53,7 @@ function Perform_Update()
 		Print_logfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
 		return
 	end
-	jdata = JSON:decode(Web_Data)
+	local jdata = JSON:decode(Web_Data)
 	-- get the ophaaldagen tabel for the coming scheduled pickups
 	if type(jdata) ~= 'table' then
 		Print_logfile('### Error: Empty Kalender found stopping execution.')
@@ -82,15 +81,13 @@ end
 function processdata(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
-		record = ophaaldata[i]
+		local record = ophaaldata[i]
 		if type(record) == 'table' then
-			web_garbagetype = record['Soort']
-			web_garbagedate = record['Datum']
-			wnameType = ''
+			local web_garbagetype = record['Soort']
+			local web_garbagedate = record['Datum']
 			Print_logfile('  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
-			local dateformat = '????????'
 			-- Get days diff
-			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+			local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 			if daysdiffdev == nil then
 				Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 				return

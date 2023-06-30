@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_csv_file.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_csv_file'
 
 --[[
@@ -27,19 +27,16 @@ chkfields = {
 	'websitemodule',
 	--	"Zipcode",
 	--	"Housenr",
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
 }
 -- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
-	local txt = ''
-	local txtcnt = 0
-	--
 	Print_logfile('---- check garbage_input.csv ----------------------------------------------------------------------------')
 	if (genfuncs.exists(input_csv_file)) then
 		Print_logfile('input File ' .. input_csv_file .. ' found, check access.')
@@ -59,9 +56,9 @@ function Perform_Update()
 	end
 
 	Print_logfile('---- Open garbage_input.csv ----------------------------------------------------------------------------')
-	ifile, err = io.open(input_csv_file, 'r')
+	local ifile, err = io.open(input_csv_file, 'r')
 	local Web_Data = ''
-	if not err then
+	if ifile then
 		Web_Data = ifile:read('*all')
 		ifile:close()
 	end
@@ -81,10 +78,9 @@ function Perform_Update()
 		i = i + 1
 		Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
 		if web_garbagetype ~= nil and web_garbagedate ~= nil and web_garbagedate ~= 'garbagedate' then
-			web_garbagedesc = web_garbagedesc or ''
 			-- first match for each Type we save the date to capture the first next dates
 			--Print_logfile( web_garbagetype,web_garbagedate)
-			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
+			local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
 			-- When days is 0 or greater the date is today or in the future. Ignore any date in the past
 			if (daysdiffdev >= 0) then
 				garbagedata[#garbagedata + 1] = {}
@@ -92,7 +88,7 @@ function Perform_Update()
 				garbagedata[#garbagedata].garbagedate = dateformat
 				garbagedata[#garbagedata].diff = daysdiffdev
 				-- field to be used when Web_Data contains a description
-				garbagedata[#garbagedata].wdesc = web_garbagedesc
+				-- garbagedata[#garbagedata].wdesc = web_garbagedesc
 			end
 		end
 	end

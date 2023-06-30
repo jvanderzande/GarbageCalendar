@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -12,15 +12,14 @@ chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
 }
 
 -- Load required extra module base64
-local Load_Success = true
 status, base64 = pcall(genfuncs.loadlualib, 'base64')
 if not status then
 	Print_logfile('### Error: failed loading default base64.lua: ' .. domoticzjsonpath .. '.')
@@ -35,9 +34,6 @@ function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data
-	local thnr = Housenr .. Housenrsuf
-
 	--[[
 		API information for Omrin found here:
 		https://github.com/pippyn/Home-Assistant-Sensor-Afvalbeheer/blob/411fc963075fd98af9899e2bace34dd52151daac/custom_components/afvalbeheer/API.py
@@ -57,13 +53,14 @@ function Perform_Update()
 		)
 	end
 	-- data required to get token
-	appId = uuid()
-	data = "{'AppId': '" .. appId .. "' , 'AppVersion': '', 'OsVersion': '', 'Platform': 'HomeAssistant'}"
-	Web_Data = genfuncs.perform_webquery(' -H "Content-Type: application/json" -d "' .. data .. '" "https://api-omrin.freed.nl/Account/GetToken/"')
+	local appId = uuid()
+	local thnr = Housenr .. Housenrsuf
+	local data = "{'AppId': '" .. appId .. "' , 'AppVersion': '', 'OsVersion': '', 'Platform': 'HomeAssistant'}"
+	local Web_Data = genfuncs.perform_webquery(' -H "Content-Type: application/json" -d "' .. data .. '" "https://api-omrin.freed.nl/Account/GetToken/"')
 	Print_logfile('---- web data stripped -------------------------------------------------------------------')
 	Print_logfile(Web_Data)
 	Print_logfile('---- end web data ------------------------------------------------------------------------')
-	jdata = JSON:decode(Web_Data)
+	local jdata = JSON:decode(Web_Data)
 	-- get PublicKey
 	if type(jdata) ~= 'table' then
 		Print_logfile('### Error: Token not received, stopping execution.')
@@ -73,11 +70,11 @@ function Perform_Update()
 		Print_logfile('### Error: Unable to read the PublicKey field from received data...  stopping execution.')
 		return
 	end
-	PublicKey = jdata.PublicKey
+	local PublicKey = jdata.PublicKey
 
 	-- save publickey to file
 	local file, err = io.open(Datafile .. '_tmp_token.tmp', 'w')
-	if not err then
+	if file then
 		file:write('-----BEGIN PUBLIC KEY-----', '\n')
 		file:write(PublicKey, '\n')
 		file:write('-----END PUBLIC KEY-----', '\n')
@@ -85,11 +82,11 @@ function Perform_Update()
 	end
 
 	-- create data json and save to file
-	requestBody = '{"a": false, "Email": null, "Password": null, "PostalCode": "' .. Zipcode .. '", "HouseNumber": "' .. thnr .. '"}'
-	local file, err = io.open(Datafile .. '_tmp_datain.tmp', 'w')
-	if not err then
-		file:write(requestBody)
-		file:close()
+	local requestBody = '{"a": false, "Email": null, "Password": null, "PostalCode": "' .. Zipcode .. '", "HouseNumber": "' .. thnr .. '"}'
+	local file2, err2 = io.open(Datafile .. '_tmp_datain.tmp', 'w')
+	if file2 then
+		file2:write(requestBody)
+		file2:close()
 	else
 		Print_logfile('### Error: Unable to read the encrypted data from file ' .. Datafile .. '_tmp_datain.tmp' .. '  ...  stopping execution.')
 		return
@@ -101,8 +98,8 @@ function Perform_Update()
 
 	-- read the ecncrypted data for POST request
 	local ifile, ierr = io.open(Datafile .. '_tmp_dataout.tmp', 'rb')
-	encryptedRequest = ''
-	if not ierr then
+	local encryptedRequest = ''
+	if ifile then
 		encryptedRequest = ifile:read('*all')
 		ifile:close()
 	end
@@ -142,7 +139,7 @@ end
 function processdata(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
-		record = ophaaldata[i]
+		local record = ophaaldata[i]
 		if type(record) == 'table' then
 			--[[
 				"Aansluitingid":153148,
@@ -159,14 +156,13 @@ function processdata(ophaaldata)
 				"WelkAfval":"<p>\r\n\t.</p>\r\n",
 				"WelkAfvalAfbeelding":"713f46f2-eb9b-4069-a7e9-0084a7559adb.png"
 			]]
-			web_garbagetype = record['Omschrijving']
-			web_garbagedate = record['Datum']
+			local web_garbagetype = record['Omschrijving']
+			local web_garbagedate = record['Datum']
 			-- first match for each Type we save the date to capture the first next dates
 			-- get the long description from the JSON data
 			Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
-			local dateformat = '????????'
 			-- Get days diff
-			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+			local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 			if daysdiffdev == nil then
 				Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 			end

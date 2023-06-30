@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_deafvalapp.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_deafvalapp'
 -- Link to WebSite:  http://dataservice.deafvalapp.nl
 --
@@ -12,11 +12,11 @@ chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
 }
 
 -- Start Functions =========================================================================
@@ -24,8 +24,7 @@ chkfields = {
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data
-	Web_Data = genfuncs.perform_webquery('"https://dataservice.deafvalapp.nl/dataservice/DataServiceServlet?service=OPHAALSCHEMA&land=NL&postcode=' .. Zipcode .. '&straatId=0&huisnr=' .. Housenr .. '' .. Housenrsuf .. '"')
+	local Web_Data = genfuncs.perform_webquery('"https://dataservice.deafvalapp.nl/dataservice/DataServiceServlet?service=OPHAALSCHEMA&land=NL&postcode=' .. Zipcode .. '&straatId=0&huisnr=' .. Housenr .. '' .. Housenrsuf .. '"')
 	if Web_Data == '' then
 		Print_logfile('Error Web_Data is empty.')
 		return
@@ -44,7 +43,7 @@ function Perform_Update()
 				i = i + 1
 				-- first match for each Type we save the date to capture the first next dates
 				Print_logfile(i .. '  web_garbagetype:' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
-				dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
+				local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
 				-- When days is 0 or greater the date is today or in the future. Ignore any date in the past
 				if (daysdiffdev >= 0) then
 					garbagedata[#garbagedata + 1] = {}

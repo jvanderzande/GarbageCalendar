@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rmn.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_rmn'
 -- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
 --
@@ -11,11 +11,11 @@ websitemodule = 'm_rmn'
 chkfields = {
 	'Zipcode',
 	'Housenr',
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
 }
 
 -- Start Functions =========================================================================
@@ -24,10 +24,11 @@ chkfields = {
 function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data
 	local thnr = Housenr .. Housenrsuf
 	local refreshToken = ''
 	local idToken = ''
+	local Web_Data = ''
+	local jdata = ''
 
 	-- read previous found refresh token
 	local tokenfilename = datafilepath .. 'garbagecalendar_' .. websitemodule .. '_refresh_token.txt'
@@ -108,7 +109,7 @@ function Perform_Update()
 	--[[
 		Step 2: We can use the IDToken to retrieve a address ID by using the postal code and housenumber
 			curl -H "authorization: _IDTOKEN_" "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/138204213564933597/address?zipcode=1234AB&housenumber=1"
-			[{"addressId":"_ADDRESSID_","zipcode":"1234AB","street":"Xtraat","city":"XCity","housenumber":1,"municipalityId":"XXX","latitude":XXXX,"longitude":XXXX}]
+			[{"addressId":"_ADDRESSID_","zipcode":"1234AB",'Street':"Xtraat","city":"XCity","housenumber":1,"municipalityId":"XXX","latitude":XXXX,"longitude":XXXX}]
 
 	]]
 	Web_Data = genfuncs.perform_webquery(' -X GET -H "Content-Length:0" -H "authorization:' .. idToken .. '" "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/138204213564933597/address?zipcode=' .. Zipcode:upper() .. '&housenumber=' .. thnr .. '"')
@@ -177,17 +178,16 @@ function processdata(ophaaldata)
 			},
 		]]
 	for i = 1, #ophaaldata do
-		record = ophaaldata[i]
+		local record = ophaaldata[i]
 		if type(record) == 'table' then
-			wnameType = record['fraction']
-			web_garbagetype = record['fraction']
-			web_garbagedate = record['collectionDate']
+			local wnameType = record['fraction']
+			local web_garbagetype = record['fraction']
+			local web_garbagedate = record['collectionDate']
 			-- first match for each Type we save the date to capture the first next dates
 			-- get the long description from the JSON data
 			Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
-			local dateformat = '????????'
 			-- Get days diff
-			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+			local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 			if daysdiffdev == nil then
 				Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 			end

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -12,11 +12,11 @@ chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile'
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
 }
 
 -- Start Functions =========================================================================
@@ -25,8 +25,7 @@ chkfields = {
 function Perform_Update()
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data
-	Web_Data = genfuncs.perform_webquery('"https://www.mijnafvalwijzer.nl/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"', false)
+	local Web_Data = genfuncs.perform_webquery('"https://www.mijnafvalwijzer.nl/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"', false)
 	if Web_Data == '' then
 		Print_logfile('Error Web_Data is empty.')
 		return
@@ -55,7 +54,7 @@ function Perform_Update()
 			web_garbagedesc = web_garbagedesc or ''
 			-- first match for each Type we save the date to capture the first next dates
 			--Print_logfile( web_garbagetype,web_garbagedate)
-			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$', {'dd', 'mmm', 'yyyy'})
+			local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '[^%s]+%s+(%d+)%s+([^%s]+)%s-(%d-)$', {'dd', 'mmm', 'yyyy'})
 			-- When days is 0 or greater the date is today or in the future. Ignore any date in the past
 			if (daysdiffdev >= 0) then
 				garbagedata[#garbagedata + 1] = {}

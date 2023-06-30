@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230629-1930'
+	MainScriptVersion = '20230630-1300'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -330,12 +330,14 @@ function gc_main(commandArray, domoticz, batchrun)
 				dofile(websitemodulescript)
 				-- Check whether the required parameters are specified.
 				Print_logfile('>> ========== Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+				chkfields = chkfields or {}
 				local param_err = 0
-				local chkfields = {}
 				for key, value in pairs(chkfields) do
 					if (_G[value] or '') == '' then
 						param_err = param_err + 1
-						Print_logfile('!!! ' .. value .. ' not specified!', 1)
+						Print_logfile('### Error: ' .. value .. ' not specified! Please update your configuration with the correct information for this module', 1)
+					else
+						Print_logfile('--> ' .. value .. '=' .. _G[value])
 					end
 				end
 				-- =======================================================================================
@@ -347,10 +349,13 @@ function gc_main(commandArray, domoticz, batchrun)
 					genfuncs.SortGarbagedata()
 					Print_logfile('=> Write data to ' .. Datafile)
 					table.save(garbagedata, Datafile)
+					return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
 				else
+					Print_logfile('!!! ==============================================', 1)
 					Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
+					Print_logfile('!!! ==============================================', 1)
+					return '', '  - Module ' .. (websitemodule or '') .. ' stopped! Look at ' .. RunLogfile .. ' for more information.'
 				end
-				return '', '  - Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
 			end
 
 			-- run module

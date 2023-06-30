@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230629-1930'
+ver = '20230630-1300'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -12,11 +12,11 @@ chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
-	--	"Housenrsuf",
+	--	'Housenrsuf',
 	'Datafile',
 	'Hostname'
-	--	"Street",
-	--	"Companycode"
+	--	'Street',
+	--	'Companycode'
 }
 
 -- Start Functions =========================================================================
@@ -24,9 +24,8 @@ chkfields = {
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data
 	-- Get the information for the specified address specifically the bagId for the subsequent calls
-	Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. Zipcode .. '-' .. Housenr .. '"')
+	local Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. Zipcode .. '-' .. Housenr .. '"')
 	if Web_Data == '' then
 		return
 	end
@@ -76,9 +75,8 @@ function processdata(ophaaldata)
 				Print_logfile(' Not collected web_garbagetype : ' .. (web_garbagetype or '?????'))
 			else
 				Print_logfile(' web_garbagetype : ' .. web_garbagetype .. '   web_garbagedate:' .. web_garbagedate)
-				local dateformat = '????????'
 				-- Get days diff
-				dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
+				local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'yyyy', 'mm', 'dd'})
 				if daysdiffdev == nil then
 					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 					return
