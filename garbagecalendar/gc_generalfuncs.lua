@@ -1,14 +1,14 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230630-2050'
+MainGenUtilsVersion = '20230630-2130'
 
 local genfuncs = {}
 
 -- Get Domoticz Version used
 function genfuncs.getdomoticzversion()
 	local url = domoticz_url .. '/json.htm?type=command&param=getversion'
-	local sQuery = 'curl  "' .. url .. '"'
+	local sQuery = 'curl --connect-timeout 1 "' .. url .. '"'
 	--Print_logfile(sQuery)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
@@ -28,8 +28,8 @@ function genfuncs.getdomoticzversion()
 		Print_logfile('-> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
 	else
 		Print_logfile('No or Empty response from Domoticz url:' .. url)
-		genfuncs.DomoticzRevision = nil
-		genfuncs.DomoticzVersion = nil
+		genfuncs.DomoticzRevision = -1
+		genfuncs.DomoticzVersion = -1
 	end
 end
 
@@ -69,7 +69,7 @@ function genfuncs.getdeviceiconidx(DeviceIdx)
 
 	--Print_logfile('>> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
 	--Print_logfile('>> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
-	if not genfuncs.DomoticzRevision then
+	if genfuncs.DomoticzRevision < 0 then
 		Print_logfile('Unable to get the domoticz version information...skipping Icon update')
 		return nil, 2
 	end
@@ -179,7 +179,7 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 
 	--Print_logfile('>> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
 	--Print_logfile('>> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
-	if not genfuncs.DomoticzRevision then
+	if genfuncs.DomoticzRevision < 0 then
 		Print_logfile('Unable to get the domoticz version information...skipping Icon update')
 		return nil, 2
 	end
@@ -228,6 +228,11 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 	end
 	if not genfuncs.DomoticzRevision then
 		genfuncs.getdomoticzversion()
+	end
+
+	if genfuncs.DomoticzRevision < 0 then
+		Print_logfile('Unable to get the domoticz version information...skipping Icon update')
+		return
 	end
 
 	if genfuncs.getdeviceiconidx(idx) == iconidx then

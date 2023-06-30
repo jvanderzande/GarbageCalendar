@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230630-2050'
+	MainScriptVersion = '20230630-2130'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -894,11 +894,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- Start of logic ==============================================================================================
 
 	-- check for notification times and run update only when we are at one of these defined times
-	if RunbyDzVents then
-		Print_logfile('-> Start checking garbagetype_cfg table whether an action is needed:')
-	else
-		Print_logfile('-> Time: Start checking garbagetype_cfg table whether an action is needed:')
-	end
+	Print_logfile('-> Start checking garbagetype_cfg table whether an action is needed:')
 	if garbagetype_cfg == nil then
 		Print_logfile('### Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.', 1)
 		return
