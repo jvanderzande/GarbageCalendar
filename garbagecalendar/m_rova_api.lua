@@ -71,7 +71,7 @@ function Perform_Update()
 		return
 	end
 	Print_logfile('- start looping through this year received data -----------------------------------------------------------')
-	processdata(rdataty)
+	processdata(rdataty, rdesc)
 	-- only process nextyear data in case we do not have the requested number of next events
 	if #garbagedata < 10 then
 		-- get the ophaaldagen tabel for next year when needed
@@ -85,13 +85,13 @@ function Perform_Update()
 			else
 				-- get the next number of ShowNextEvents
 				Print_logfile('- start looping through next year received data -----------------------------------------------------------')
-				processdata(rdataly)
+				processdata(rdataly, rdesc)
 			end
 		end
 	end
 end
 
-function processdata(ophaaldata)
+function processdata(ophaaldata, rdesc)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
 		local record = ophaaldata[i]
