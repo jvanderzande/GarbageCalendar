@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230630-2130'
+	MainScriptVersion = '20230701-1000'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -47,7 +47,7 @@ function gc_main(commandArray, domoticz, batchrun)
 
 	genfuncs.DomoticzVersion = nil
 	genfuncs.DomoticzRevision = nil
-	domoticz_url = domoticz_url or 'http://127.0.0.1:8080'
+	DomoticzURL = DomoticzURL or 'http://127.0.0.1:8080'
 
 	---====================================================================================================
 	-- mydebug print
@@ -664,6 +664,7 @@ function gc_main(commandArray, domoticz, batchrun)
 							garbagetype_cfg[web_garbagetype].nextdate = web_garbagedate
 							--print(">>>>"..web_garbagetype)
 							if not FirstGType then
+								-- get the defined icon for the first collected garbagetype
 								FirstGType = web_garbagetype
 								FirstGTypeIcon = garbagetype_cfg[web_garbagetype].icon
 							--print("######:"..(FirstGTypeIcon or "nil"))
@@ -788,18 +789,23 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 
 		-- Check the for the customicon idx for our defined icon in config (if defined)
-		do_iconupdate = true
-		if (FirstGTypeIcon or '') ~= '' then
+		do_iconupdate = false
+		-- only do icon update when icon= is defined in the config.
+		-- when icon='' or not found then reset to default icon
+		if FirstGTypeIcon then
+			do_iconupdate = true
 			Print_logfile('-> FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
-			FirstGTypeIconIdx, ierr = genfuncs.getcustomiconidx(FirstGTypeIcon)
-			if ierr then
-				Print_logfile('##  Icon update stopped with rc:' .. (ierr or '?'))
-				do_iconupdate = nil
+			if (FirstGTypeIcon or '') ~= '' then
+				FirstGTypeIconIdx, ierr = genfuncs.getcustomiconidx(FirstGTypeIcon)
+				if ierr then
+					Print_logfile('##  Icon update stopped with rc:' .. (ierr or '?'))
+					do_iconupdate = false
+				else
+					Print_logfile('>> FirstGTypeIconIdx:' .. (FirstGTypeIconIdx or '?'))
+				end
 			else
-				Print_logfile('>> FirstGTypeIconIdx:' .. (FirstGTypeIconIdx or '?'))
+				FirstGTypeIconIdx = 0
 			end
-		else
-			FirstGTypeIconIdx = 0
 		end
 
 		if do_iconupdate then

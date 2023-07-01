@@ -89,7 +89,7 @@ function notification_event(RunbyDzVents, commandArray, domoticz)
 		end
 
 		--##  setColor(r, g, b, br, cw, ww, m, t)
-		url = domoticz_url .. '/json.htm?type=command&param=setcolbrightnessvalue&idx='..idx
+		url = DomoticzURL .. '/json.htm?type=command&param=setcolbrightnessvalue&idx='..idx
 		if Notify_type == 'gft' then	--green
 			url = url .. '&color={"m":3,"t":0,"r":0,"g":255,"b":0,"cw":0,"ww":0}&brightness=50'
 		elseif Notify_type == 'papier' then --blue
@@ -104,7 +104,7 @@ function notification_event(RunbyDzVents, commandArray, domoticz)
 		commandArray[#commandArray + 1] = {["OpenURL"] = url}
 
 		--## Reset color after xx seconds via URL
-		url = domoticz_url .. '/json.htm?type=command&param=setcolbrightnessvalue&idx='..idx
+		url = DomoticzURL .. '/json.htm?type=command&param=setcolbrightnessvalue&idx='..idx
 		url = url .. '&color={"m":2,"t":0,"r":0,"g":0,"b":0,"cw":0,"ww":255}&brightness=20'
 		url = url .. ' AFTER '..ontime
 		commandArray[#commandArray + 1] = {["OpenURL"] = url}

@@ -3,9 +3,9 @@
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Specify your information here as needed for your needs
 
--- default used for communication to Domoticz for version & Icon updates
--- Ensure that you are aloowed to access Domoticz from 127.0.0.1 without an userid/password!
-domoticz_url    = 'http://127.0.0.1:8080'
+-- Domoticz URL to communicate with Domoticz for version & Icon updates Default http://127.0.0.1:8080
+-- Ensure that you are allowing access to Domoticz from 127.0.0.1 without an userid/password!
+DomoticzURL     = 'http://127.0.0.1:8080'
 myGarbageDevice = '' -- The Text devicename in Domoticz. eg 'Container'
 Zipcode = '' 			-- Your zipcode  eg '1234AB'
 Housenr = '' 			-- Your housnr. eg '99'

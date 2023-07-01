@@ -1,13 +1,13 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230630-2130'
+MainGenUtilsVersion = '20230701-1000'
 
 local genfuncs = {}
 
 -- Get Domoticz Version used
 function genfuncs.getdomoticzversion()
-	local url = domoticz_url .. '/json.htm?type=command&param=getversion'
+	local url = DomoticzURL .. '/json.htm?type=command&param=getversion'
 	local sQuery = 'curl --connect-timeout 1 "' .. url .. '"'
 	--Print_logfile(sQuery)
 	local handle = assert(io.popen(sQuery))
@@ -37,7 +37,7 @@ end
 function genfuncs.addlogmessage(text, level)
 	text = text or 'nil'
 	level = tostring(level) or '1'
-	url = domoticz_url .. '/json.htm?type=command&param=addlogmessage&message=' .. genfuncs.url_encode(text) .. '&level=' .. level
+	url = DomoticzURL .. '/json.htm?type=command&param=addlogmessage&message=' .. genfuncs.url_encode(text) .. '&level=' .. level
 	local sQuery = 'curl -k "' .. url .. '" > /tmp/garbagecalendar_logerrors.log 2>&1 '
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
@@ -75,9 +75,9 @@ function genfuncs.getdeviceiconidx(DeviceIdx)
 	end
 
 	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = domoticz_url .. '/json.htm?type=command&param=getdevices&rid=' .. DeviceIdx
+		url = DomoticzURL .. '/json.htm?type=command&param=getdevices&rid=' .. DeviceIdx
 	else
-		url = domoticz_url .. '/json.htm?type=devices&rid=' .. DeviceIdx
+		url = DomoticzURL .. '/json.htm?type=devices&rid=' .. DeviceIdx
 	end
 	local sQuery = 'curl  "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
@@ -132,11 +132,11 @@ function genfuncs.getcustomiconidx(GTypeIcon)
 
 	if (genfuncs.DomoticzRevision or 0) > 15325 then
 		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
-		url = domoticz_url .. '/json.htm?type=command&param=uploadcustomicon'
+		url = DomoticzURL .. '/json.htm?type=command&param=uploadcustomicon'
 	else
 		--OLD:
 		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
-		url = domoticz_url .. '/uploadcustomicon'
+		url = DomoticzURL .. '/uploadcustomicon'
 	end
 	local sQuery = 'curl -F file="@' .. iconzipfile .. '" "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
@@ -185,9 +185,9 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 	end
 
 	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = domoticz_url .. '/json.htm?type=command&param=custom_light_icons'
+		url = DomoticzURL .. '/json.htm?type=command&param=custom_light_icons'
 	else
-		url = domoticz_url .. '/json.htm?type=custom_light_icons'
+		url = DomoticzURL .. '/json.htm?type=custom_light_icons'
 	end
 	local sQuery = 'curl  "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
@@ -244,9 +244,9 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 	--Print_logfile('>> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
 
 	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = domoticz_url .. '/json.htm?type=command&param=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
+		url = DomoticzURL .. '/json.htm?type=command&param=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
 	else
-		url = domoticz_url .. '/json.htm?type=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
+		url = DomoticzURL .. '/json.htm?type=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
 	end
 	Print_logfile(url)
 	local sQuery = 'curl -k "' .. url .. '"'
