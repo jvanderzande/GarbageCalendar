@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230701-1000'
+	MainScriptVersion = '20230701-1350'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -283,9 +283,9 @@ function gc_main(commandArray, domoticz, batchrun)
 				ifile:close()
 				os.remove(datafilepath .. 'luatest.log')
 				luaversion = Chk_Error:match('[lL][uU][aA]%s*([%d*%.]*)[^\r\n]*') or ''
-				Print_logfile('=> Found LUA version:' .. luaversion .. '   > Lua check output:' .. (Chk_Error or '?'))
+				Print_logfile('  LUA check version:' .. luaversion .. '   > Lua check output:' .. (Chk_Error or '?'))
 			else
-				Print_logfile('Lua check error:' .. (Chk_Error or '?'))
+				Print_logfile('  LUA check error:' .. (Chk_Error or '?'))
 			end
 			-- if the testfile contain this error, it means lua is installed.
 			if luaversion ~= '' then
@@ -297,9 +297,10 @@ function gc_main(commandArray, domoticz, batchrun)
 				end
 				local command = 'lua "' .. GC_scriptpath .. 'gc_main.lua" "GetDataInBatch"'
 				Print_logfile('-> garbagecalendar: Start background webupdate for module ' .. websitemodule, 1)
-				Print_logfile('datafile:' .. Datafile)
-				Print_logfile(command .. ' &')
+				Print_logfile('   datafile:' .. Datafile)
+				Print_logfile('   ' .. command .. ' &')
 				rc = os.execute(command .. ' &')
+
 			else
 				Print_logfile('=> check LUA not found -> Run foreground to use internal LUA.', 1)
 				whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
@@ -352,12 +353,12 @@ function gc_main(commandArray, domoticz, batchrun)
 					genfuncs.SortGarbagedata()
 					Print_logfile('> Write data to ' .. Datafile)
 					table.save(garbagedata, Datafile)
-					return '', '-> Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile .. '. Look at ' .. RunLogfile .. ' for process details.'
+					return '', '-< Module ' .. (websitemodule or '') .. ' done. Saved ' .. (#garbagedata or 0) .. ' records to data file ' .. Datafile
 				else
 					Print_logfile('!!! ==============================================', 1)
 					Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
 					Print_logfile('!!! ==============================================', 1)
-					return '', '-> Module ' .. (websitemodule or '') .. ' stopped! Look at ' .. RunLogfile .. ' for more information.'
+					return '', '-< Module ' .. (websitemodule or '') .. ' stopped! Look at ' .. RunLogfile .. ' for more information.'
 				end
 			end
 
@@ -967,13 +968,15 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 	end
 	-- loop through the table to check event schedule
+	local gcnt = 0
 	for tbl_garbagetype, gtdata in pairs(garbagetype_cfg) do
+		gcnt = gcnt + 1
 		if
 			(timenow.hour == gtdata.hour or timenow.hour == gtdata.hour + gtdata.reminder or --reminder same day
 				timenow.hour == gtdata.hour + gtdata.reminder - 24) and --reminder next day
 				timenow.min == gtdata.min
 		 then
-			Print_logfile('=> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
+			Print_logfile( gcnt .. ' ==> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
 			if tbl_garbagetype == 'reloaddata' then
 				-- perform background data updates
 				GetWebData()
@@ -981,7 +984,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				UpdateDevRun = true
 			end
 		else
-			Print_logfile('-  NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
+			Print_logfile(gcnt .. ' --- NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
 		end
 	end
 	-- Always update when mydebug is enabled
@@ -993,7 +996,10 @@ function gc_main(commandArray, domoticz, batchrun)
 	if UpdateDevRun then
 		Perform_Data_check()
 	else
-		Print_logfile('Scheduled time(s) not reached yet, so nothing to do!')
+		-- Only write this logfilerec when there's nothing to do
+		if not UpdateDataRun then
+			Print_logfile('Scheduled time(s) not reached yet, so nothing to do!')
+		end
 	end
 	-- End of process run
 	Print_logfile('-< ### ' .. RunText .. ' End garbagecalendar script v' .. MainScriptVersion)
