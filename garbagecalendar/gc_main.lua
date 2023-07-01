@@ -644,8 +644,11 @@ function gc_main(commandArray, domoticz, batchrun)
 					if web_garbagedesc == '???' then
 						web_garbagedesc = web_garbagetype
 					end
-					missingrecords = missingrecords .. '   ["' .. web_garbagetype:lower() .. '"]' .. string.rep(' ', 32 - string.len(web_garbagetype)) .. ' ={hour=19,min=02,daysbefore=1,reminder=0,text="' .. web_garbagedesc .. '", icon=""},\n'
-					garbagetype_cfg[web_garbagetype] = {hour = 0, min = 0, daysbefore = 0, reminder = 0, text = 'dummy', icon = ''}
+					if missingrecords == '' then
+						missingrecords = '\n'
+					end
+					missingrecords = missingrecords .. '  ["' .. web_garbagetype:lower() .. '"]' .. string.rep(' ', 10 - string.len(web_garbagetype)) .. ' ={hour=19,min=02,daysbefore=1,reminder=0,text="' .. web_garbagedesc .. '", icon=nil},\n'
+					garbagetype_cfg[web_garbagetype] = {hour = 0, min = 0, daysbefore = 0, reminder = 0, text = 'dummy'}
 					garbagetype_cfg[web_garbagetype].text = web_garbagetype
 					garbagetype_cfg[web_garbagetype].missing = true
 				end
@@ -667,7 +670,7 @@ function gc_main(commandArray, domoticz, batchrun)
 								-- get the defined icon for the first collected garbagetype
 								FirstGType = web_garbagetype
 								FirstGTypeIcon = garbagetype_cfg[web_garbagetype].icon
-							--print("######:"..(FirstGTypeIcon or "nil"))
+								Print_logfile('> first type:' .. FirstGType .. ' Icon:"' .. (FirstGTypeIcon or 'nil') .. '"')
 							end
 							-- get the long description from the JSON data
 							if garbagetype_cfg[web_garbagetype].active ~= 'on' then
@@ -770,7 +773,7 @@ function gc_main(commandArray, domoticz, batchrun)
 		Print_logfile('-< End data loop')
 		if missingrecords ~= '' then
 			Print_logfile('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!', 1)
-			Print_logfile('#!# -- start -- Add these records into the garbagetype_cfg table and adapt the schedule and text info to your needs :', 1)
+			Print_logfile('#!# Add these records into the garbagetype_cfg table and adapt the schedule, text and icon info to your needs:', 1)
 			Print_logfile(missingrecords, 1, 0)
 			Print_logfile('#!# -- end ----------------------------')
 		end
