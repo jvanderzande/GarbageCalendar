@@ -1,8 +1,9 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_csv_file.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230620-1630'
+ver = '20230630-1600'
 websitemodule = 'm_csv_file'
+
 --[[
 This module requires an inputfile defined by this variable in the configfile:
 input_csv_file = "garbagecalendar/garbage_input.csv"
@@ -19,13 +20,23 @@ garbagedate;garbagetype
 4-10-2020;GFT
 5-10-2020;Rest
 --]]
+-- =======================================================================================
+-- Check required fields for this module. The script will end when one is missing.
+-- =======================================================================================
+chkfields = {
+	'websitemodule',
+	--	"Zipcode",
+	--	"Housenr",
+	--	'Housenrsuf',
+	'Datafile'
+	--	'Hostname',
+	--	'Street',
+	--	'Companycode'
+}
 -- Start Functions =========================================================================
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
-	local txt = ''
-	local txtcnt = 0
-	--
 	Print_logfile('---- check garbage_input.csv ----------------------------------------------------------------------------')
 	if (genfuncs.exists(input_csv_file)) then
 		Print_logfile('input File ' .. input_csv_file .. ' found, check access.')
@@ -45,9 +56,9 @@ function Perform_Update()
 	end
 
 	Print_logfile('---- Open garbage_input.csv ----------------------------------------------------------------------------')
-	ifile, err = io.open(input_csv_file, 'r')
+	local ifile, err = io.open(input_csv_file, 'r')
 	local Web_Data = ''
-	if not err then
+	if ifile then
 		Web_Data = ifile:read('*all')
 		ifile:close()
 	end
@@ -60,80 +71,26 @@ function Perform_Update()
 	Print_logfile(Web_Data)
 	Print_logfile('---- end web data ------------------------------------------------------------------------')
 	-- Process received webdata.
-	local web_garbagetype = ''
-	local web_garbagetype_date = ''
-	local web_garbagetype_changed = ''
 	local i = 0
-	local pickuptimes = {}
 	-- loop through returned result
-	i = 0
 	Print_logfile('- start looping through received data ----------------------------------------------------')
 	for web_garbagedate, web_garbagetype in string.gmatch(Web_Data, '([^;\r\n]+);([^\r\n;]+)') do
 		i = i + 1
 		Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
 		if web_garbagetype ~= nil and web_garbagedate ~= nil and web_garbagedate ~= 'garbagedate' then
-			web_garbagedesc = web_garbagedesc or ''
 			-- first match for each Type we save the date to capture the first next dates
 			--Print_logfile( web_garbagetype,web_garbagedate)
-			dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
+			local dateformat, daysdiffdev = genfuncs.GetDateFromInput(web_garbagedate, '(%d+)[-%s]+(%d+)[-%s]+(%d+)', {'dd', 'mm', 'yyyy'})
 			-- When days is 0 or greater the date is today or in the future. Ignore any date in the past
 			if (daysdiffdev >= 0) then
-				pickuptimes[#pickuptimes + 1] = {}
-				pickuptimes[#pickuptimes].garbagetype = web_garbagetype
-				pickuptimes[#pickuptimes].garbagedate = dateformat
-				pickuptimes[#pickuptimes].diff = daysdiffdev
-				-- field to be used when Web_Data contains a description
-				pickuptimes[#pickuptimes].wdesc = web_garbagedesc
-			end
-		end
-	end
-	Print_logfile('- Sorting records.')
-	local eventcnt = 0
-	for x = 0, 60, 1 do
-		for mom in pairs(pickuptimes) do
-			if pickuptimes[mom].diff == x then
 				garbagedata[#garbagedata + 1] = {}
-				garbagedata[#garbagedata].garbagetype = pickuptimes[mom].garbagetype
-				garbagedata[#garbagedata].garbagedate = pickuptimes[mom].garbagedate
+				garbagedata[#garbagedata].garbagetype = web_garbagetype
+				garbagedata[#garbagedata].garbagedate = dateformat
+				garbagedata[#garbagedata].diff = daysdiffdev
 				-- field to be used when Web_Data contains a description
-				garbagedata[#garbagedata].wdesc = pickuptimes[mom].wdesc
+				-- garbagedata[#garbagedata].wdesc = web_garbagedesc
 			end
 		end
 	end
 end
-
 -- End Functions =========================================================================
-
--- Start of logic ========================================================================
-
--- =======================================================================================
--- Check required fields for this module. The script will end when one is missing.
--- =======================================================================================
-local chkfields = {'websitemodule',
-	--	"Zipcode",
-	--	"Housenr",
-	--	"Housenrsuf",
-	'Datafile',
-	--	"Hostname",
-	--	"Street",
-	--	"Companycode"
-}
-local param_err = 0
--- Check whether the required parameters are specified.
-for key, value in pairs(chkfields) do
-	if (_G[value] or '') == '' then
-		param_err = param_err + 1
-		Print_logfile('!!! ' .. value .. ' not specified!', 1)
-	end
-end
--- =======================================================================================
--- Get the web info when all required parameters are defined
--- =======================================================================================
-if param_err == 0 then
-	Print_logfile('!!! perform web data update to ' .. Datafile .. ' for Zipcode ' .. Zipcode .. ' - ' .. Housenr .. Housenrsuf)
-	Perform_Update()
-	Print_logfile('=> Write data to ' .. Datafile)
-	table.save(garbagedata, Datafile)
-else
-	Print_logfile('!!! Webupdate cancelled due to missing parameters!', 1)
-end

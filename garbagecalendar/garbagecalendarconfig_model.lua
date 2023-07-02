@@ -2,6 +2,10 @@
 -- garbagecalendarconfig.lua
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Specify your information here as needed for your needs
+
+-- Domoticz URL to communicate with Domoticz for version & Icon updates Default http://127.0.0.1:8080
+-- Ensure that you are allowing access to Domoticz from 127.0.0.1 without an userid/password!
+DomoticzURL     = 'http://127.0.0.1:8080'
 myGarbageDevice = '' -- The Text devicename in Domoticz. eg 'Container'
 Zipcode = '' 			-- Your zipcode  eg '1234AB'
 Housenr = '' 			-- Your housnr. eg '99'
@@ -61,17 +65,18 @@ testnotification = false   -- trigger a test notification each run for the first
 --    sdesc = short garbage type description from Website  eg pmd
 --    ldesc = long garbage type description from Website when available, will be replaced by table description when not
 --    tdesc = Use the description available in the table text field
-textformat = 'tdesc: wd dd mmm'
+--textformat = 'tdesc: wd dd mmm'
+textformat = 'wd dd mmm: tdesc'
 -- One can also add some html formatting formating to the output when the used interface supports that:eg:
 --    textformat = '<font color="red" size=1>tdesc: wd dd mmm</font>'
 
 -- ### define  what to show in the domoticz text device
 -- !!! ShowSinglePerType will be forced to false when Combine_Garbage_perDay = true
-ShowSinglePerType = false -- (default) false => show multiple occurrences of a garbagetype (default)
--- true  => show one the next occurrence for a unique garbagetype
-ShowNextEvents = 3 -- indicate the next x eventlines to show in the TEXT Sensor in Domoticz
-Combine_Garbage_perDay = false -- (default) false will show each garbagetype on its own line
--- true will show multiple garbagetype on a single line when collected the same day
+ShowSinglePerType = false        -- (default) false => show multiple occurrences of a garbagetype (default)
+--                               --	          true  => show one the next occurrence for a unique garbagetype
+ShowNextEvents = 3               -- indicate the next x eventlines to show in the TEXT Sensor in Domoticz
+Combine_Garbage_perDay = false   -- (default) false will show each garbagetype on its own line
+--                               --            true will show multiple garbagetype on a single line when collected the same day
 
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Configuration for the Notificaton system:
@@ -88,12 +93,12 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 NotificationEmailAdress = {'', ''} -- Specify multiple Email Addresses for the notifications. Leave empty to skip email notification
 Notificationsystem = '' -- Specify notification system eg "telegram/pushover/gcm/http/kodi/lms/nma/prowl/pushalot/pushbullet/pushsafer" leave empty to skip
 
--- Specify personal notification script/command eg:  lua sendmessage.lua "@TEXT@"  (where @TEXT@ will be replaced by the notification text.)
---Notificationscript = 'lua /home/pi/domoticz/scripts/lua/garbage_notification.lua Beide "@TEXT@" "@REMINDER@" > /tmp/garbage_notification.log 2>&1 '  -- Specify personal notification script/command eg:  lua sendmessage.lua
+-- Specify external personal notification script/command (Shelled async)
+--Notificationscript = 'lua /home/pi/domoticz/scripts/lua/garbagecalendar/notification_external_script.lua "@GARBAGETYPE@" > /tmp/GC_Notify.log 2> /tmp/GC_Notify.log'
 
 -- Specify personal notification event script
 -- This example is provided and will work in DzVents and regular Lua Time Events
-EventNotificationscript = 'notification_event_script.lua' -- Specify personal notification script event eg: my_event_script.lua  (This needs to be placed in the GarbageCalendar directory together with the modules)
+-- EventNotificationscript = 'notification_event_script.lua' -- Specify personal notification script event eg: my_event_script.lua  (This needs to be placed in the GarbageCalendar directory together with the modules)
 
 -- Supported variables for Title and Body
 -- @DAY@         ==> Will be replaced by notificationtoday; notificationtomorrow; notificationlonger depending on the days difference.
@@ -114,13 +119,13 @@ notificationlonger = 'over @DAYS@ dagen'
 notificationdate = 'wd dd mmmm yyyy' -- @GARBAGEDATE@ format -> Options are the same as available for textformat date options
 
 --### English example
---~ notificationreminder = ' (reminder)'
---~ notificationtitle    = 'GarbageCalendar: @GARBAGETEXT@ will be picked up in @DAY@!'
---~ notificationtext     = 'Put the @GARBAGETEXT@ out as it will be picked up @DAY@.!@REMINDER@'
---~ notificationtoday    = 'today'
---~ notificationtomorrow = 'tomorrow'
---~ notificationlonger   = 'in @DAYS@ days'
---~ notificationdate     = 'wd dd mmmm yyyy'      -- Options are the same as available for textformat date options
+-- notificationreminder = ' (reminder)'
+-- notificationtitle    = 'GarbageCalendar: @GARBAGETEXT@ will be picked up in @DAY@!'
+-- notificationtext     = 'Put the @GARBAGETEXT@ out as it will be picked up @DAY@.!@REMINDER@'
+-- notificationtoday    = 'today'
+-- notificationtomorrow = 'tomorrow'
+-- notificationlonger   = 'in @DAYS@ days'
+-- notificationdate     = 'wd dd mmmm yyyy'      -- Options are the same as available for textformat date options
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Configuration for the generation of an ics file:
 -- IcalDesc:
@@ -149,14 +154,14 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 
 garbagetype_cfg = {
 	-- Add any missing records below this line -----------------------------------------------------
-	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'plastic bak', icon = 'garbagecalendar_yellow'},
-	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'groene bak', icon = 'garbagecalendar_green'},
-	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'blauwe bak', icon = 'garbagecalendar_blue'},
-	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 0, text = 'grijze bak', icon = 'garbagecalendar_grey'},
+	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = 'garbagecalendar_yellow'},
+	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'groene bak', icon = 'garbagecalendar_green'},
+	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'blauwe bak', icon = 'garbagecalendar_blue'},
+	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'grijze bak', icon = 'garbagecalendar_grey'},
 	-- Add any missing records above this line -----------------------------------------------------
 	--  "reloaddata" is used to start the background update process at this given time.
 	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},
-	['dummy'] = {hour = 02, min = 31, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice after Webupdate ran'}
+	['dummy'] = {hour = 04, min = 01, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice early morning'}
 }
 
 ------------------------------------------------------------------------------------------------------------------------------------
@@ -173,10 +178,10 @@ InputMonth = {jan = 1, feb = 2, mrt = 3, maa = 3, apr = 4, mei = 5, jun = 6, jul
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Language options English
 -- Date/day info:
---~ daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
---~ Longdaysoftheweek={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"}
---~ ShortMonth={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
---~ LongMonth={"January","February","March","April","May","June","July","August","September","October","November","December"}
+--daysoftheweek={"Sun","Mon","Tue","Wed","Thu","Fri","Sat"}
+--Longdaysoftheweek={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"}
+--ShortMonth={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
+--LongMonth={"January","February","March","April","May","June","July","August","September","October","November","December"}
 -- Used to translate the month abbreviation back to the month number. Can contain multiple options for abbreviations.
 -- Adapt when your GarbageCollector is using different abbreviations.
---~ InputMonth={jan = 1, feb = 2, mar = 3, apr = 4, may = 5, jun = 6, jul = 7, aug = 8, sep = 9, oct = 10, nov = 11, dec = 12}
+--InputMonth={jan = 1, feb = 2, mar = 3, apr = 4, may = 5, jun = 6, jul = 7, aug = 8, sep = 9, oct = 10, nov = 11, dec = 12}
