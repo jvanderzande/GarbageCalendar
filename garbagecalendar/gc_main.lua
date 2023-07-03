@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230703-2110'
+	MainScriptVersion = '20230703-2300'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -270,7 +270,7 @@ function gc_main(commandArray, domoticz, batchrun)
 		-- Modules variables
 		UpdateDataRun = true
 		Companycode = (Companycode or Hostname) -- Left Hostname alternative in there for backwards compatibility as that was initially used.
-
+		Hostname = genfuncs.Hostname_strip(Hostname)
 		-- Update Now or in the BackGround to avoid slowdown of the Domoticz event process
 		if ((whenrun or '') ~= 'now') then
 			-- Test if lua is installed, if so submit backgrond task to update the Datafile to relieve the event system
