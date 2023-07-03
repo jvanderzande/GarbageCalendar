@@ -152,6 +152,21 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 -- The "reloaddata" entry is required to run the background process to update the data one time per day.
 -- The "dummy" entry can be used to force reading the data, update the Domoticz text device and see if there are any errors or missing garbadge types.
 
+-- Without updating the Text device ICON:
+garbagetype_cfg = {
+	-- Add any missing records below this line -----------------------------------------------------
+	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = nil},
+	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'groene bak', icon = nil},
+	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'blauwe bak', icon = nil},
+	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'grijze bak', icon = nil},
+	-- Add any missing records above this line -----------------------------------------------------
+	--  "reloaddata" is used to start the background update process at this given time.
+	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},
+	['dummy'] = {hour = 04, min = 01, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice early morning'}
+}
+
+--[[
+-- Also update the Text device ICON to your preference:
 garbagetype_cfg = {
 	-- Add any missing records below this line -----------------------------------------------------
 	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = 'garbagecalendar_yellow'},
@@ -163,7 +178,7 @@ garbagetype_cfg = {
 	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},
 	['dummy'] = {hour = 04, min = 01, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice early morning'}
 }
-
+]]
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Taal opties Nederlands
 -- Datum / dag informatie:
