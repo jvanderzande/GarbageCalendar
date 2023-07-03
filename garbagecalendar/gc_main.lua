@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230701-1350'
+	MainScriptVersion = '20230703-2100'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -823,15 +823,16 @@ function gc_main(commandArray, domoticz, batchrun)
 				if domoticz.devices(myGarbageDevice).idx == nil then
 					Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
 				else
+					-- update the domoticz device text & icon
+					domoticz.devices(myGarbageDevice).updateText(devtxt)
+					-- update the domoticz device icon
+					genfuncs.setdeviceicon(domoticz.devices(myGarbageDevice).idx, myGarbageDevice, FirstGTypeIconIdx, domoticz.devices(myGarbageDevice).idx)
 					if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
 						Print_logfile('> Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
 					else
 						Print_logfile('> No updated text for TxtDevice.')
 					end
 				end
-				-- update the domoticz device text & icon
-				domoticz.devices(myGarbageDevice).updateText(devtxt)
-				domoticz.devices(myGarbageDevice).setIcon(FirstGTypeIconIdx)
 			else
 				if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
 					Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
