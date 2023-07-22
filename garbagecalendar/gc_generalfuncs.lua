@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230703-2300'
+MainGenUtilsVersion = '20230722-1050'
 
 local genfuncs = {}
 
@@ -12,6 +12,7 @@ function genfuncs.getdomoticzversion()
 	--Print_logfile(sQuery)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
+	handle:close()
 	Print_logfile('Get domoticz version information:' .. url)
 	if Web_Data and Web_Data ~= '' then
 		Print_logfile('result:' .. Web_Data:gsub('[\r\n\t]', ''))
@@ -82,6 +83,8 @@ function genfuncs.getdeviceiconidx(DeviceIdx)
 	local sQuery = 'curl  "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
+	handle:close()
+
 	Print_logfile('Get current device info:' .. (url or '?'), 0)
 	Print_logfile('result:' .. (Web_Data:gsub('[\r\n\t]', '') or '?'), 0)
 
@@ -141,6 +144,8 @@ function genfuncs.getcustomiconidx(GTypeIcon)
 	local sQuery = 'curl -F file="@' .. iconzipfile .. '" "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
+	handle:close()
+
 	Print_logfile('sQuery:' .. (sQuery or ''))
 	-- Check if upload was successfull
 	if Web_Data ~= nil then
@@ -192,6 +197,8 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 	local sQuery = 'curl  "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
+	handle:close()
+
 	Print_logfile('Get available custom icons:' .. (url or '?'), 0)
 	Print_logfile('result:' .. (Web_Data:gsub('[\r\n\t]', '') or '?'), 0)
 

@@ -112,7 +112,7 @@ Notificationsystem = '' -- Specify notification system eg "telegram/pushover/gcm
 -- Define how the title and bodytext should look
 notificationreminder = ' (herinnering)'
 notificationtitle = 'GarbageCalendar: @DAY@ de @GARBAGETEXT@ aan de weg zetten!'
-notificationtext = '@GARBAGETEXT@ wordt @DAY@ opgehaald!@REMINDER@'
+notificationtext = '@GARBAGETEXT@ wordt @DAY@ opgehaald!@REMINDER@\nOphaal datum is @GARBAGEDATE@'
 notificationtoday = 'vandaag'
 notificationtomorrow = 'morgen'
 notificationlonger = 'over @DAYS@ dagen'
@@ -155,30 +155,17 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 -- Without updating the Text device ICON:
 garbagetype_cfg = {
 	-- Add any missing records below this line -----------------------------------------------------
-	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = nil},
-	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'groene bak', icon = nil},
-	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'blauwe bak', icon = nil},
-	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'grijze bak', icon = nil},
+	-- ['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = nil},
+	-- ['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = 'garbagecalendar_yellow'},
+	-- ['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'groene bak', icon = nil},
+	-- ['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'blauwe bak', icon = nil},
+	-- ['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'grijze bak', icon = nil},
 	-- Add any missing records above this line -----------------------------------------------------
 	--  "reloaddata" is used to start the background update process at this given time.
 	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},
 	['dummy'] = {hour = 04, min = 01, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice early morning'}
 }
 
---[[
--- Also update the Text device ICON to your preference:
-garbagetype_cfg = {
-	-- Add any missing records below this line -----------------------------------------------------
-	['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = 'garbagecalendar_yellow'},
-	['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'groene bak', icon = 'garbagecalendar_green'},
-	['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'blauwe bak', icon = 'garbagecalendar_blue'},
-	['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'grijze bak', icon = 'garbagecalendar_grey'},
-	-- Add any missing records above this line -----------------------------------------------------
-	--  "reloaddata" is used to start the background update process at this given time.
-	['reloaddata'] = {hour = 02, min = 30, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into garbagecalendar.data'},
-	['dummy'] = {hour = 04, min = 01, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice early morning'}
-}
-]]
 ------------------------------------------------------------------------------------------------------------------------------------
 -- Taal opties Nederlands
 -- Datum / dag informatie:
