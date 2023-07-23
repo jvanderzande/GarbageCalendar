@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230722-1050'
+	MainScriptVersion = '20230723-1040'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -45,6 +45,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	genfuncs = {}
 	param = {}
 
+	genfuncs.DomoticzBuildDate = nil
 	genfuncs.DomoticzVersion = nil
 	genfuncs.DomoticzRevision = nil
 	DomoticzURL = DomoticzURL or 'http://127.0.0.1:8080'

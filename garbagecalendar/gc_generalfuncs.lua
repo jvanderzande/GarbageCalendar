@@ -1,10 +1,11 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230722-1050'
+MainGenUtilsVersion = '20230723-1040'
 
 local genfuncs = {}
 
+-- 15326	20230601	Webserver	Merge PR 5697 Refactor/webserversimplification
 -- Get Domoticz Version used
 function genfuncs.getdomoticzversion()
 	local url = DomoticzURL .. '/json.htm?type=command&param=getversion'
@@ -21,17 +22,24 @@ function genfuncs.getdomoticzversion()
 		if decoded_response and decoded_response['Revision'] then
 			genfuncs.DomoticzRevision = (decoded_response['Revision'] or 0)
 			genfuncs.DomoticzVersion = (decoded_response['version'] or 0)
+			-- build_time: "2023-06-18 14:39:26" convert to number 20230618 to allow for comparing
+			genfuncs.DomoticzBuildDate = (decoded_response['build_time'] or 0)
+			genfuncs.DomoticzBuildDate = genfuncs.DomoticzBuildDate:gsub("(%d+)%-(%d+)%-(%d+).*","%1%2%3")
+			genfuncs.DomoticzBuildDate = tonumber(genfuncs.DomoticzBuildDate or 0)
 		else
 			genfuncs.DomoticzRevision = 0
 			genfuncs.DomoticzVersion = 0
+			genfuncs.DomoticzBuildDate = 0
 		end
-		Print_logfile('-> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
-		Print_logfile('-> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
 	else
 		Print_logfile('No or Empty response from Domoticz url:' .. url)
 		genfuncs.DomoticzRevision = -1
 		genfuncs.DomoticzVersion = -1
+		genfuncs.DomoticzBuildDate = -1
 	end
+	Print_logfile('-> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
+	Print_logfile('-> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
+	Print_logfile('-> DomoticzBuildDate ' .. (genfuncs.DomoticzBuildDate or 'nil'))
 end
 
 -- addlogmessage function sends messages to Domoticz log
@@ -63,22 +71,21 @@ function genfuncs.getdeviceiconidx(DeviceIdx)
 		return nil
 	end
 
-	-- Get Version/Revision info when not done yet
-	if not genfuncs.DomoticzRevision then
+	-- Get Version/Revision/Builddate info when not done yet
+	if not genfuncs.DomoticzBuildDate then
 		genfuncs.getdomoticzversion()
 	end
 
-	--Print_logfile('>> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
-	--Print_logfile('>> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
-	if genfuncs.DomoticzRevision < 0 then
+	-- No response?
+	if genfuncs.DomoticzBuildDate < 0 then
 		Print_logfile('Unable to get the domoticz version information...skipping Icon update')
 		return nil, 2
 	end
 
-	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = DomoticzURL .. '/json.htm?type=command&param=getdevices&rid=' .. DeviceIdx
-	else
+	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
 		url = DomoticzURL .. '/json.htm?type=devices&rid=' .. DeviceIdx
+	else
+		url = DomoticzURL .. '/json.htm?type=command&param=getdevices&rid=' .. DeviceIdx
 	end
 	local sQuery = 'curl  "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
@@ -133,13 +140,13 @@ function genfuncs.getcustomiconidx(GTypeIcon)
 	Print_logfile('>! ' .. GTypeIcon .. ' not found in Domoticz custom icons')
 	Print_logfile('>> Trying to upload the found default:' .. iconzipfile)
 
-	if (genfuncs.DomoticzRevision or 0) > 15325 then
+	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
+		url = DomoticzURL .. '/uploadcustomicon'
+		--OLD:
+		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/uploadcustomicon
+	else
 		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
 		url = DomoticzURL .. '/json.htm?type=command&param=uploadcustomicon'
-	else
-		--OLD:
-		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
-		url = DomoticzURL .. '/uploadcustomicon'
 	end
 	local sQuery = 'curl -F file="@' .. iconzipfile .. '" "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
@@ -177,22 +184,20 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 		return nil, 1
 	end
 
-	-- Get Version/Revision info when not done yet
-	if not genfuncs.DomoticzRevision then
+	-- Get Domoticz Builddate when unknown
+	if not genfuncs.DomoticzBuildDate then
 		genfuncs.getdomoticzversion()
 	end
 
-	--Print_logfile('>> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
-	--Print_logfile('>> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
-	if genfuncs.DomoticzRevision < 0 then
+	if genfuncs.DomoticzBuildDate < 0 then
 		Print_logfile('Unable to get the domoticz version information...skipping Icon update')
 		return nil, 2
 	end
 
-	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = DomoticzURL .. '/json.htm?type=command&param=custom_light_icons'
-	else
+	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
 		url = DomoticzURL .. '/json.htm?type=custom_light_icons'
+	else
+		url = DomoticzURL .. '/json.htm?type=command&param=custom_light_icons'
 	end
 	local sQuery = 'curl  "' .. url .. '"'
 	local handle = assert(io.popen(sQuery))
@@ -233,11 +238,12 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 		Print_logfile('!! Icon not update, idx = nil')
 		return
 	end
-	if not genfuncs.DomoticzRevision then
+
+	if not genfuncs.DomoticzBuildDate then
 		genfuncs.getdomoticzversion()
 	end
 
-	if genfuncs.DomoticzRevision < 0 then
+	if genfuncs.DomoticzBuildDate < 0 then
 		Print_logfile('Unable to get the domoticz version information...skipping Icon update')
 		return
 	end
@@ -247,13 +253,14 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 		return
 	end
 
-	--Print_logfile('>> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
-	--Print_logfile('>> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
+	--Print_logfile('>> DomoticzVersion   ' .. (genfuncs.DomoticzVersion or 'nil'))
+	--Print_logfile('>> DomoticzRevision  ' .. (genfuncs.DomoticzRevision or 'nil'))
+	--Print_logfile('>> DomoticzBuildDate ' .. (genfuncs.DomoticzBuildDate or 'nil'))
 
-	if (genfuncs.DomoticzRevision or 0) > 15325 then
-		url = DomoticzURL .. '/json.htm?type=command&param=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
-	else
+	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
 		url = DomoticzURL .. '/json.htm?type=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
+	else
+		url = DomoticzURL .. '/json.htm?type=command&param=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
 	end
 	Print_logfile(url)
 	local sQuery = 'curl -k "' .. url .. '"'
