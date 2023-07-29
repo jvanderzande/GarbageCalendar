@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230723-1040'
+	MainScriptVersion = '20230729-1430'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -301,7 +301,6 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile('   datafile:' .. Datafile)
 				Print_logfile('   ' .. command .. ' &')
 				rc = os.execute(command .. ' &')
-
 			else
 				Print_logfile('=> check LUA not found -> Run foreground to use internal LUA.', 1)
 				whenrun = 'now' -- perform the update in the foreground with the domoticz LUA implementation
@@ -813,41 +812,48 @@ function gc_main(commandArray, domoticz, batchrun)
 			end
 		end
 
-		if do_iconupdate then
-			FirstGTypeIconIdx = FirstGTypeIconIdx or 0
-			if FirstGTypeIconIdx == 0 then
-				Print_logfile('>> FirstGTypeIcon "' .. (FirstGTypeIcon or '?') .. '" not found so settting textdevice to DefaultTextIcon:0')
+		if RunbyDzVents then
+			if domoticz.devices(myGarbageDevice).idx == nil then
+				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
 			else
-				Print_logfile('>> Set textdevice to FirstGTypeIcon:' .. (FirstGTypeIcon or '?') .. '=>' .. FirstGTypeIconIdx)
-			end
-			if RunbyDzVents then
-				if domoticz.devices(myGarbageDevice).idx == nil then
-					Print_logfile("### Error: Couldn't get the current data of Domoticz text device: " .. myGarbageDevice)
+				-- update the domoticz device text & icon
+				domoticz.devices(myGarbageDevice).updateText(devtxt)
+				if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
+					Print_logfile('> Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
 				else
-					-- update the domoticz device text & icon
-					domoticz.devices(myGarbageDevice).updateText(devtxt)
+					Print_logfile('> No updated text for TxtDevice.')
+				end
+				if do_iconupdate then
+					FirstGTypeIconIdx = FirstGTypeIconIdx or 0
+					if FirstGTypeIconIdx == 0 then
+						Print_logfile('>> FirstGTypeIcon "' .. (FirstGTypeIcon or '?') .. '" not found so settting textdevice to DefaultTextIcon:0')
+					else
+						Print_logfile('>> Set textdevice to FirstGTypeIcon:' .. (FirstGTypeIcon or '?') .. '=>' .. FirstGTypeIconIdx)
+					end
 					-- update the domoticz device icon
 					genfuncs.setdeviceicon(domoticz.devices(myGarbageDevice).idx, myGarbageDevice, FirstGTypeIconIdx, domoticz.devices(myGarbageDevice).idx)
-					if (domoticz.devices(myGarbageDevice).text ~= devtxt) then
-						Print_logfile('> Update device from: \n' .. domoticz.devices(myGarbageDevice).text .. '\n replace with:\n' .. devtxt)
-					else
-						Print_logfile('> No updated text for TxtDevice.')
-					end
 				end
+			end
+		else
+			if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
+				Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
 			else
-				if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
-					Print_logfile("### Error: Couldn't get the current data from Domoticz text device " .. myGarbageDevice)
+				-- update the domoticz device text
+				commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
+				if (otherdevices[myGarbageDevice] ~= devtxt) then
+					Print_logfile('> Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
 				else
-					-- update the domoticz device text
-					commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt
+					Print_logfile('> No updated text for TxtDevice.')
+				end
+				if do_iconupdate then
+					FirstGTypeIconIdx = FirstGTypeIconIdx or 0
+					if FirstGTypeIconIdx == 0 then
+						Print_logfile('>> FirstGTypeIcon "' .. (FirstGTypeIcon or '?') .. '" not found so settting textdevice to DefaultTextIcon:0')
+					else
+						Print_logfile('>> Set textdevice to FirstGTypeIcon:' .. (FirstGTypeIcon or '?') .. '=>' .. FirstGTypeIconIdx)
+					end
 					-- update the domoticz device icon
 					genfuncs.setdeviceicon(otherdevices_idx[myGarbageDevice], myGarbageDevice, FirstGTypeIconIdx)
-
-					if (otherdevices[myGarbageDevice] ~= devtxt) then
-						Print_logfile('> Update device from: \n' .. otherdevices[myGarbageDevice] .. '\n replace with:\n' .. devtxt)
-					else
-						Print_logfile('> No updated text for TxtDevice.')
-					end
 				end
 			end
 		end
@@ -978,7 +984,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				timenow.hour == gtdata.hour + gtdata.reminder - 24) and --reminder next day
 				timenow.min == gtdata.min
 		 then
-			Print_logfile( gcnt .. ' ==> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
+			Print_logfile(gcnt .. ' ==> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
 			if tbl_garbagetype == 'reloaddata' then
 				-- perform background data updates
 				GetWebData()
