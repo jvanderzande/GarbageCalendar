@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230731-1100'
+	MainScriptVersion = '20230731-1130'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -984,7 +984,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				timenow.hour == gtdata.hour + gtdata.reminder - 24) and --reminder next day
 				timenow.min == gtdata.min
 		 then
-			Print_logfile(gcnt .. ' ==> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
+			Print_logfile(gcnt .. ' ==> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype) .. '  active=' .. (gtdata.active or '??') .. '  reminder=' .. (gtdata.reminder or '??'))
 			if tbl_garbagetype == 'reloaddata' then
 				-- perform background data updates
 				GetWebData()
@@ -992,7 +992,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				UpdateDevRun = true
 			end
 		else
-			Print_logfile(gcnt .. ' --- NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype))
+			Print_logfile(gcnt .. ' --- NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype) .. '  active=' .. (gtdata.active or '??') .. '  reminder=' .. (gtdata.reminder or '??'))
 		end
 	end
 	-- Always update when mydebug is enabled
