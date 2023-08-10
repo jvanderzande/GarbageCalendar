@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230731-1130'
+	MainScriptVersion = '20230810-2310'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -519,7 +519,10 @@ function gc_main(commandArray, domoticz, batchrun)
 					-- User event script function to capture any errors seperately
 					function run_notification_event(RunbyDzVents, commandArray, domoticz)
 						dofile(GC_scriptpath .. '' .. EventNotificationscript)
-						Notification_Event(RunbyDzVents, commandArray, domoticz)
+						-- Run the Notification_Event function when it exists
+						if Notification_Event then
+							Notification_Event(RunbyDzVents, commandArray, domoticz)
+						end
 					end
 
 					-- run the extra function

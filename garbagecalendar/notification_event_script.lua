@@ -1,4 +1,4 @@
-function notification_event(RunbyDzVents, commandArray, domoticz)
+function Notification_Event(RunbyDzVents, commandArray, domoticz)
 	-----------------------------------------------------------------------------------------------------------------
 	-- garbagecalendar notification script
 	-- Example script which will Switch a light on with specified color in case of a garbagecalendar notification
