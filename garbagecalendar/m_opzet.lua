@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20230811-0900'
 websitemodule = 'm_opzet'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -47,7 +47,7 @@ function Perform_Update()
 	]]
 	Web_Data = Web_Data:match("let adres = '(.-)'")
 	if Web_Data == nil or Web_Data == '' then
-		print('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
+		Print_logfile('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
 		return
 	end
 	Print_logfile('---- web data stripped -------------------------------------------------------------------')

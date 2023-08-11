@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20230811-0900'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -36,7 +36,7 @@ function Perform_Update()
 	-- Retrieve part with the dates for pickup
 	Web_Data = Web_Data:match('.-class="ophaaldagen">(.-)<div id="calendarMessage"')
 	if Web_Data == nil or Web_Data == '' then
-		print('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
+		Print_logfile('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
 		return
 	end
 	Web_Data = Web_Data:gsub('%s+', ' ')

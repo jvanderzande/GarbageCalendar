@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer_API.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20230811-0900'
 websitemodule = 'm_mijnafvalwijzer_API'
 -- Link to WebSite: https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=1234AB&street=&huisnummer=1&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=2021-01-01&version=58&langs=nl
 --
@@ -66,7 +66,7 @@ function Perform_Update()
 		-- get the ophaaldagen tabel for next year when needed
 		rdataly = decoded_response['ophaaldagenNext']
 		if type(rdataly) ~= 'table' then
-			print('@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.')
+			Print_logfile('@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.')
 		else
 			rdataly = rdataly['data']
 			if type(rdataly) ~= 'table' then

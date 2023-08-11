@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rova_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20230811-0900'
 websitemodule = 'm_rova_api'
 -- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
 --
@@ -77,7 +77,7 @@ function Perform_Update()
 		-- get the ophaaldagen tabel for next year when needed
 		local rdataly = rdata['ophaaldagenNext']
 		if type(rdataly) ~= 'table' then
-			print('@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.')
+			Print_logfile('@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.')
 		else
 			rdataly = rdataly['data']
 			if type(rdataly) ~= 'table' then

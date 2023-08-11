@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20230811-0900'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -113,7 +113,7 @@ function Perform_Update()
 	os.remove(Datafile .. '_tmp_datain.tmp')
 	os.remove(Datafile .. '_tmp_dataout.tmp')
 
-	print('--- start web query ---')
+	Print_logfile('--- start web query ---')
 	Web_Data = genfuncs.perform_webquery(" -H \"Content-Type: application/x-www-form-urlencoded\" -d '" .. encryptedRequest .. "' -X POST https://api-omrin.freed.nl/Account/FetchAccount/" .. appId .. '')
 
 	if (Web_Data:sub(1, 2) == '[]') then

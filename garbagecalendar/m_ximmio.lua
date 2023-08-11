@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20230811-0900'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -82,7 +82,7 @@ function Perform_Update()
 	end
 	jdata = jdata['dataList'] -- get the Datalist tabel for the coming scheduled pickups
 	if type(jdata) ~= 'table' then
-		print('### Error: Empty Kalender found stopping execution.')
+		Print_logfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
 	-- process the data
