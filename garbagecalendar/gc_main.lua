@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20230810-2310'
+	MainScriptVersion = '20230811-0900'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -499,34 +499,31 @@ function gc_main(commandArray, domoticz, batchrun)
 					Notificationscript = Notificationscript:gsub('@GARBAGETEXT@', tostring(garbagetype_cfg[s_garbagetype].text))
 					Notificationscript = Notificationscript:gsub('@GARBAGEDATE@', inotificationdate)
 					Notificationscript = Notificationscript:gsub('@REMINDER@', ireminder)
+					Print_logfile('--->External Notification script started: ' .. Notificationscript)
 					os.execute(Notificationscript .. ' &')
-					Print_logfile('--->Notification script started: ' .. Notificationscript)
 				end
 				if (EventNotificationscript or '') ~= '' then
-					Print_logfile('--->check : ' .. GC_scriptpath .. '' .. EventNotificationscript)
+					Print_logfile('--->Check Internal Notification script : ' .. GC_scriptpath .. '' .. EventNotificationscript)
 					if (not genfuncs.exists(GC_scriptpath .. '' .. EventNotificationscript)) then
 						Print_logfile('### Error: EventNotificationscript not found: ' .. GC_scriptpath .. '' .. EventNotificationscript)
 						return
 					end
-					Print_logfile('--->Notification script started: ' .. EventNotificationscript)
 					Notify_mtext = inotificationtext
 					Notify_mtitle = inotificationtitle
 					Notify_date = inotificationdate
 					Notify_type = s_garbagetype
 					Notify_text = tostring(garbagetype_cfg[s_garbagetype].text)
 					Notify_reminder = ireminder
+
 					--
 					-- User event script function to capture any errors seperately
 					function run_notification_event(RunbyDzVents, commandArray, domoticz)
 						dofile(GC_scriptpath .. '' .. EventNotificationscript)
-						-- Run the Notification_Event function when it exists
-						if Notification_Event then
-							Notification_Event(RunbyDzVents, commandArray, domoticz)
-						end
 					end
 
 					-- run the extra function
 					local n_rc, n_errmsg
+					Print_logfile('--->Start Internal Notification script: ' .. EventNotificationscript)
 					if RunbyDzVents then
 						n_rc, n_errmsg = pcall(run_notification_event, RunbyDzVents, nil, domoticz)
 					else
@@ -534,7 +531,7 @@ function gc_main(commandArray, domoticz, batchrun)
 					end
 					-- check for errors
 					if n_rc then
-						Print_logfile('--->Notification script ended: ' .. EventNotificationscript)
+						Print_logfile('--->Internal Notification script ended: ' .. EventNotificationscript)
 					else
 						Print_logfile('!!!!> ' .. EventNotificationscript .. '  ended with errors: ' .. n_errmsg, 1)
 						genfuncs.addlogmessage('!!!!> ' .. EventNotificationscript .. '  ended with errors: ' .. n_errmsg, 4)
