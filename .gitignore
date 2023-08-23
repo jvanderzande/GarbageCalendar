@@ -6,3 +6,4 @@ garbagecalendar/*test*
 garbagecalendar/data/*
 _LocalStuff
 .editorconfig
+garbagecalendar/_setup_check.lua
