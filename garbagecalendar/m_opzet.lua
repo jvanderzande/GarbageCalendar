@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230811-0900'
+ver = '20231030-0930'
 websitemodule = 'm_opzet'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -34,17 +34,6 @@ function Perform_Update()
 		return
 	end
 	-- retrieve bagid from address data web data
-	--[[
-	<script>
-		let adres = '{"bagid":"0743200000013039","postcode":"5721GW","huisnummer":74,"huisletter":"a","toevoeging":"","description":"Kerkstraat 74a, 5721GW Asten","straat":"Kerkstraat","woonplaats":"Asten","woonplaatsId":2928,"gemeenteId":743,"latitude":51.39906,"longitude":5.750401}'
-		if (adres==='') {
-			window.location.href = "/"
-		} else {
-			window.localStorage.setItem('zcalendarAdresWidget-data', adres)
-			window.location.href = "/overzicht"
-		}
-	</script>
-	]]
 	Web_Data = Web_Data:match("let adres = '(.-)'")
 	if Web_Data == nil or Web_Data == '' then
 		Print_logfile('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
@@ -77,6 +66,9 @@ function Perform_Update()
 	-- loop through returned result
 	Print_logfile('- start looping through received data ----------------------------------------------------')
 	for web_garbagedate, web_garbagetype in string.gmatch(Web_Data, 'DTSTART;VALUE=DATE:(.-)\n.-SUMMARY:(.-)\n') do
+		-- trim garbagetype and strip escape characters
+		web_garbagetype = web_garbagetype:match("^%s*(.*)%s*$")
+		web_garbagetype = web_garbagetype:gsub('[\n\r\\]', '')
 		i = i + 1
 		Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype) .. '   web_garbagedate:' .. tostring(web_garbagedate))
 		if web_garbagetype ~= nil and web_garbagedate ~= nil then
