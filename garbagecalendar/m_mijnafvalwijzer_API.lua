@@ -1,9 +1,10 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer_API.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230811-0900'
+ver = '20240101-2000'
 websitemodule = 'm_mijnafvalwijzer_API'
 -- Link to WebSite: https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=1234AB&street=&huisnummer=1&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=2021-01-01&version=58&langs=nl
+-- Also used for rova with config: Hostname=api.inzamelkalender.rova.nl
 --
 -- =======================================================================================
 -- Check required fields for this module. The script will end when one is missing.
@@ -26,9 +27,13 @@ function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
+	if Hostname == '' then
+		Hostname = 'api.mijnafvalwijzer.nl'  -- default
+	end
+
 	local Web_Data =
 		genfuncs.perform_webquery(
-		'"https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=' ..
+		'"https://' .. Hostname .. '/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=' ..
 			Zipcode .. '&street=&huisnummer=' .. Housenr .. '&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=' .. tostring(os.date('*t').year) .. '-01-01&version=58&langs=nl"'
 	)
 	if (Web_Data == '') then
