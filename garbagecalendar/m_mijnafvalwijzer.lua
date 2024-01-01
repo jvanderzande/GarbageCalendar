@@ -1,10 +1,11 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230811-0900'
+ver = '20240101-1910'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
+-- Also used for rova with config: Hostname=afvalkalender.rova.nl
 -- =======================================================================================
 -- Check required fields for this module. The script will end when one is missing.
 -- =======================================================================================
@@ -25,7 +26,10 @@ chkfields = {
 function Perform_Update()
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data = genfuncs.perform_webquery('"https://www.mijnafvalwijzer.nl/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"', false)
+	if Hostname == '' then
+		Hostname = 'www.mijnafvalwijzer.nl'  -- default
+	end
+	local Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"', false)
 	if Web_Data == '' then
 		Print_logfile('Error Web_Data is empty.')
 		return
