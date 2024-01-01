@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20240101-1930'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -53,22 +53,47 @@ function Perform_Update()
 	Print_logfile('bagId:' .. bagId)
 
 	-- get the Afvalstromen information for all possible garbagetypeid's with their ophaaldatum info for this address(bagId)
-	Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/afvalstromen"')
+	Web_Garbagetype_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/afvalstromen"')
 	if (Web_Data:sub(1, 2) == '[]') then
 		Print_logfile('### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
 		return
 	end
 
-	-- process the data
-	Print_logfile('- start looping through received data -----------------------------------------------------------')
-	processdata(JSON:decode(Web_Data))
+	-- get the calendar info for current calendar year
+	Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/kalender/' .. os.date('%Y') .. '"')
+	if (Web_Data:sub(1, 2) == '[]') then
+		Print_logfile('### Error: Unable to retrieve kalender information...  stopping execution.')
+		return
+	end
+	-- process the received data
+	Print_logfile('- start looping through received data for current year  --------------------------------------------')
+	LastDaysDiff = processdata(JSON:decode(Web_Data), JSON:decode(Web_Garbagetype_Data))
+	if #garbagedata < 10 then
+		-- get the calendar info for next calendar year
+		Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/kalender/' .. (tonumber(os.date('%Y'))+1) .. '"')
+		if (Web_Data:sub(1, 2) == '[]') then
+			Print_logfile('### Error: Unable to retrieve next kalender information...  stopping execution.')
+			return
+		end
+		-- process the received data
+		Print_logfile('- start looping through received data for next year ---------------------------------------------')
+		processdata(JSON:decode(Web_Data), JSON:decode(Web_Garbagetype_Data), LastDaysDiff )
+	end
 end
 
-function processdata(ophaaldata)
+function processdata(ophaaldata, garbagetypedata, prevdaysdiff)
+	prevdaysdiff = prevdaysdiff or 0
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
+	Print_logfile('garbagetypedata records:' .. (#garbagetypedata or '??'))
+	Print_logfile('prevdaysdiff:' .. (prevdaysdiff  or '??'))
+	local wGarbagetypes = {}
+	local LastDaysDiff = prevdaysdiff
+	for record, data in pairs(garbagetypedata) do
+		wGarbagetypes[data.id] = {desc = data.title, nextdate = data.ophaaldatum}
+	end
 	for record, data in pairs(ophaaldata) do
 		if type(data) == 'table' then
-			local web_garbagetype = data.title
+			local web_garbagetype = wGarbagetypes[data.afvalstroom_id].desc
 			local web_garbagedate = data.ophaaldatum
 			if web_garbagedate == nil then
 				-- this is a type that is not collected and has no ophaaldag defined
@@ -81,15 +106,19 @@ function processdata(ophaaldata)
 					Print_logfile('Invalid date from web for : ' .. web_garbagetype .. '   date:' .. web_garbagedate)
 					return
 				end
-				if (daysdiffdev >= 0) then
+				-- avoid saving calendar dates which where processed in previous year
+				-- only valid at the end of year period when 2 years data is processed
+				if (daysdiffdev > prevdaysdiff) then
 					garbagedata[#garbagedata + 1] = {}
 					garbagedata[#garbagedata].garbagetype = web_garbagetype
 					garbagedata[#garbagedata].garbagedate = dateformat
 					garbagedata[#garbagedata].diff = daysdiffdev
+					LastDaysDiff = daysdiffdev
 				end
 			end
 		end
 	end
+	return LastDaysDiff
 end
 
 -- End Functions =========================================================================
