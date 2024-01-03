@@ -12,11 +12,13 @@ Housenr = '' 			-- Your housnr. eg '99'
 Housenrsuf = '' 		-- Your housnr suffix  ('a', 'b'  etc)
 Hostname = '' 			-- m_opzet & m_opzet_api: Specify the hostname of your website. eg 'inzamelkalender.hvcgroep.nl'
 Street = '' 			-- Street name Only needed for: m_recycleapp
+BPName = ''          -- Burgerportaal name either: assen/bar/rmn
 Companycode = ''		-- m_ximmio Companycode. (See m_ximmio.lua file for how to find this code).
 
 -- ==============================
 -- choose one of these modules ==
 -- ==============================
+--websitemodule = "m_burgerportaal"
 --websitemodule = "m_deafvalapp"
 --websitemodule = 'm_mijnafvalwijzer_API'
 websitemodule = 'm_mijnafvalwijzer'
@@ -26,7 +28,6 @@ websitemodule = 'm_mijnafvalwijzer'
 --websitemodule = "m_opzet_api"
 --websitemodule = "m_opzet"
 --websitemodule = "m_recycleapp-be"
---websitemodule = "m_rmn_api"
 --websitemodule = "m_rova_api"
 --websitemodule = "m_ximmio"
 --websitemodule = "m_zuidlimburg"
