@@ -10,9 +10,9 @@ myGarbageDevice = '' -- The Text devicename in Domoticz. eg 'Container'
 Zipcode = '' 			-- Your zipcode  eg '1234AB'
 Housenr = '' 			-- Your housnr. eg '99'
 Housenrsuf = '' 		-- Your housnr suffix  ('a', 'b'  etc)
-Hostname = '' 			-- m_opzet & m_opzet_api: Specify the hostname of your website. eg 'inzamelkalender.hvcgroep.nl'
+Hostname = '' 			-- m_opzet, m_opzet_api, m_mijnafvalwijzer_api: Specify the hostname of your website. eg 'inzamelkalender.hvcgroep.nl'
 Street = '' 			-- Street name Only needed for: m_recycleapp
-BPName = ''          -- Burgerportaal name either: assen/bar/rmn
+BPName = ''          -- Burgerportaal name either: 'assen'/'bar'/'rmn'
 Companycode = ''		-- m_ximmio Companycode. (See m_ximmio.lua file for how to find this code).
 
 -- ==============================
@@ -20,7 +20,7 @@ Companycode = ''		-- m_ximmio Companycode. (See m_ximmio.lua file for how to fin
 -- ==============================
 --websitemodule = "m_burgerportaal"
 --websitemodule = "m_deafvalapp"
---websitemodule = 'm_mijnafvalwijzer_API'
+--websitemodule = 'm_mijnafvalwijzer_api'
 websitemodule = 'm_mijnafvalwijzer'
 --websitemodule = "m_montferland"
 --websitemodule = "m_ophaalkalender-be"
