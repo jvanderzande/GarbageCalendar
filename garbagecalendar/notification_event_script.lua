@@ -3,10 +3,10 @@
 -- Example script which will Switch a light on with specified color in case of a garbagecalendar notification
 --[[=== Available variables from the mainscript :
 			Notify_type     = GarbageType as defined as key in "garbagetype_cfg" and coming from the internet.
-			Notify_text     = Formed text sentence using the settings from the "notificationtext" field
+			Notify_text     = Description from "garbagetype_cfg" "text" field
 			Notify_date     = Formatted notification date using the config variable "notificationdate"
 			Notify_mtitle   = Formatted Title sentence using the settings from the "notificationtitle" field
-			Notify_mtext    = Description from "garbagetype_cfg" "text" field
+			Notify_mtext    = Formatted text sentence using the settings from the "notificationtext" field
 			Notify_reminder = Formatted content for the config variable "notificationreminder"
 	]]
 -- ensure they are all initialised to avoid errors.
@@ -17,7 +17,7 @@ Notify_mtitle = Notify_mtitle or ''
 Notify_mtext = Notify_mtext or ''
 Notify_reminder = Notify_reminder or ''
 -----------------------------------------------------------------------------------------------------------------
--- Start you logic here in the appropriate section
+-- Start your logic here in the appropriate section
 -----------------------------------------------------------------------------------------------------------------
 local lamp = 'TestLight'
 local ontime = 30
