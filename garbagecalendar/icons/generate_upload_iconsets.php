@@ -34,6 +34,7 @@ create_ico_collection("garbagecalendar_red", "rode bak");
 create_ico_collection("garbagecalendar_white", "witte bak");
 create_ico_collection("garbagecalendar_yellow", "gele bak");
 create_ico_collection("garbagecalendar_tree", "kerstbomen");
+create_ico_collection("garbagecalendar_unknown", "onbekend");
 */
 //
 function create_ico_collection($name, $text)
