@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20230811-0900'
+MainGenUtilsVersion = '20240716-1600'
 
 local genfuncs = {}
 
@@ -444,6 +444,14 @@ function genfuncs.perform_webquery(url, logdata)
 	if logdata then
 		Print_logfile('---- web data ----------------------------------------------------------------------------')
 		Print_logfile(Web_Data)
+	end
+	-- Check for 301 Moved Permanently
+	if (Web_Data:find('Moved Permanently')) then
+		Print_logfile('### Error: Site Moved Permanently: check your hostname for changes!',1)
+		local lWeb_Data = Web_Data:gsub('.-<body>(.-)</body>.*', '%1')
+		lWeb_Data = lWeb_Data:gsub('[\r\n]', '')
+		Print_logfile(lWeb_Data,1)
+		return ''
 	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
 	Print_logfile('---- web err ------------------------------------------------------------------------')
