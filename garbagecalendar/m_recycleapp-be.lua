@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver = '20240906-1300'
+ver = '20240906-1330'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
@@ -24,26 +24,20 @@ chkfields = {
 -------------------------------------------------------
 -- Do the actual update retrieving data from the website and processing it
 function Perform_Update()
-	-- function to process ThisYear and Lastyear JSON data
+	-- Get Data for the Website
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	-- Get Access token
-	--[[ skip and now hardcoded as this didn't work anymore
-	-- step 1: Get main js name from home page: <script src="/static/js/main.0b66adb4.chunk.js">
-	local Web_Data = genfuncs.perform_webquery('https://www.recycleapp.be')
-	local MainScript = Web_Data:match('<script src="(/static/js/main.-)">')
-	Print_logfile(' MainScript:' .. (MainScript or '?')) -- MainScript:/static/js/main.0b66adb4.chunk.js
-	-- step 2: retrieve main js and get code from source:
-	--          var n="8a9pIQlfYpgmJZD15KdK70MCTR2xyD0EAvOmi9HCBfiBUY4n34ytxQmqo3AP2OET6tssYy6R4Be6N2M2GtiX3AcbiNxR8G7pOalN45dXPZ4emKE2c1nimx9B1YFciutJwFZHYHI2Qpzo0E0GCDHkg5",c="/api/v1/assets/<script src="/static/js/main.0b66adb4.chunk.js">
-	Web_Data = genfuncs.perform_webquery('https://www.recycleapp.be' .. MainScript)
-	local secret = Web_Data:match('.+var n="(.-)",')
-	Print_logfile(' secret:' .. (secret or '?'))
-	]]
+	local host = 'https://api.fostplus.be'
+	local baseUrl = host .. '/recycle-public/app/v1'
+	local consumer = 'recycleapp.be'
 	local secret = 'Op2tDi2pBmh1wzeC5TaN2U3knZan7ATcfOQgxh4vqC0mDKmnPP2qzoQusmInpglfIkxx8SZrasBqi5zgMSvyHggK9j6xCQNQ8xwPFY2o03GCcQfcXVOyKsvGWLze7iwcfcgk2Ujpl0dmrt3hSJMCDqzAlvTrsvAEiaSzC9hKRwhijQAFHuFIhJssnHtDSB76vnFQeTCCvwVB27DjSVpDmq8fWQKEmjEncdLqIsRnfxLcOjGIVwX5V0LBntVbeiBvcjyKF2nQ08rIxqHHGXNJ6SbnAmTgsPTg7k6Ejqa7dVfTmGtEPdftezDbuEc8DdK66KDecqnxwOOPSJIN0zaJ6k2Ye2tgMSxxf16gxAmaOUqHS0i7dtG5PgPSINti3qlDdw6DTKEPni7X0rxM'
-	local headerdata = ' -H "x-secret: ' .. secret .. '"' .. ' -H "x-consumer: recycleapp.be"'
-	-- step 3: Get access token:
-	Web_Data = genfuncs.perform_webquery(headerdata .. ' https://www.recycleapp.be/api/app/v1/access-token')
-	local webdata = JSON:decode(Web_Data)
-	local accessToken = webdata.accessToken or ''
+	local headerdata = ' -H "x-secret: ' .. secret .. '"' .. ' -H "x-consumer: ' .. consumer .. '"'
+	local Web_Data = ''
+
+	-- Step 1: Get access token:
+	Web_Data = genfuncs.perform_webquery(headerdata .. ' "' .. baseUrl .. '/access-token"')
+	local jswebdata = JSON:decode(Web_Data)
+	local accessToken = jswebdata.accessToken or ''
 	if accessToken == '' then
 		Print_logfile('### Error: No accessToken retrieved...  stopping execution.')
 		return
@@ -51,18 +45,18 @@ function Perform_Update()
 	Print_logfile('accessToken:' .. accessToken)
 	headerdata = headerdata .. ' -H "Authorization:' .. accessToken .. '"'
 
-	-- Step 4: Get zipcodeid
-	Web_Data = genfuncs.perform_webquery(headerdata .. ' "https://www.recycleapp.be/api/app/v1/zipcodes?q=' .. Zipcode .. '"')
+	-- Step 2: Get zipcodeid
+	Web_Data = genfuncs.perform_webquery(headerdata .. ' "' .. baseUrl .. '/zipcodes?q=' .. Zipcode .. '"')
 	Web_Data = JSON:decode(Web_Data)
-	postcode_id = Web_Data.items[1].id or ''
+	local postcode_id = Web_Data.items[1].id or ''
 	if postcode_id == '' then
 		Print_logfile('### Error: No postcode_id retrieved...  stopping execution.')
 		return
 	end
 	Print_logfile('postcode_id:' .. postcode_id)
 
-	-- Step 5: Get streetid
-	Web_Data = genfuncs.perform_webquery(headerdata .. ' "https://www.recycleapp.be/api/app/v1/streets?q=' .. genfuncs.url_encode(Street) .. '&zipcodes=' .. postcode_id .. '"')
+	-- Step 3: Get streetid
+	Web_Data = genfuncs.perform_webquery(headerdata .. ' "' .. baseUrl .. '/streets?q=' .. genfuncs.url_encode(Street) .. '&zipcodes=' .. postcode_id .. '"')
 	Web_Data = JSON:decode(Web_Data)
 
 	local street_id = Web_Data.items[1].id or ''
@@ -72,10 +66,10 @@ function Perform_Update()
 	end
 	Print_logfile('street_id:' .. street_id)
 
-	-- Step 6: Get calendar data
+	-- Step 4: Get calendar data
 	local startDate = os.date('%Y-%m-%d')
 	local endDate = os.date('%Y-%m-%d', os.time() + 28 * 24 * 60 * 60) -- 4 weken
-	Web_Data = genfuncs.perform_webquery(headerdata .. ' "https://www.recycleapp.be/api/app/v1/collections?zipcodeId=' .. postcode_id .. '&streetId=' .. street_id .. '&houseNumber=' .. Housenr .. '&fromDate=' .. startDate .. '&untilDate=' .. endDate .. '&size=100"')
+	Web_Data = genfuncs.perform_webquery(headerdata .. ' "' .. baseUrl .. '/collections?zipcodeId=' .. postcode_id .. '&streetId=' .. street_id .. '&houseNumber=' .. Housenr .. '&fromDate=' .. startDate .. '&untilDate=' .. endDate .. '&size=100"')
 	Web_Data = JSON:decode(Web_Data)
 	-- get the ophaaldagen tabel for the coming scheduled pickups
 	if type(Web_Data) ~= 'table' then
