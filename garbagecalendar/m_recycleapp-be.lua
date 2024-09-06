@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-ver = '20230630-1600'
+ver = '20240906-1300'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
@@ -27,6 +27,7 @@ function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	-- Get Access token
+	--[[ skip and now hardcoded as this didn't work anymore
 	-- step 1: Get main js name from home page: <script src="/static/js/main.0b66adb4.chunk.js">
 	local Web_Data = genfuncs.perform_webquery('https://www.recycleapp.be')
 	local MainScript = Web_Data:match('<script src="(/static/js/main.-)">')
@@ -36,6 +37,8 @@ function Perform_Update()
 	Web_Data = genfuncs.perform_webquery('https://www.recycleapp.be' .. MainScript)
 	local secret = Web_Data:match('.+var n="(.-)",')
 	Print_logfile(' secret:' .. (secret or '?'))
+	]]
+	local secret = 'Op2tDi2pBmh1wzeC5TaN2U3knZan7ATcfOQgxh4vqC0mDKmnPP2qzoQusmInpglfIkxx8SZrasBqi5zgMSvyHggK9j6xCQNQ8xwPFY2o03GCcQfcXVOyKsvGWLze7iwcfcgk2Ujpl0dmrt3hSJMCDqzAlvTrsvAEiaSzC9hKRwhijQAFHuFIhJssnHtDSB76vnFQeTCCvwVB27DjSVpDmq8fWQKEmjEncdLqIsRnfxLcOjGIVwX5V0LBntVbeiBvcjyKF2nQ08rIxqHHGXNJ6SbnAmTgsPTg7k6Ejqa7dVfTmGtEPdftezDbuEc8DdK66KDecqnxwOOPSJIN0zaJ6k2Ye2tgMSxxf16gxAmaOUqHS0i7dtG5PgPSINti3qlDdw6DTKEPni7X0rxM'
 	local headerdata = ' -H "x-secret: ' .. secret .. '"' .. ' -H "x-consumer: recycleapp.be"'
 	-- step 3: Get access token:
 	Web_Data = genfuncs.perform_webquery(headerdata .. ' https://www.recycleapp.be/api/app/v1/access-token')
