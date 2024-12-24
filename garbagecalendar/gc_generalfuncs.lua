@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20240718-1450'
+MainGenUtilsVersion = '20241224-1210'
 
 local genfuncs = {}
 
@@ -219,7 +219,7 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 				imageSrc: "garbagecalendar_blue",
 				text: "Garbagecalendar blauwe bak"
 				]]
-				gicontype = record['imageSrc']:match('^garbagecalendar_(.*)')
+				--gicontype = record['imageSrc']:match('^garbagecalendar_(.*)')
 				--print(gicontype)
 				if record['imageSrc']:lower() == GTypeIcon:lower() then
 					--print("found:",GTypeIcon,record["idx"],record["imageSrc"])
@@ -366,9 +366,6 @@ function genfuncs.loadlualib(libname)
 	Print_logfile('-> Loading module ' .. (libname or 'nil'))
 	local moduleobject
 	local function loadlib()
-		if unexpected_condition then
-			error()
-		end
 		-- add defined Domoticz path to the search path
 		if not package.path:match(GC_scriptpath .. '%?.lua;') then
 			package.path = GC_scriptpath .. '?.lua;' .. package.path
@@ -431,7 +428,7 @@ function genfuncs.perform_webquery(url, logdata)
 		logdata = mydebug
 	end
 	-- Define Web Query
-	local sQuery = 'curl -k ' .. url
+	local sQuery = 'curl -L -k ' .. url
 	errlogfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'webquery_err.log'
 	-- Pipe STDERR to file when defined
 	sQuery = sQuery .. ' 2>' .. errlogfile

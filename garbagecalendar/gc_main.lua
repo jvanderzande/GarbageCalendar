@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20240718-1450'
+	MainScriptVersion = '20241224-1210'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -167,9 +167,6 @@ function gc_main(commandArray, domoticz, batchrun)
 	local status, err =
 		pcall(
 		function()
-			if unexpected_condition then
-				error()
-			end
 			Print_logfile('-> Start processing garbagecalendarconfig.lua information.')
 			-- check if debugging is required
 			testdataload = testdataload or false
