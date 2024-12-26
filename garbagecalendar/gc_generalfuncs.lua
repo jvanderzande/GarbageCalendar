@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20241224-1210'
+MainGenUtilsVersion = '20241226-2030'
 
 local genfuncs = {}
 
@@ -428,8 +428,8 @@ function genfuncs.perform_webquery(url, logdata)
 		logdata = mydebug
 	end
 	-- Define Web Query
-	local sQuery = 'curl -L -k ' .. url
-	errlogfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'webquery_err.log'
+	local sQuery = 'curl -L -k --silent -w "\\n#@#httprc:%{http_code}#@#\\n#@#endurl:%{url_effective}#@#" ' .. url
+	local errlogfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'webquery_err.log'
 	-- Pipe STDERR to file when defined
 	sQuery = sQuery .. ' 2>' .. errlogfile
 	-- Run Query
@@ -437,21 +437,31 @@ function genfuncs.perform_webquery(url, logdata)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
 	handle:close()
+	-- Get effective url and http response code from the output and strip it from the result output
+	--Print_logfile(Web_Data)
+	local httprc = Web_Data:match('#@#httprc:([^#]*)#@#') or '?'
+	local redirecturl = '"' .. (Web_Data:match('#@#endurl:([^#]*)#@#') or '?') .. '"'
+	if Web_Data:find('(.*)\n#@#httprc:') then
+		Web_Data = Web_Data:match('(.*)\n#@#httprc:')
+	end
 	-- Show Webdata retrieved
 	if logdata then
-		Print_logfile('---- web data ----------------------------------------------------------------------------')
+		Print_logfile('--- url: ' .. redirecturl .. ' rc:' .. (httprc or '?') .. '  web data:  --------')
 		Print_logfile(Web_Data)
 	end
 	-- Check for 301 Moved Permanently
-	if (Web_Data:find('Moved Permanently')) then
+	if (httprc == '301' or Web_Data:find('Moved Permanently')) then
 		Print_logfile('### Error: Site Moved Permanently: check your hostname for changes!',1)
 		local lWeb_Data = Web_Data:gsub('.-<body>(.-)</body>.*', '%1')
 		lWeb_Data = lWeb_Data:gsub('[\r\n]', '')
 		Print_logfile(lWeb_Data,1)
 		return ''
 	end
+	-- Check redirection to warn
+	if (url ~= redirecturl and redirecturl ~= '?') then
+		Print_logfile('### warning: Site redirected from : ' ..  url .. '  to : ' ..  redirecturl,1)
+	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
-	Print_logfile('---- web err ------------------------------------------------------------------------')
 	local Web_Error = ''
 	local ifile, ierr = io.open(errlogfile, 'r')
 	Web_Error = ierr or ''
@@ -459,7 +469,10 @@ function genfuncs.perform_webquery(url, logdata)
 		Web_Error = ifile:read('*all')
 		ifile:close()
 	end
-	Print_logfile('Web_Err=' .. Web_Error)
+	if Web_Error ~= '' then
+		Print_logfile('---- web err ------------------------------------------------------------------------')
+		Print_logfile('Web_Err=' .. Web_Error)
+	end
 	--os.remove(errlogfile)
 	Print_logfile('---- end web data ------------------------------------------------------------------------')
 	if (Web_Error:find('unsupported protocol')) then
