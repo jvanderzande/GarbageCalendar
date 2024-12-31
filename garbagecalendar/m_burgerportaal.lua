@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rmn.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20240103-1710'
+M_ver = '20241231-1100'
 websitemodule = 'm_burgerportaal'
 -- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
 -- Current supported BPName's

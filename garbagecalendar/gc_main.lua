@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20241226-2030'
+	MainScriptVersion = '20241231-1100'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -31,19 +31,19 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- start logic - no changes below this line
 	--===================================================================================================================
 	-- Define gobal variable
-	websitemodule = 'unknown'
-	datafilepath = nil
-	GC_scriptpath = ''
-	RunLogfile = ''
+	_G.websitemodule = 'unknown'
+	_G.datafilepath = nil
+	_G.GC_scriptpath = ''
+	_G.RunLogfile = ''
 	-- set temp log to capture the initial log messages in until the final logfile is known
-	HRunLogfile = io.tmpfile()
-	Datafile = ''
-	icalfile = ''
-	UpdateDevRun = false
-	UpdateDataRun = false
-	timenow = os.date('*t')
-	genfuncs = {}
-	param = {}
+	_G.HRunLogfile = io.tmpfile()
+	_G.Datafile = ''
+	_G.icalfile = ''
+	_G.UpdateDevRun = false
+	_G.UpdateDataRun = false
+	_G.timenow = os.date('*t')
+	_G.genfuncs = {}
+	_G.param = {}
 
 	genfuncs.DomoticzBuildDate = nil
 	genfuncs.DomoticzVersion = nil
@@ -330,7 +330,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile('-> Load module ' .. (websitemodule or '??'))
 				dofile(websitemodulescript)
 				-- Check whether the required parameters are specified.
-				Print_logfile('-> ========== Start module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+				Print_logfile('-> ========== Start module ' .. (websitemodule or '??') .. '.lua (v' .. (M_ver or '??') .. ')')
 				chkfields = chkfields or {}
 				local param_err = 0
 				for key, value in pairs(chkfields) do
@@ -372,7 +372,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile(err)
 				Print_logfile(debug.traceback())
 			end
-			Print_logfile('-< ========== End module ' .. (websitemodule or '??') .. '.lua (v' .. (ver or '??') .. ')')
+			Print_logfile('-< ========== End module ' .. (websitemodule or '??') .. '.lua (v' .. (M_ver or '??') .. ')')
 		end
 	end
 

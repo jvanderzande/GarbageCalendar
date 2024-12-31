@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-ver = '20240101-1910'
+M_ver = '20241231-1100'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
