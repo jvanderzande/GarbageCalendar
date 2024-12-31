@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1100'
+M_ver = '20241231-1400'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -49,33 +49,39 @@ function Perform_Update()
 
 	-- get the Afvalstromen information for all possible garbagetypeid's for this address(AdministratieID)
 	Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. os.date('%Y') .. '&Date=' .. os.date('%d/%m/%Y%%2001:00:00%p') .. '"')
-	if (Web_Data:sub(1, 2) == '[]') then
-		Print_logfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
-		return
-	end
-	local jdata = JSON:decode(Web_Data)
-	-- get the ophaaldagen tabel for the coming scheduled pickups
-	if type(jdata) ~= 'table' then
-		Print_logfile('### Error: Empty Kalender found stopping execution.')
-		return
-	end
-	-- process the data
-	Print_logfile('- start looping through received data -----------------------------------------------------------')
-	processdata(jdata)
-
 	-- also get nextyears data in november/december
+	Web_Data2 = '[]'
 	if tonumber(os.date('%m')) >= 11 then
 		local nextyear = tostring(tonumber(os.date('%Y')) + 1)
 		nextyear = nextyear:sub(0, 4)
-		Web_Data = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. nextyear .. '&Date=' .. os.date('%m/%d/%Y%%20%I:%M:%S%p') .. '"')
-		if (Web_Data:sub(1, 2) == '[]') then
+		Web_Data2 = genfuncs.perform_webquery('"http://afvalwijzer.afvaloverzicht.nl/OphaalDatums.ashx?ADM_ID=' .. AdministratieID .. '&Username=GSD&Password=' .. genfuncs.url_encode('gsd$2014') .. '&ADR_ID=' .. AdresID .. '&Jaar=' .. nextyear .. '&Date=' .. os.date('%m/%d/%Y%%20%I:%M:%S%p') .. '"')
+		if (Web_Data2:sub(1, 2) == '[]') then
 			Print_logfile('### Warning: no calendar data for next year.')
-		else
-			jdata = JSON:decode(Web_Data)
-			Print_logfile('- start looping through next received data -----------------------------------------------------------')
-			processdata(jdata)
 		end
 	end
+
+	if (Web_Data:sub(1, 2) == '[]' and Web_Data2:sub(1, 2) == '[]') then
+		Print_logfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
+		return
+	end
+
+	if (Web_Data:sub(1, 2) ~= '[]') then
+		local jdata = JSON:decode(Web_Data)
+		-- get the ophaaldagen tabel for the coming scheduled pickups
+		if type(jdata) ~= 'table' then
+			Print_logfile('### Error: Empty Kalender found stopping execution.')
+			return
+		end
+		-- process the data
+		Print_logfile('- start looping through this year received data -----------------------------------------------------------')
+		processdata(jdata)
+	end
+	if (Web_Data2:sub(1, 2) ~= '[]') then
+		local jdata = JSON:decode(Web_Data2)
+		Print_logfile('- start looping through next year received data -----------------------------------------------------------')
+		processdata(jdata)
+	end
+
 end
 
 function processdata(ophaaldata)
