@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20241231-1100'
+	MainScriptVersion = '20250126-1610'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -711,7 +711,7 @@ function gc_main(commandArray, domoticz, batchrun)
 							stextformat = stextformat:gsub('ldesc', txtdev_ldesc)
 							stextformat = stextformat:gsub('tdesc', txtdev_tdesc)
 							txtdev_prevdesc = devtxt
-							devtxt = devtxt .. stextformat .. '\r\n'
+							devtxt = devtxt .. stextformat .. '\n'
 							-- only add 1 when the next display record is a different date or seperate line wanted
 							if (i < #garbagedata) then
 								if ((not Combine_Garbage_perDay) or web_garbagedate ~= garbagedata[i + 1].garbagedate) then
@@ -780,7 +780,14 @@ function gc_main(commandArray, domoticz, batchrun)
 			return
 		end
 		-- always update the domoticz device so one can see it is updating and when it was ran last.
-		Print_logfile('-> found schedule:' .. devtxt:gsub('\r\n', ' ; '), 1)
+		Print_logfile('-> found schedule:' .. devtxt:gsub('\n', ' ; '), 1)
+
+		-- add global formatting when defined
+		tdevformat = tdevformat or ''
+		if tdevformat:match('#') then
+			devtxt = tdevformat:gsub('#', devtxt, 1)
+			Print_logfile('-> added textdev formatting:' .. devtxt:gsub('\n', ' ; '), 1)
+		end
 
 		-- close ICAL file when requested
 		if IcalEnable then

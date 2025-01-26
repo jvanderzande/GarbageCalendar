@@ -70,6 +70,11 @@ testnotification = false   -- trigger a test notification each run for the first
 textformat = 'wd dd mmm: tdesc'
 -- One can also add some html formatting formating to the output when the used interface supports that:eg:
 --    textformat = '<font color="red" size=1>tdesc: wd dd mmm</font>'
+--
+-- the tdevformat variable can contain the surrounding text device formatting for the total textbox information
+-- # => Generated lines that need to be surrounded. This variable is ignored when it doesn't contain a # character.
+-- e.g.: tdevformat = '<div style="font-size : 8px" align="center">#</div>'
+tdevformat = '' -- no formatting
 
 -- ### define  what to show in the domoticz text device
 -- !!! ShowSinglePerType will be forced to false when Combine_Garbage_perDay = true
