@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20250126-1610'
+	MainScriptVersion = '20250402-1550'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -671,7 +671,9 @@ function gc_main(commandArray, domoticz, batchrun)
 								Print_logfile('> first type:' .. FirstGType .. ' Icon:"' .. (FirstGTypeIcon or 'nil') .. '"')
 							end
 							-- get the long description from the JSON data
-							if garbagetype_cfg[web_garbagetype].active ~= 'on' then
+							if garbagetype_cfg[web_garbagetype].missing then
+								Print_logfile('>> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because garbagetype:' .. (garbagetype_cfg[web_garbagetype].active or '??') .. ' insn\'t defined in garbagetype_cfg[]!', 0, 0)
+							elseif garbagetype_cfg[web_garbagetype].active ~= 'on' then
 								Print_logfile('>> GarbageDate:' .. tostring(web_garbagedate) .. ' GarbageType:' .. tostring(web_garbagetype) .. '; Calc Days Diff=' .. tostring(daysdiffdev) .. '; *** Notify skipped because active <> on ( ' .. (garbagetype_cfg[web_garbagetype].active or '??') .. ') in garbagetype_cfg[]!', 0, 0)
 							else
 								Print_logfile(
