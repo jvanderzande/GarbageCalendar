@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20250402-1550'
+	MainScriptVersion = '20250406-1640'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -85,12 +85,17 @@ function gc_main(commandArray, domoticz, batchrun)
 			ptext = '   ' .. ptext
 		end
 		--
+		local ctext = ptext or 'nil?'
 		if (prefix or 1) == 1 then
 			ptext = os.date('%X ') .. calledfrom .. ':' .. calledline .. ': ' .. ptext
 		end
 		-- Console print in case .....
-		if (mydebug or false) or ((toconsole or 0) == 1) then
-			print(ptext)
+		if (mydebug or false) or ((toconsole or 0) > 0) then
+			if toconsole > 10 then
+				genfuncs.addlogmessage(ctext, toconsole-10)
+			else
+				print(ctext)
+		end
 		end
 		-- LOG Print when file is specified
 		if ((RunLogfile or '') ~= '') then
@@ -172,6 +177,7 @@ function gc_main(commandArray, domoticz, batchrun)
 			testdataload = testdataload or false
 			testdataloadbatch = testdataloadbatch or false
 			mydebug = mydebug or false
+			testrun = testrun or false
 			--
 			-- Default to the data subdirectory when not provided
 			datafilepath = datafilepath or (GC_scriptpath .. 'data')
@@ -642,9 +648,9 @@ function gc_main(commandArray, domoticz, batchrun)
 					if web_garbagedesc == '???' then
 						web_garbagedesc = web_garbagetype
 					end
-					if missingrecords == '' then
-						missingrecords = '\n'
-					end
+					-- if missingrecords == '' then
+					--  	missingrecords = 'garbagetype_cfg = {\n'
+					-- end
 					missingrecords = missingrecords .. '  ["' .. web_garbagetype:lower() .. '"]' .. string.rep(' ', 10 - string.len(web_garbagetype)) .. ' ={hour=19,min=02,daysbefore=1,reminder=0,text="' .. web_garbagedesc .. '", icon=nil},\n'
 					garbagetype_cfg[web_garbagetype] = {hour = 0, min = 0, daysbefore = 0, reminder = 0, text = 'dummy'}
 					garbagetype_cfg[web_garbagetype].text = web_garbagetype
@@ -772,10 +778,11 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 		Print_logfile('-< End data loop')
 		if missingrecords ~= '' then
-			Print_logfile('#!# Warning: These records are missing in your garbagecalendarconfig.lua file, so no notifications will be send!', 1)
-			Print_logfile('#!# Add these records into the garbagetype_cfg table and adapt the schedule, text and icon info to your needs:', 1)
-			Print_logfile(missingrecords, 1, 0)
-			Print_logfile('#!# -- end ----------------------------')
+			Print_logfile('#!# Warning: These garbage types are missing in your garbagetype_cfg table in file garbagecalendarconfig.lua, so no notifications will be send!', 11)
+			Print_logfile('--> Add the below and adapt the schedule, text and icon info to your needs:', 11)
+			missingrecords = 'garbagetype_cfg = {\n...\n' .. missingrecords .. '...\n}'
+			Print_logfile(missingrecords, 11, 0)
+			Print_logfile('#!# -- end ----------------------------', 11 ,0)
 		end
 		if (cnt == 0) then
 			Print_logfile('### Error: No valid data found in returned webdata.  skipping the rest of the logic.', 1)
@@ -1002,6 +1009,10 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 	end
 	-- Always update when mydebug is enabled
+	if testrun then
+		UpdateDevRun = true
+		Print_logfile('#> Perform update because testrun=true.')
+	end
 	if mydebug then
 		UpdateDevRun = true
 		Print_logfile('#> Perform update because mydebug=true.')
