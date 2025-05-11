@@ -32,3 +32,7 @@ The main changes are:
 **PullRequest for Fixes/Changes/Additions must be made against the development branch so it can be tested first. Thanks :-)**
 
 GarbageCalendar is a free and open source application written in lua and distributed under the [GNU General Public License](LICENSE).
+
+
+In case you want to buy me a nice dram of peaty Whisky: :smile:  
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.me/jvdzande)
