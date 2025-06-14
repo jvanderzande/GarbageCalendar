@@ -3,7 +3,7 @@
 ----------------------------------------------------------------------------------------------------------------
 ver = '20230811-0900'
 websitemodule = 'm_rova_api'
--- Link to WebSite: http://api.inzamelkalender.rova.nl/webservices/appsinput/?postcode=3828bc&street=&huisnummer=53&toevoeging=A&apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&platform=phone&langs=nl&mobiletype=android&version=3&app_name=rova
+-- Link to WebSite: https://www.rova.nl/api/waste-calendar/year?postalcode=1234aa&houseNumber=123&addition=&year=2025
 --
 -- This module tries to access the API that the Rova App uses.
 --
