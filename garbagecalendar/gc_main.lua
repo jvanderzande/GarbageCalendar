@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20250406-1640'
+	MainScriptVersion = '20250614-1700'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -90,7 +90,8 @@ function gc_main(commandArray, domoticz, batchrun)
 			ptext = os.date('%X ') .. calledfrom .. ':' .. calledline .. ': ' .. ptext
 		end
 		-- Console print in case .....
-		if (mydebug or false) or ((toconsole or 0) > 0) then
+		toconsole = toconsole or 0
+		if (mydebug or false) or (toconsole > 0) then
 			if toconsole > 10 then
 				genfuncs.addlogmessage(ctext, toconsole-10)
 			else

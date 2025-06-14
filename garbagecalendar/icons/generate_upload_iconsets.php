@@ -21,7 +21,7 @@
 //
 // ================================================================================================
 // Define here the iconname.png you have added and run the script to generate the required zipfile
-create_ico_collection("garbagecalendar_Type-here-your-icon-name", "zwarte");
+// create_ico_collection("garbagecalendar_Type-here-your-icon-name", "zwarte");
 // ================================================================================================
 /* standard set of custom icons, with thanks to the Dashticz project for a copy of their set!!
 create_ico_collection("garbagecalendar_black", "zwarte bak");
@@ -49,7 +49,7 @@ function create_ico_collection($name, $text)
         exit("File missing: <${name}.png>\n");
     }
     $zip->addFromString("icons.txt", "$name;garbagecalendar $text;Used by Garbagecalendar");
-    $zip->addFromString("${name}.png", "");
+    $zip->addFile("${name}.png", "${name}.png");
     $zip->addFile("${name}.png", "${name}48_Off.png");
     $zip->addFile("${name}.png", "${name}48_On.png");
     $zip->close();
