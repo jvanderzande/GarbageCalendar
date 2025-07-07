@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1100'
+M_ver = '20250707-1210'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -82,7 +82,7 @@ function Perform_Update()
 end
 
 function processdata(ophaaldata, garbagetypedata, prevdaysdiff)
-	prevdaysdiff = prevdaysdiff or 0
+	prevdaysdiff = prevdaysdiff or -1
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	Print_logfile('garbagetypedata records:' .. (#garbagetypedata or '??'))
 	Print_logfile('prevdaysdiff:' .. (prevdaysdiff  or '??'))
