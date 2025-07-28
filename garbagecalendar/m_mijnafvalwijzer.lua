@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20250728-1130'
+M_ver = '20250728-1420'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -27,7 +27,7 @@ function Perform_Update()
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
 	if Hostname == '' then
-		Hostname = 'www.mijnafvalwijzer.nl'  -- default
+		Hostname = 'www.mijnafvalwijzer.nl' -- default
 	end
 	local Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"', false)
 	if Web_Data == '' then
@@ -45,10 +45,17 @@ function Perform_Update()
 		return
 	end
 	-- Find end section or else use a length of 30000 characters to get the first 25ish occurences
-	local e_data = Web_Data:find('id="waste-info-sections"', s_data, true) or (s_data + 30000)
+	local e_data = Web_Data:find('<!-- DESKTOP/TABLET VIEW:', s_data, true) or (s_data + 60000)
+	-- Strip all embedded images
+	Web_Data = Web_Data:gsub('<img%s+src="data:image.-">', '')
 	-- Maximise the Data to review to keep the speed of the module
-	if e_data - s_data > 30000 then
-		e_data = s_data + 30000
+	if not e_data or e_data - s_data > 120000 then
+		Print_logfile('### Original found Calendar data section: s_data:' .. s_data .. ' -> e_data:' .. e_data)
+		e_data = s_data + 120000
+		if e_data > Web_Data:len() then
+			e_data = Web_Data:len() - 10
+			Print_logfile('### Use webdata:len() s_data:' .. s_data .. ' -> e_data:' .. e_data)
+		end
 	end
 	Web_Data = Web_Data:sub(s_data, e_data)
 	if Web_Data == nil or Web_Data == '' then
@@ -56,7 +63,7 @@ function Perform_Update()
 		return
 	end
 	Web_Data = Web_Data:gsub('%s+', ' ')
-	Print_logfile('### Calendar data section: s_data:'..s_data ..  ' -> e_data:'..e_data)
+	Print_logfile('### Calendar data section: s_data:' .. s_data .. ' -> e_data:' .. e_data)
 	Print_logfile('---- web data stripped -------------------------------------------------------------------')
 	Print_logfile(Web_Data)
 	Print_logfile('---- end web data stripped ------------------------------------------------------------------------')
@@ -64,10 +71,15 @@ function Perform_Update()
 	local i = 0
 	-- loop through returned result
 	Print_logfile('- start looping through received data ----------------------------------------------------')
-	for web_garbagetype, web_garbagedesc, web_garbagedate in string.gmatch(Web_Data, '#waste.(.-)".-title="(.-)".-span.line.break">(.-)<') do
+	--for web_garbagetype, web_garbagedate, web_garbagedesc in string.gmatch(Web_Data, 'href="#waste%-(.-)".-title="(.-)".-span class="span%-line%-break">(.-)</span>.-afvaldescr.-">(.-)</span>') do
+	for a_block in Web_Data:gmatch('<a [^>]-(href="#waste%-.-)</a>') do
+		local web_garbagetype = a_block:match('href="#waste%-(.-)"')
+		local web_garbagedate = a_block:match('span class="span%-line%-break">(.-)</span>')
+		local web_garbagedesc = a_block:match('afvaldescr[^>]*>(.-)</span>')
 		i = i + 1
-		Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. ' web_garbagedesc:' .. tostring(web_garbagedesc or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
+		-- Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. ' web_garbagedesc:' .. tostring(web_garbagedesc or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
 		if web_garbagetype ~= nil and web_garbagedate ~= nil then
+			Print_logfile(i .. ' web_garbagetype:' .. tostring(web_garbagetype or '?') .. ' web_garbagedesc:' .. tostring(web_garbagedesc or '?') .. '   web_garbagedate:' .. tostring(web_garbagedate or '?'))
 			web_garbagedesc = web_garbagedesc or ''
 			-- first match for each Type we save the date to capture the first next dates
 			--Print_logfile( web_garbagetype,web_garbagedate)
@@ -83,5 +95,6 @@ function Perform_Update()
 			end
 		end
 	end
+	Print_logfile('- End looping through received data ----------------------------------------------------')
 end
 -- End Functions =========================================================================
