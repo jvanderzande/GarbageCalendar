@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1100'
+M_ver = '20250728-1130'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -38,12 +38,25 @@ function Perform_Update()
 		return
 	end
 	-- Retrieve part with the dates for pickup
-	Web_Data = Web_Data:match('.-class="ophaaldagen">(.-)<div id="calendarMessage"')
+	-- local s_data = Web_Data:find('class="ophaaldagen"') or 0
+	local s_data = Web_Data:find('href="#waste', 0, true) or 0
+	if s_data == 0 then
+		Print_logfile('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
+		return
+	end
+	-- Find end section or else use a length of 30000 characters to get the first 25ish occurences
+	local e_data = Web_Data:find('id="waste-info-sections"', s_data, true) or (s_data + 30000)
+	-- Maximise the Data to review to keep the speed of the module
+	if e_data - s_data > 30000 then
+		e_data = s_data + 30000
+	end
+	Web_Data = Web_Data:sub(s_data, e_data)
 	if Web_Data == nil or Web_Data == '' then
 		Print_logfile('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
 		return
 	end
 	Web_Data = Web_Data:gsub('%s+', ' ')
+	Print_logfile('### Calendar data section: s_data:'..s_data ..  ' -> e_data:'..e_data)
 	Print_logfile('---- web data stripped -------------------------------------------------------------------')
 	Print_logfile(Web_Data)
 	Print_logfile('---- end web data stripped ------------------------------------------------------------------------')
