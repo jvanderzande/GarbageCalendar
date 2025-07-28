@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20250728-1420'
+M_ver = '20250728-1530'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -37,24 +37,35 @@ function Perform_Update()
 		Print_logfile('Error check postcode   Web_Data:' .. Web_Data)
 		return
 	end
+
+	-- Strip all embedded images
+	Web_Data = Web_Data:gsub('<img%s+src="data:image.-">', '')
+
 	-- Retrieve part with the dates for pickup
 	-- local s_data = Web_Data:find('class="ophaaldagen"') or 0
 	local s_data = Web_Data:find('href="#waste', 0, true) or 0
+	local Expected_data_len = 120000
 	if s_data == 0 then
-		Print_logfile('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
-		return
+		s_data = Web_Data:find('ITEMS layout -->', 0, true) or 0
+		if s_data == 0 then
+			Print_logfile('### Error: Could not find the ophaaldata section in the data.  skipping the rest of the logic.')
+			return
+		end
 	end
 	-- Find end section or else use a length of 30000 characters to get the first 25ish occurences
-	local e_data = Web_Data:find('<!-- DESKTOP/TABLET VIEW:', s_data, true) or (s_data + 60000)
-	-- Strip all embedded images
-	Web_Data = Web_Data:gsub('<img%s+src="data:image.-">', '')
+	local e_data = Web_Data:find('<!-- DESKTOP/TABLET VIEW:', s_data, true)
+	if not e_data then
+		local e_data = Web_Data:find('ITEMS layout -->', s_data+50, true) or (s_data + Expected_data_len)
+	end
 	-- Maximise the Data to review to keep the speed of the module
-	if not e_data or e_data - s_data > 120000 then
+	if not e_data or e_data - s_data > Expected_data_len*1.3 then
 		Print_logfile('### Original found Calendar data section: s_data:' .. s_data .. ' -> e_data:' .. e_data)
-		e_data = s_data + 120000
+		e_data = s_data + Expected_data_len
 		if e_data > Web_Data:len() then
 			e_data = Web_Data:len() - 10
 			Print_logfile('### Use webdata:len() s_data:' .. s_data .. ' -> e_data:' .. e_data)
+		else
+			Print_logfile('### Use max expected datalength:' .. s_data .. ' -> e_data:' .. e_data)
 		end
 	end
 	Web_Data = Web_Data:sub(s_data, e_data)
