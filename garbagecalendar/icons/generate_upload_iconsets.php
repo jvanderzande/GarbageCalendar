@@ -13,45 +13,49 @@
    	['reloaddata'] = {hour = 08, min = 23, daysbefore = 0, reminder = 0, text = 'trigger for reloading data from website into a file'},
    	['dummy1'] = {hour = 02, min = 31, daysbefore = 0, reminder = 0, text = 'dummy to trigger update of textdevice'}
 
-   GarbageClerder will check whether "garbagecalendar_grey" already available is and else, when zip file is found
-   in the icons directory, will be tried to upload it as custom icon to domoticz for you.
+   GarbageCalendar will check whether "garbagecalendar_grey" already available is in DOmoticz, and else, when zip file is found
+   in the icons directory, will upload it as custom icon to domoticz for you.
 }
 */
 // php.ini requires "extension=zip" to be enabled for this script to work!
 //
 // ================================================================================================
-// Define here the iconname.png you have added and run the script to generate the required zipfile
-// create_ico_collection("garbagecalendar_Type-here-your-icon-name", "zwarte");
-// ================================================================================================
-/* standard set of custom icons, with thanks to the Dashticz project for a copy of their set!!
-create_ico_collection("garbagecalendar_black", "zwarte bak");
-create_ico_collection("garbagecalendar_blue", "blauwe bak");
-create_ico_collection("garbagecalendar_brown", "bruine bak");
-create_ico_collection("garbagecalendar_green", "groene bak");
-create_ico_collection("garbagecalendar_grey", "grijze bak");
-create_ico_collection("garbagecalendar_orange", "oranje bak");
-create_ico_collection("garbagecalendar_red", "rode bak");
-create_ico_collection("garbagecalendar_white", "witte bak");
-create_ico_collection("garbagecalendar_yellow", "gele bak");
-create_ico_collection("garbagecalendar_tree", "kerstbomen");
-create_ico_collection("garbagecalendar_unknown", "onbekend");
-*/
-//
-function create_ico_collection($name, $text)
+// Define here the ico directories that contain the different ico sets.
+// The standard set of custom icons, with thanks to the Dashticz project for a copy of their set!!
+create_ico_collection("original_icons");
+// more modern ico set supplied arjantenhoopen: https://github.com/jvanderzande/GarbageCalendar/issues/43
+create_ico_collection("modern_icons");
+
+
+function create_ico_collection($dirname) {
+	// loop through directory, find *.png and generate zip file for each
+	print(" ----- Directory " . $dirname . " ---------------------------\n");
+	$dir = new DirectoryIterator($dirname);
+	foreach ($dir as $fileinfo) {
+		if ($fileinfo->isDot()) continue;
+		if (!$fileinfo->isFile()) continue;
+		print("- " . $fileinfo->getFilename() . " => ");
+		if (substr($fileinfo->getFilename(), -4) != ".png") continue;
+		$name = substr($fileinfo->getFilename(), 0, -4);
+		create_ico_zipfile($dirname, $name, $name);
+	}
+}
+
+function create_ico_zipfile($dirname, $name, $text)
 {
     $zip = new ZipArchive();
     $filename = "${name}.zip";
 
-    if ($zip->open("".$filename, ZipArchive::CREATE)!==true) {
+    if ($zip->open("$filename", ZipArchive::CREATE)!==true) {
         exit("cannot open <$filename>\n");
     }
-    if (!file_exists("${name}.png")) {
-        exit("File missing: <${name}.png>\n");
+    if (!file_exists("$dirname/${name}.png")) {
+        exit("File missing: <$dirname/${name}.png>\n");
     }
     $zip->addFromString("icons.txt", "$name;garbagecalendar $text;Used by Garbagecalendar");
-    $zip->addFile("${name}.png", "${name}.png");
-    $zip->addFile("${name}.png", "${name}48_Off.png");
-    $zip->addFile("${name}.png", "${name}48_On.png");
+    $zip->addFile("$dirname/${name}.png", "${name}.png");
+    $zip->addFile("$dirname/${name}.png", "${name}48_Off.png");
+    $zip->addFile("$dirname/${name}.png", "${name}48_On.png");
     $zip->close();
-    print("-1> $filename generated. \n");
+    print(" $filename generated. \n");
 }
