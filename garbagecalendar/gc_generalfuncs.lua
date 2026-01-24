@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20260124-1320'
+MainGenUtilsVersion = '20260124-1400'
 
 local genfuncs = {}
 
@@ -378,8 +378,6 @@ function genfuncs.perform_webquery(url, logdata)
 	-- Check redirection to warn
 	if (not url:find(redirecturl, 1, true)) then
 		Print_logfile('### warning: Site redirected from : #' ..  url .. '#  to : #' ..  redirecturl .. '#' .. (url:find(redirecturl, 1, true) or '?'),1)
-		-- Print_logfile('### warning: Site redirected from : #' ..  url .. '#  to : #' ..  redirecturl .. '#',1)
-		-- Print_logfile('### warning: Site redirected from : ' ..  url .. '  to : ' ..  redirecturl,1)
 	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
 	local Web_Error = ''

@@ -14,7 +14,7 @@ chkfields = {
 	'websitemodule',
 	'Zipcode',
 	'Housenr',
-	--	'Housenrsuf',
+	--'Housenrsuf',
 	'Datafile'
 	--	'Hostname',
 	--	'Street',
@@ -28,7 +28,7 @@ function Perform_Update()
 	-- function to process ThisYear and Lastyear JSON data
 	--
 	Print_logfile('---- web update ----------------------------------------------------------------------------')
-	local Web_Data = genfuncs.perform_webquery('"https://data.rd4.nl/api/v1/waste-calendar?postal_code=' .. Zipcode .. '&house_number=' .. Housenr .. Housenrsuf .. '&year=' .. os.date('%Y') .. '"')
+	local Web_Data = genfuncs.perform_webquery('"https://data.rd4.nl/api/v1/waste-calendar?postal_code=' .. Zipcode .. '&house_number=' .. Housenr .. '&house_number_extension=' .. (Housenrsuf or '') .. '&year=' .. os.date('%Y') .. '"')
 	if (Web_Data == '') then
 		Print_logfile('### Error: Empty result from curl command. Please check whether curl.exe is installed.')
 		return
@@ -45,7 +45,7 @@ function Perform_Update()
 	-- only process nextyear data in case we do not have the requested number of next events
 	if #garbagedata < 10 then
 		-- get webinfo for next year
-		local Web_Data = genfuncs.perform_webquery('"https://data.rd4.nl/api/v1/waste-calendar?postal_code=' .. Zipcode .. '&house_number=' .. Housenr .. Housenrsuf .. '&year=' .. (tonumber(os.date('%Y')) + 1) .. '"')
+		local Web_Data = genfuncs.perform_webquery('"https://data.rd4.nl/api/v1/waste-calendar?postal_code=' .. Zipcode .. '&house_number=' .. Housenr .. '&house_number_extension='  .. (Housenrsuf or '') .. '&year=' .. (tonumber(os.date('%Y')) + 1) .. '"')
 		if (Web_Data == '') then
 			Print_logfile('### Error: Empty result from curl command. Please check whether curl.exe is installed.')
 			return
