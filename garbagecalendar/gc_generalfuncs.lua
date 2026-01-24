@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20250614-1700'
+MainGenUtilsVersion = '20260124-1320'
 
 local genfuncs = {}
 
@@ -278,88 +278,6 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 	end
 end
 
---[[
--- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
---  Maybe use later to create the required ZIP file for a custom icon, but doesn't work with tar only
--- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-function genfuncs.CopyFile(old_path, new_path)
-	local old_file = io.open(old_path, 'rb')
-	local new_file = io.open(new_path, 'wb')
-	local old_file_sz, new_file_sz = 0, 0
-	if not old_file or not new_file then
-		Print_logfile('Copy error opening input or output')
-		return false
-	end
-	while true do
-		local block = old_file:read(2 ^ 13)
-		if not block then
-			old_file_sz = old_file:seek('end')
-			break
-		end
-		new_file:write(block)
-	end
-	old_file:close()
-	new_file_sz = new_file:seek('end')
-	new_file:close()
-	Print_logfile('File copied:' .. old_path .. ' to ' .. new_path)
-	return (new_file_sz == old_file_sz)
-end
-
--------------------------------------------------------
--- Create zip file required for custom icons in Domoticz
-function genfuncs.CreateDeviceIconZip(iconfile)
-	local ICONS_path = GC_scriptpath .. 'icons/'
-	local ZipTempPath = ICONS_path .. 'ziptemp/'
-
-	if (not genfuncs.isdir(ZipTempPath)) then
-		-- Try creating subdir ziptemp in the garbagecalendar/icons subdirectory.
-		os.execute('mkdir "' .. ZipTempPath .. '"')
-		if (not genfuncs.isdir(ZipTempPath)) then
-			Print_logfile('### Info: Failed creating temp Subdir for ZIP creation:"' .. ZipTempPath .. '"')
-			return nil
-		end
-		Print_logfile('### Info: created temp Subdir for ZIP creation:"' .. ZipTempPath .. '"')
-	end
-
-	-- Process input filename
-	local iconname = iconfile:gsub('%.png', '')
-	-- Copy the png icon file to the required names in the ziptemp directory
-	ICONS_path = ICONS_path .. '/'
-	ZipTempPath = ZipTempPath .. '/'
-	genfuncs.CopyFile(ICONS_path .. iconfile, ZipTempPath .. iconfile:gsub('.png', '48_On.png'))
-	genfuncs.CopyFile(ICONS_path .. iconfile, ZipTempPath .. iconfile:gsub('.png', '48_Off.png'))
-
-	-- Create nul file for the small icon in the ziptemp directory
-	local file = io.open(ZipTempPath .. iconfile, 'w')
-	if file == nil then
-		Print_logfile('!!! Error creating '..ZipTempPath .. iconfile)
-		return nil
-	end
-	file:close()
-
-	-- create icons.txt file
-	local file = io.open(ZipTempPath .. 'icons.txt', 'w')
-	if file == nil then
-		Print_logfile('!!! Error opening icons.txt ')
-		return nil
-	end
-	file:write(iconname .. ';' .. iconname:gsub('_', ' ') .. ';Used by Garbagecalendar')
-	file:close()
-
-	-- create a new zip file
-	os.remove(ZipTempPath .. iconname .. '.zip')
-	os.execute('cd "' .. ZipTempPath .. '" & tar -rv  -f "' .. iconname .. '.zip" "' .. iconname .. '.png" "' .. iconname .. '48_On.png" "' .. iconname .. '48_Off.png" "' .. 'icons.txt"')
-	-- Copy the created zip file to the icon directory
-	genfuncs.CopyFile(ZipTempPath .. iconname .. '.zip', ICONS_path .. iconname .. '.zip')
-
-	-- delete temp files
-	os.remove(ZipTempPath .. iconname .. '.zip')
-	os.remove(ZipTempPath .. iconname .. '.png')
-	os.remove(ZipTempPath .. iconname .. '48_On.png')
-	os.remove(ZipTempPath .. iconname .. '48_Off.png')
-	os.remove(ZipTempPath .. 'icons.txt')
-end
-]]
 -------------------------------------------------------
 -- try to load module/library
 function genfuncs.loadlualib(libname)
@@ -440,7 +358,7 @@ function genfuncs.perform_webquery(url, logdata)
 	-- Get effective url and http response code from the output and strip it from the result output
 	--Print_logfile(Web_Data)
 	local httprc = Web_Data:match('#@#httprc:([^#]*)#@#') or '?'
-	local redirecturl = '"' .. (Web_Data:match('#@#endurl:([^#]*)#@#') or '?') .. '"'
+	local redirecturl = (Web_Data:match('#@#endurl:([^#]*)#@#') or '?')
 	if Web_Data:find('(.*)\n#@#httprc:') then
 		Web_Data = Web_Data:match('(.*)\n#@#httprc:')
 	end
@@ -458,8 +376,10 @@ function genfuncs.perform_webquery(url, logdata)
 		return ''
 	end
 	-- Check redirection to warn
-	if (url ~= redirecturl and redirecturl ~= '?') then
-		Print_logfile('### warning: Site redirected from : ' ..  url .. '  to : ' ..  redirecturl,1)
+	if (not url:find(redirecturl, 1, true)) then
+		Print_logfile('### warning: Site redirected from : #' ..  url .. '#  to : #' ..  redirecturl .. '#' .. (url:find(redirecturl, 1, true) or '?'),1)
+		-- Print_logfile('### warning: Site redirected from : #' ..  url .. '#  to : #' ..  redirecturl .. '#',1)
+		-- Print_logfile('### warning: Site redirected from : ' ..  url .. '  to : ' ..  redirecturl,1)
 	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
 	local Web_Error = ''

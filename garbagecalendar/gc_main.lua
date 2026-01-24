@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20250614-1700'
+	MainScriptVersion = '20260124-1320'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -634,9 +634,11 @@ function gc_main(commandArray, domoticz, batchrun)
 		for i = 1, #garbagedata do
 			if garbagedata[i].garbagetype ~= nil then
 				-- change all table entries to lower to make the script case insensitive
-				web_garbagetype = garbagedata[i].garbagetype:lower():gsub('\\', '')
-				web_garbagedate = garbagedata[i].garbagedate
-				web_garbagedesc = (garbagedata[i].wdesc or '')
+				-- also remove: any \\, spaces or . in the string
+				local web_garbagetype = garbagedata[i].garbagetype:lower()
+				web_garbagetype = garbagedata[i].garbagetype:gsub('\\', '')
+				local web_garbagedate = garbagedata[i].garbagedate
+				local web_garbagedesc = (garbagedata[i].wdesc or '')
 				if (web_garbagedesc == '') then
 					if garbagetype_cfg[web_garbagetype] ~= nil then
 						web_garbagedesc = garbagetype_cfg[web_garbagetype].text
@@ -644,14 +646,22 @@ function gc_main(commandArray, domoticz, batchrun)
 						web_garbagedesc = '???'
 					end
 				end
-				-- first match for each Type we save the date to capture the first next dates
+				-- check stripped version of the garbagetype when original is missing
 				if garbagetype_cfg[web_garbagetype] == nil then
+					-- Remove any none-a-z 0-9 character from the GarbageType and convert to lowercase for better matching
+					local tweb_garbagetype = web_garbagetype:gsub("[^%w]", "")
+					if garbagetype_cfg[tweb_garbagetype] ~= nil then
+						Print_logfile('------> "' .. web_garbagetype .. '" ->Found stripped GarbageType so use that version: ' .. tweb_garbagetype)
+						web_garbagetype = tweb_garbagetype
+					else
+						Print_logfile('------> "' .. web_garbagetype .. '" ->Did not find stripped GarbageType ' .. tweb_garbagetype)
+					end
+				end
+				-- check if the garbagetype is missing in the config table and generate warning for log
+				if garbagetype_cfg[web_garbagetype] == nil and garbagetype_cfg[tweb_garbagetype] == nil then
 					if web_garbagedesc == '???' then
 						web_garbagedesc = web_garbagetype
 					end
-					-- if missingrecords == '' then
-					--  	missingrecords = 'garbagetype_cfg = {\n'
-					-- end
 					missingrecords = missingrecords .. '  ["' .. web_garbagetype:lower() .. '"]' .. string.rep(' ', 10 - string.len(web_garbagetype)) .. ' ={hour=19,min=02,daysbefore=1,reminder=0,text="' .. web_garbagedesc .. '", icon=nil},\n'
 					garbagetype_cfg[web_garbagetype] = {hour = 0, min = 0, daysbefore = 0, reminder = 0, text = 'dummy'}
 					garbagetype_cfg[web_garbagetype].text = web_garbagetype
@@ -807,10 +817,10 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 
 		-- Check the for the customicon idx for our defined icon in config (if defined)
-		do_iconupdate = false
+		local do_iconupdate = false
 		-- only do icon update when icon= is defined in the config.
 		-- when icon='' or not found then reset to default icon
-		if FirstGTypeIcon then
+		if FirstGTypeIcon and FirstGTypeIcon ~= '' then
 			do_iconupdate = true
 			Print_logfile('-> FirstGTypeIcon:' .. (FirstGTypeIcon or '?'))
 			if (FirstGTypeIcon or '') ~= '' then
@@ -926,7 +936,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- Start of logic ==============================================================================================
 
 	-- check for notification times and run update only when we are at one of these defined times
-	Print_logfile('-> Start checking garbagetype_cfg table whether an action is needed:')
+	Print_logfile('-> Start checking garbagetype_cfg table records:')
 	if garbagetype_cfg == nil then
 		Print_logfile('### Error: failed loading the "garbagetype_cfg" table from your garbagecalendarconfig.lua file. Please check your setup file.', 1)
 		return
@@ -958,19 +968,19 @@ function gc_main(commandArray, domoticz, batchrun)
 			Print_logfile('!!!! Check reminder field value for GarbageType "' .. tbl_garbagetype .. '"  current value:"' .. gtdata.reminder .. '"')
 			garbagetype_cfg[tbl_garbagetype].reminder = 0
 		end
-		if (tbl_garbagetype ~= tbl_garbagetype:lower()) then
-			Print_logfile(tbl_garbagetype .. ' change to ' .. tbl_garbagetype:lower())
-			garbagetype_cfg[tbl_garbagetype:lower()] = {
-				hour = gtdata.hour,
-				min = gtdata.min,
-				daysbefore = gtdata.daysbefore,
-				reminder = gtdata.reminder,
-				text = gtdata.text
-			}
-			garbagetype_cfg[tbl_garbagetype] = nil
+		-- Create second version of the garbagetype for better matching.
+		-- Remove any none-a-z 0-9 character from the GarbageType and convert to lowercase for better matching
+		local test_garbagetype = tbl_garbagetype:lower():gsub("[^%w]", "")
+		-- copy the current table records when modified version is different to improve matching
+		if (tbl_garbagetype ~= test_garbagetype) then
+			Print_logfile('-> added stripped version of garbagetype "' .. tbl_garbagetype .. '" change to "' .. test_garbagetype .. '" to table')
+			--Make copy of record instead of pointer and mark with gtest
+			garbagetype_cfg[test_garbagetype] = JSON:decode(JSON:encode(garbagetype_cfg[tbl_garbagetype]))
+			garbagetype_cfg[test_garbagetype].gtest = "*"
 		end
 		-- create dummy entry to update the domoticz device 1 minute after the webupdate background task was scheduled
 		if tbl_garbagetype == 'reloaddata' then
+			-- add 1 minute to hour/min
 			local smin = gtdata.min + 1
 			local shour = gtdata.hour
 			if smin > 59 then
@@ -998,7 +1008,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				timenow.hour == gtdata.hour + gtdata.reminder - 24) and --reminder next day
 				timenow.min == gtdata.min
 		 then
-			Print_logfile(gcnt .. ' ==> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype) .. '  active=' .. (gtdata.active or '??') .. '  reminder=' .. (gtdata.reminder or '??'))
+			Print_logfile(gcnt .. (gtdata.gtest or '-') .. ' ==> NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype="' .. tostring(tbl_garbagetype) .. '"  active=' .. (gtdata.active or '??') .. '  reminder=' .. (gtdata.reminder or '??') .. '  icon=' .. (gtdata.icon or '??'))
 			if tbl_garbagetype == 'reloaddata' then
 				-- perform background data updates
 				GetWebData()
@@ -1006,7 +1016,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				UpdateDevRun = true
 			end
 		else
-			Print_logfile(gcnt .. ' --- NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype=' .. tostring(tbl_garbagetype) .. '  active=' .. (gtdata.active or '??') .. '  reminder=' .. (gtdata.reminder or '??'))
+			Print_logfile(gcnt .. (gtdata.gtest or '-')  .. ' --- NotificationTime=' .. string.format('%02d:%02d', gtdata.hour, gtdata.min) .. '  Garbagetype="' .. tostring(tbl_garbagetype) .. '"  active=' .. (gtdata.active or '??') .. '  reminder=' .. (gtdata.reminder or '??') .. '  icon=' .. (gtdata.icon or '??'))
 		end
 	end
 	-- Always update when mydebug is enabled
