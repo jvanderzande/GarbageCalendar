@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20250728-1530'
+M_ver = '20260126-0950'
 websitemodule = 'm_mijnafvalwijzer'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 -- Link to WebSite:  https://mijnafvalwijzer.nl/nl/postcode/huisnr--
@@ -29,7 +29,7 @@ function Perform_Update()
 	if Hostname == '' then
 		Hostname = 'www.mijnafvalwijzer.nl' -- default
 	end
-	local Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"', false)
+	local Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/nl/' .. Zipcode .. '/' .. Housenr .. '' .. Housenrsuf .. '"')
 	if Web_Data == '' then
 		Print_logfile('Error Web_Data is empty.')
 		return
@@ -55,7 +55,7 @@ function Perform_Update()
 	-- Find end section or else use a length of 30000 characters to get the first 25ish occurences
 	local e_data = Web_Data:find('<!-- DESKTOP/TABLET VIEW:', s_data, true)
 	if not e_data then
-		local e_data = Web_Data:find('ITEMS layout -->', s_data+50, true) or (s_data + Expected_data_len)
+		e_data = Web_Data:find('ITEMS layout -->', s_data+50, true) or (s_data + Expected_data_len)
 	end
 	-- Maximise the Data to review to keep the speed of the module
 	if not e_data or e_data - s_data > Expected_data_len*1.3 then

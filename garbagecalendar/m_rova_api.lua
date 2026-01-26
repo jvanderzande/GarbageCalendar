@@ -33,14 +33,14 @@ function Perform_Update()
 		Print_logfile('### Error: Empty result from curl command. Please check whether curl.exe is installed.')
 		return
 	end
-	local decoded_response = JSON:decode(Web_Data)
+	local JSON_Web_Data = JSON:decode(Web_Data)
 	--
-	if type(decoded_response) ~= 'table' then
+	if type(JSON_Web_Data) ~= 'table' then
 		Print_logfile('### Error: Empty data table in JSON data...  stopping execution.')
 		return
 	end
 	Print_logfile('- start looping through this year received data -----------------------------------------------------------')
-	processdata(decoded_response)
+	ProcessData(JSON_Web_Data)
 	-- only process nextyear data in case we do not have the requested number of next events
 	if #garbagedata < 10 then
 		-- get webinfo for next year
@@ -49,17 +49,17 @@ function Perform_Update()
 			Print_logfile('### Error: Empty result from curl command. Please check whether curl.exe is installed.')
 			return
 		end
-		local decoded_response = JSON:decode(Web_Data)
-		if type(decoded_response) ~= 'table' then
+		local JSON_Web_Data = JSON:decode(Web_Data)
+		if type(JSON_Web_Data) ~= 'table' then
 			Print_logfile('### Error: Empty data table in JSON data...  stopping execution.')
 			return
 		end
 		Print_logfile('- start looping through next year received data -----------------------------------------------------------')
-		processdata(decoded_response)
+		ProcessData(JSON_Web_Data)
 	end
 end
 
-function processdata(ophaaldata)
+function ProcessData(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
 		local record = ophaaldata[i]

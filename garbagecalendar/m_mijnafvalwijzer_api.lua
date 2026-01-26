@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_mijnafvalwijzer_api.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20250124-2020'
+M_ver = '20260126-0950'
 websitemodule = 'm_mijnafvalwijzer_api'
 -- Link to WebSite: https://api.mijnafvalwijzer.nl/webservices/appsinput/?apikey=5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca&method=postcodecheck&postcode=1234AB&street=&huisnummer=1&toevoeging=&app_name=afvalwijzer&platform=phone&mobiletype=android&afvaldata=2021-01-01&version=58&langs=nl
 -- Also used for rova with config: Hostname=api.inzamelkalender.rova.nl
@@ -50,10 +50,10 @@ function Perform_Update()
 	end
 	--
 	-- Decode JSON table
-	local decoded_response = JSON:decode(Web_Data)
+	local JSON_Web_Data = JSON:decode(Web_Data)
 
 	-- get the ophaaldagen tabel for the coming scheduled pickups for this year
-	local rdata = decoded_response['ophaaldagen']
+	local rdata = JSON_Web_Data['ophaaldagen']
 	if type(rdata) ~= 'table' then
 		Print_logfile('### Error: Empty data.ophaaldagen table in JSON data...  stopping execution.')
 		return
@@ -65,11 +65,11 @@ function Perform_Update()
 		return
 	end
 	Print_logfile('- start looping through this year received data -----------------------------------------------------------')
-	processdata(rdata)
+	ProcessData(rdata)
 	-- only process nextyear data in case we do not have the requested number of next events
 	if #garbagedata < 10 then
 		-- get the ophaaldagen tabel for next year when needed
-		rdataly = decoded_response['ophaaldagenNext']
+		rdataly = JSON_Web_Data['ophaaldagenNext']
 		if type(rdataly) ~= 'table' then
 			Print_logfile('@AFW: Empty data.ophaaldagen table in JSON data...  stopping execution.')
 		else
@@ -79,13 +79,13 @@ function Perform_Update()
 			else
 				-- get the next number of ShowNextEvents
 				Print_logfile('- start looping through next year received data -----------------------------------------------------------')
-				processdata(rdataly)
+				ProcessData(rdataly)
 			end
 		end
 	end
 end
 
-function processdata(ophaaldata)
+function ProcessData(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
 		local record = ophaaldata[i]

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_montferland.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1400'
+M_ver = '20260126-0950'
 websitemodule = 'm_montferland'
 -- Link to WebSite:  http://www.montferland.afvalwijzer.net/introductie.aspx.
 --
@@ -66,25 +66,25 @@ function Perform_Update()
 	end
 
 	if (Web_Data:sub(1, 2) ~= '[]') then
-		local jdata = JSON:decode(Web_Data)
+		local JSON_Web_Data = JSON:decode(Web_Data)
 		-- get the ophaaldagen tabel for the coming scheduled pickups
-		if type(jdata) ~= 'table' then
+		if type(JSON_Web_Data) ~= 'table' then
 			Print_logfile('### Error: Empty Kalender found stopping execution.')
 			return
 		end
 		-- process the data
 		Print_logfile('- start looping through this year received data -----------------------------------------------------------')
-		processdata(jdata)
+		ProcessData(JSON_Web_Data)
 	end
 	if (Web_Data2:sub(1, 2) ~= '[]') then
-		local jdata = JSON:decode(Web_Data2)
+		local JSON_Web_Data = JSON:decode(Web_Data2)
 		Print_logfile('- start looping through next year received data -----------------------------------------------------------')
-		processdata(jdata)
+		ProcessData(JSON_Web_Data)
 	end
 
 end
 
-function processdata(ophaaldata)
+function ProcessData(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
 		local record = ophaaldata[i]

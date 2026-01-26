@@ -40,9 +40,9 @@ websitemodule = 'm_mijnafvalwijzer'
 --input_csv_file = "/home/pi/garbage_input.csv"
 -- =================================================================================================================================
 
--- Switch on mydebug in case of issues and initially and check the domoticz log for any issues or missing
+-- Switch on testrun in case of issues and initially and check the domoticz log for any issues or missing
 -- set to true or false
-mydebug = false            -- run the script as it normally does when any of the scheduled times is the current time
+testrun = false            -- run the script as it normally does when any of the scheduled times is the current time
 testdataload = false       -- run the web update module in the foreground with each run for debugging.
 testdataloadbatch = false  -- run the web update module in the background with each run for debugging. (testdataload takes presedence)
 testnotification = false   -- trigger a test notification each run for the first record for testing the notification system

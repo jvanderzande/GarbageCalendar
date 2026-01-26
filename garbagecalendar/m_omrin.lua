@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_omrin.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1100'
+M_ver = '20260126-0950'
 websitemodule = 'm_omrin'
 -- Link to WebSite: "https://www.omrin.nl/bij-mij-thuis/afval-regelen/afvalkalender"
 --
@@ -60,17 +60,17 @@ function Perform_Update()
 	Print_logfile('---- web data stripped -------------------------------------------------------------------')
 	Print_logfile(Web_Data)
 	Print_logfile('---- end web data ------------------------------------------------------------------------')
-	local jdata = JSON:decode(Web_Data)
+	local JSON_Web_Data = JSON:decode(Web_Data)
 	-- get PublicKey
-	if type(jdata) ~= 'table' then
+	if type(JSON_Web_Data) ~= 'table' then
 		Print_logfile('### Error: Token not received, stopping execution.')
 		return
 	end
-	if not jdata.PublicKey then
+	if not JSON_Web_Data.PublicKey then
 		Print_logfile('### Error: Unable to read the PublicKey field from received data...  stopping execution.')
 		return
 	end
-	local PublicKey = jdata.PublicKey
+	local PublicKey = JSON_Web_Data.PublicKey
 
 	-- save publickey to file
 	local file, err = io.open(Datafile .. '_tmp_token.tmp', 'w')
@@ -120,23 +120,24 @@ function Perform_Update()
 		Print_logfile('### Error: Unable to retrieve the Kalender information for this address...  stopping execution.')
 		return
 	end
-	jdata = JSON:decode(Web_Data)
+	JSON_Web_Data = JSON:decode(Web_Data)
 	-- check received data is JSON object table
-	if type(jdata) ~= 'table' then
+	if type(JSON_Web_Data) ~= 'table' then
 		Print_logfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
 	-- check if CalendarV2 is part of the received data and is a table, as that contains the garbage collection information
-	if type(jdata['CalendarV2']) ~= 'table' then
-		Print_logfile('### Error: Empty jdata["CalendarV2"] table in JSON data...  stopping execution.')
+	if type(JSON_Web_Data['CalendarV2']) ~= 'table' then
+		Print_logfile('### Error: Empty JSON_Web_Data["CalendarV2"] table in JSON data...  stopping execution.')
 		return
 	end
 
 	-- process the data
-	processdata(jdata['CalendarV2'])
+	ProcessData(JSON_Web_Data['CalendarV2'])
+	ProcessData(JSON_Web_Data['CalendarHomeV2'])
 end
 
-function processdata(ophaaldata)
+function ProcessData(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
 		local record = ophaaldata[i]

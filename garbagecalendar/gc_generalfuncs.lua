@@ -1,41 +1,58 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20260124-1400'
+MainGenUtilsVersion = '20260126-0950'
 
 local genfuncs = {}
+
+-- addlogmessage function sends messages to Domoticz log
+function genfuncs.domo_api_query(url, uploadfile)
+	if not url then
+		return nil, 1, nil
+	end
+	local sQuery = 'curl --silent --connect-timeout 2 '
+	if uploadfile and uploadfile ~= '' then
+		sQuery = sQuery .. ' -F file="@' .. uploadfile .. '" '
+	end
+	sQuery = sQuery .. '"' .. url .. '"'
+
+	Print_logfile('-> domo_api_query:' .. (sQuery or 'NIL'))
+	local handle = assert(io.popen(sQuery))
+	local Web_Data = handle:read('*all')
+	handle:close()
+	Print_logfile('Web_Data:' .. (Web_Data or 'NIL'))
+	local JSON_Web_Data = JSON:decode(Web_Data or '')
+	if (JSON_Web_Data == nil) then
+		-- No data returned so API must have failed
+		Print_logfile('-< domo_api_query failed, no json returned:' .. (Web_Data or '?'))
+		return nil, 2
+	end
+	if (JSON_Web_Data['status'] ~= 'OK') then
+		-- No data returned so API must have failed
+		Print_logfile('-< domo_api_query failed, status not OK:' .. (Web_Data or '?'))
+		return JSON_Web_Data, 3
+	end
+	Print_logfile('-< domo_api_query successful.')
+	return JSON_Web_Data, 0
+end
 
 -- 15326	20230601	Webserver	Merge PR 5697 Refactor/webserversimplification
 -- Get Domoticz Version used
 function genfuncs.getdomoticzversion()
 	local url = DomoticzURL .. '/json.htm?type=command&param=getversion'
-	local sQuery = 'curl --connect-timeout 1 "' .. url .. '"'
-	--Print_logfile(sQuery)
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
+	local JSON_Web_Data = genfuncs.domo_api_query(url)
 	Print_logfile('Get domoticz version information:' .. url)
-	if Web_Data and Web_Data ~= '' then
-		Print_logfile('result:' .. Web_Data:gsub('[\r\n\t]', ''))
-		decoded_response = JSON:decode(Web_Data)
-		-- Set the Global variables for Domoticz version and revision
-		if decoded_response and decoded_response['Revision'] then
-			genfuncs.DomoticzRevision = (decoded_response['Revision'] or 0)
-			genfuncs.DomoticzVersion = (decoded_response['version'] or 0)
-			-- build_time: "2023-06-18 14:39:26" convert to number 20230618 to allow for comparing
-			genfuncs.DomoticzBuildDate = (decoded_response['build_time'] or 0)
-			genfuncs.DomoticzBuildDate = genfuncs.DomoticzBuildDate:gsub("(%d+)%-(%d+)%-(%d+).*","%1%2%3")
-			genfuncs.DomoticzBuildDate = tonumber(genfuncs.DomoticzBuildDate or 0)
-		else
-			genfuncs.DomoticzRevision = 0
-			genfuncs.DomoticzVersion = 0
-			genfuncs.DomoticzBuildDate = 0
-		end
+	if JSON_Web_Data and JSON_Web_Data['Revision'] then
+		genfuncs.DomoticzRevision = (JSON_Web_Data['Revision'] or 0)
+		genfuncs.DomoticzVersion = (JSON_Web_Data['version'] or 0)
+		-- build_time: "2023-06-18 14:39:26" convert to number 20230618 to allow for comparing
+		genfuncs.DomoticzBuildDate = (JSON_Web_Data['build_time'] or 0)
+		genfuncs.DomoticzBuildDate = genfuncs.DomoticzBuildDate:gsub("(%d+)%-(%d+)%-(%d+).*","%1%2%3")
+		genfuncs.DomoticzBuildDate = tonumber(genfuncs.DomoticzBuildDate or 99999999)
 	else
-		Print_logfile('No or Empty response from Domoticz url:' .. url)
-		genfuncs.DomoticzRevision = -1
-		genfuncs.DomoticzVersion = -1
-		genfuncs.DomoticzBuildDate = -1
+		genfuncs.DomoticzRevision = 0
+		genfuncs.DomoticzVersion = 0
+		genfuncs.DomoticzBuildDate = 99999999
 	end
 	Print_logfile('-> DomoticzVersion ' .. (genfuncs.DomoticzVersion or 'nil'))
 	Print_logfile('-> DomoticzRevision ' .. (genfuncs.DomoticzRevision or 'nil'))
@@ -46,11 +63,8 @@ end
 function genfuncs.addlogmessage(text, level)
 	text = text or 'nil'
 	level = tostring(level) or '1'
-	url = DomoticzURL .. '/json.htm?type=command&param=addlogmessage&message=' .. genfuncs.url_encode(text) .. '&level=' .. level
-	local sQuery = 'curl -k "' .. url .. '" > /tmp/garbagecalendar_logerrors.log 2>&1 '
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
+	local url = DomoticzURL .. '/json.htm?type=command&param=addlogmessage&message=' .. genfuncs.url_encode(text) .. '&level=' .. level
+	genfuncs.domo_api_query(url)
 end
 
 function genfuncs.file_exists(name)
@@ -82,22 +96,15 @@ function genfuncs.getdeviceiconidx(DeviceIdx)
 		return nil, 2
 	end
 
-	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
+	local url = DomoticzURL .. '/json.htm?type=command&param=getdevices&rid=' .. DeviceIdx
+	if (genfuncs.DomoticzBuildDate or 99999999) < 20230601 then
 		url = DomoticzURL .. '/json.htm?type=devices&rid=' .. DeviceIdx
-	else
-		url = DomoticzURL .. '/json.htm?type=command&param=getdevices&rid=' .. DeviceIdx
 	end
-	local sQuery = 'curl  "' .. url .. '"'
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
-
-	Print_logfile('Get current device info:' .. (url or '?'), 0)
-	Print_logfile('result:' .. (Web_Data:gsub('[\r\n\t]', '') or '?'), 0)
-
-	if Web_Data ~= nil then
-		decoded_response = JSON:decode(Web_Data)
-		result = decoded_response['result']
+	local JSON_Web_Data = genfuncs.domo_api_query(url)
+	Print_logfile('Get current device info:')
+	if JSON_Web_Data then
+		local result = JSON_Web_Data['result'] or ''
+		Print_logfile('result:' .. (JSON:encode(result) or '?'))
 		for i = 1, #result do
 			local record = result[i]
 			if type(record) == 'table' then
@@ -122,7 +129,7 @@ function genfuncs.getcustomiconidx(GTypeIcon)
 	local iidx, ierr = genfuncs.getcustom_light_icons(GTypeIcon)
 	if ierr == 2 then
 		Print_logfile('Unable to connect to Domoticz (' .. ierr .. '). Stop Icon update process')
-		return nil, 1
+		return nil, ierr
 	end
 	if iidx then
 		Print_logfile(GTypeIcon .. ' idx ' .. iidx .. ' found in Domoticz custom icons')
@@ -140,31 +147,20 @@ function genfuncs.getcustomiconidx(GTypeIcon)
 	Print_logfile('>! ' .. GTypeIcon .. ' not found in Domoticz custom icons')
 	Print_logfile('>> Trying to upload the found default:' .. iconzipfile)
 
-	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
+	--New curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://127.0.0.1:8080/json.htm?type=command&param=uploadcustomicon
+	local url = DomoticzURL .. '/json.htm?type=command&param=uploadcustomicon'
+	if (genfuncs.DomoticzBuildDate or 99999999) < 20230601 then
 		url = DomoticzURL .. '/uploadcustomicon'
-		--OLD:
-		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/uploadcustomicon
-	else
-		--curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://192.168.0.190:8080/json.htm?type=command&param=uploadcustomicon
-		url = DomoticzURL .. '/json.htm?type=command&param=uploadcustomicon'
+		--OLD: curl -F file=@domoticz_custom_icon_garbagecalendar_green.zip http://127.0.0.1:8080/uploadcustomicon
 	end
-	local sQuery = 'curl -F file="@' .. iconzipfile .. '" "' .. url .. '"'
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
-
-	Print_logfile('sQuery:' .. (sQuery or ''))
+	local JSON_Web_Data = genfuncs.domo_api_query(url, iconzipfile)
 	-- Check if upload was successfull
-	if Web_Data ~= nil then
-		data = JSON:decode(Web_Data)
-		if (data == nil or data['status'] ~= 'OK') then
-			-- upload must have failed
-			Print_logfile('Upload icon file failed:')
-			Print_logfile(Web_Data)
-			return nil, 4
-		end
+	if (JSON_Web_Data == nil or JSON_Web_Data['status'] ~= 'OK') then
+		-- upload must have failed
+		Print_logfile('Upload icon file failed:')
+		return nil, 4
 	end
-	Print_logfile('Upload icons done.')
+	Print_logfile('Upload icons done, now cheking its IDX.')
 	-- Icons uploaded so try to get the IDX again
 	-- Check if icon exists in Domoticz and get its idx
 	iidx = genfuncs.getcustom_light_icons(GTypeIcon)
@@ -194,41 +190,34 @@ function genfuncs.getcustom_light_icons(GTypeIcon)
 		return nil, 2
 	end
 
-	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
+	local	url = DomoticzURL .. '/json.htm?type=command&param=custom_light_icons'
+	if (genfuncs.DomoticzBuildDate or 99999999) < 20230601 then
 		url = DomoticzURL .. '/json.htm?type=custom_light_icons'
-	else
-		url = DomoticzURL .. '/json.htm?type=command&param=custom_light_icons'
 	end
-	local sQuery = 'curl  "' .. url .. '"'
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
-
-	Print_logfile('Get available custom icons:' .. (url or '?'), 0)
-	Print_logfile('result:' .. (Web_Data:gsub('[\r\n\t]', '') or '?'), 0)
-
-	if Web_Data ~= nil then
-		decoded_response = JSON:decode(Web_Data)
-		result = decoded_response['result']
-		for i = 1, #result do
-			local record = result[i]
-			if type(record) == 'table' then
-				--[[
-				description: "Used by Garbagecalendar",
-				idx: 104,
-				imageSrc: "garbagecalendar_blue",
-				text: "Garbagecalendar blauwe bak"
-				]]
-				--gicontype = record['imageSrc']:match('^garbagecalendar_(.*)')
-				--print(gicontype)
-				if record['imageSrc']:lower() == GTypeIcon:lower() then
-					--print("found:",GTypeIcon,record["idx"],record["imageSrc"])
-					return record['idx'], 0
-				end
+	Print_logfile('Get available custom icons:')
+	local JSON_Web_Data = genfuncs.domo_api_query(url)
+	if not JSON_Web_Data or JSON_Web_Data['result'] == nil then
+		return nil, 3
+	end
+	local result = JSON_Web_Data['result']
+	for i = 1, #result do
+		local record = result[i]
+		if type(record) == 'table' then
+			--[[
+			description: "Used by Garbagecalendar",
+			idx: 104,
+			imageSrc: "garbagecalendar_blue",
+			text: "Garbagecalendar blauwe bak"
+			]]
+			--gicontype = record['imageSrc']:match('^garbagecalendar_(.*)')
+			--print(gicontype)
+			if record['imageSrc']:lower() == GTypeIcon:lower() then
+				--print("found:",GTypeIcon,record["idx"],record["imageSrc"])
+				return record['idx'], 0
 			end
 		end
 	end
-	return nil, 3
+	return nil, 4
 end
 
 -- Set Domoticz device icon
@@ -243,7 +232,7 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 		genfuncs.getdomoticzversion()
 	end
 
-	if genfuncs.DomoticzBuildDate < 0 then
+	if genfuncs.DomoticzBuildDate >= 99999999 then
 		Print_logfile('Unable to get the domoticz version information...skipping Icon update')
 		return
 	end
@@ -253,28 +242,15 @@ function genfuncs.setdeviceicon(idx, devname, iconidx)
 		return
 	end
 
-	--Print_logfile('>> DomoticzVersion   ' .. (genfuncs.DomoticzVersion or 'nil'))
-	--Print_logfile('>> DomoticzRevision  ' .. (genfuncs.DomoticzRevision or 'nil'))
-	--Print_logfile('>> DomoticzBuildDate ' .. (genfuncs.DomoticzBuildDate or 'nil'))
-
-	if (genfuncs.DomoticzBuildDate or 0) < 20230601 then
+	local url = DomoticzURL .. '/json.htm?type=command&param=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
+	if (genfuncs.DomoticzBuildDate or 99999999) < 20230601 then
 		url = DomoticzURL .. '/json.htm?type=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
-	else
-		url = DomoticzURL .. '/json.htm?type=command&param=setused&used=true&name=' .. (devname:gsub(' ', '%%20')) .. '&idx=' .. idx .. '&switchtype=0&customimage=' .. iconidx
 	end
-	Print_logfile(url)
-	local sQuery = 'curl -k "' .. url .. '"'
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
-	if Web_Data ~= nil then
-		--print(Web_Data)
-		record = JSON:decode(Web_Data)
-		if record and (record['status'] or '') == 'OK' then
-			Print_logfile('> Icon updated to idx:' .. iconidx)
-		else
-			Print_logfile('!! Icon update failed')
-		end
+	local JSON_Web_Data = genfuncs.domo_api_query(url)
+	if JSON_Web_Data and (JSON_Web_Data['status'] or '') == 'OK' then
+		Print_logfile('> Icon updated to idx:' .. iconidx, 1)
+	else
+		Print_logfile('!! Icon update failed')
 	end
 end
 
@@ -338,13 +314,7 @@ end
 
 --------------------------------------------------------------------------
 -- Do the actual webquery, retrieving data from the website
-function genfuncs.perform_webquery(url, logdata)
-	-- Show retrieved webdat by default or else depening on mydebug
-	if logdata == nil then
-		logdata = true
-	else
-		logdata = mydebug
-	end
+function genfuncs.perform_webquery(url)
 	-- Define Web Query
 	local sQuery = 'curl -L -k --silent -w "\\n#@#httprc:%{http_code}#@#\\n#@#endurl:%{url_effective}#@#" ' .. url
 	local errlogfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'webquery_err.log'
@@ -363,10 +333,8 @@ function genfuncs.perform_webquery(url, logdata)
 		Web_Data = Web_Data:match('(.*)\n#@#httprc:')
 	end
 	-- Show Webdata retrieved
-	if logdata then
-		Print_logfile('--- url: ' .. redirecturl .. ' rc:' .. (httprc or '?') .. '  web data:  --------')
-		Print_logfile(Web_Data)
-	end
+	Print_logfile('--- url: ' .. redirecturl .. ' rc:' .. (httprc or '?') .. '  web data:  --------')
+	Print_logfile(Web_Data)
 	-- Check for 301 Moved Permanently
 	if (httprc == '301' or Web_Data:find('Moved Permanently')) then
 		Print_logfile('### Error: Site Moved Permanently: check your hostname for changes!',1)
@@ -383,7 +351,7 @@ function genfuncs.perform_webquery(url, logdata)
 	local Web_Error = ''
 	local ifile, ierr = io.open(errlogfile, 'r')
 	Web_Error = ierr or ''
-	if not ierr then
+	if ifile then
 		Web_Error = ifile:read('*all')
 		ifile:close()
 	end

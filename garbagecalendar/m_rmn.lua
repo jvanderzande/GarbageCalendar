@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rmn.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1100'
+M_ver = '20260126-0950'
 websitemodule = 'm_rmn'
 -- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
 --
@@ -28,7 +28,7 @@ function Perform_Update()
 	local refreshToken = ''
 	local idToken = ''
 	local Web_Data = ''
-	local jdata = ''
+	local JSON_Web_Data = ''
 
 	-- read previous found refresh token
 	local tokenfilename = datafilepath .. 'garbagecalendar_' .. websitemodule .. '_refresh_token.txt'
@@ -60,15 +60,15 @@ function Perform_Update()
 		]]
 		--
 		Web_Data = genfuncs.perform_webquery(' -X POST -H "Content-Length:0" "https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=AIzaSyA6NkRqJypTfP-cjWzrZNFJzPUbBaGjOdk"')
-		jdata = JSON:decode(Web_Data)
+		JSON_Web_Data = JSON:decode(Web_Data)
 		-- get idToken
-		if type(jdata) ~= 'table' or not jdata.idToken then
+		if type(JSON_Web_Data) ~= 'table' or not JSON_Web_Data.idToken then
 			Print_logfile('### Error: Token not received, stopping execution.')
 			return
 		end
 		--
-		idToken = jdata.idToken
-		refreshToken = jdata.refreshToken
+		idToken = JSON_Web_Data.idToken
+		refreshToken = JSON_Web_Data.refreshToken
 		-- save refreshToken to file
 		local file, err = io.open(tokenfilename, 'w')
 		if not err then
@@ -94,14 +94,14 @@ function Perform_Update()
 				}
 		]]
 		Web_Data = genfuncs.perform_webquery(' -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "grant_type=refresh_token&refresh_token=' .. refreshToken .. '" "https://securetoken.googleapis.com/v1/token?key=AIzaSyA6NkRqJypTfP-cjWzrZNFJzPUbBaGjOdk"')
-		jdata = JSON:decode(Web_Data)
+		JSON_Web_Data = JSON:decode(Web_Data)
 		-- get idToken
-		if type(jdata) ~= 'table' or not jdata.id_token then
+		if type(JSON_Web_Data) ~= 'table' or not JSON_Web_Data.id_token then
 			Print_logfile('### Error: Token not received, stopping execution.')
 			return
 		end
 		--
-		idToken = jdata.id_token
+		idToken = JSON_Web_Data.id_token
 	end
 
 	Print_logfile('idToken:' .. (idToken or 'nil'))
@@ -113,14 +113,14 @@ function Perform_Update()
 
 	]]
 	Web_Data = genfuncs.perform_webquery(' -X GET -H "Content-Length:0" -H "authorization:' .. idToken .. '" "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/138204213564933597/address?zipcode=' .. Zipcode:upper() .. '&housenumber=' .. thnr .. '"')
-	jdata = JSON:decode(Web_Data)[1]
+	JSON_Web_Data = JSON:decode(Web_Data)[1]
 	-- get idToken
-	if type(jdata) ~= 'table' or not jdata.addressId then
+	if type(JSON_Web_Data) ~= 'table' or not JSON_Web_Data.addressId then
 		Print_logfile('### Error: addressId not received, stopping execution.')
 		return
 	end
 	--
-	local addressId = jdata.addressId
+	local addressId = JSON_Web_Data.addressId
 	Print_logfile('addressId:' .. (addressId or 'nil'))
 
 	--[[
@@ -152,17 +152,17 @@ function Perform_Update()
 	]]
 	Web_Data = genfuncs.perform_webquery(' -H "authorization: ' .. idToken .. '" https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/138204213564933597/address/' .. addressId .. '/calendar')
 	-- get calendar information
-	jdata = JSON:decode(Web_Data)
+	JSON_Web_Data = JSON:decode(Web_Data)
 	-- get the ophaaldagen tabel for the coming scheduled pickups
-	if type(jdata) ~= 'table' then
+	if type(JSON_Web_Data) ~= 'table' then
 		Print_logfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
 	-- process the data
-	processdata(jdata)
+	ProcessData(JSON_Web_Data)
 end
 
-function processdata(ophaaldata)
+function ProcessData(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	--[[
 			[

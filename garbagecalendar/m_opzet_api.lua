@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_opzet_api.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20250707-1210'
+M_ver = '20260126-0950'
 websitemodule = 'm_opzet_api'
 -- Link to WebSite:  variable, needs to be defined in the garbagecalendarconfig.lua in field Hostname.
 --
@@ -67,7 +67,7 @@ function Perform_Update()
 	end
 	-- process the received data
 	Print_logfile('- start looping through received data for current year  --------------------------------------------')
-	LastDaysDiff = processdata(JSON:decode(Web_Data), JSON:decode(Web_Garbagetype_Data))
+	LastDaysDiff = ProcessData(JSON:decode(Web_Data), JSON:decode(Web_Garbagetype_Data))
 	if #garbagedata < 10 then
 		-- get the calendar info for next calendar year
 		Web_Data = genfuncs.perform_webquery('"https://' .. Hostname .. '/rest/adressen/' .. bagId .. '/kalender/' .. (tonumber(os.date('%Y'))+1) .. '"')
@@ -77,11 +77,11 @@ function Perform_Update()
 		end
 		-- process the received data
 		Print_logfile('- start looping through received data for next year ---------------------------------------------')
-		processdata(JSON:decode(Web_Data), JSON:decode(Web_Garbagetype_Data), LastDaysDiff )
+		ProcessData(JSON:decode(Web_Data), JSON:decode(Web_Garbagetype_Data), LastDaysDiff )
 	end
 end
 
-function processdata(ophaaldata, garbagetypedata, prevdaysdiff)
+function ProcessData(ophaaldata, garbagetypedata, prevdaysdiff)
 	prevdaysdiff = prevdaysdiff or -1
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	Print_logfile('garbagetypedata records:' .. (#garbagetypedata or '??'))

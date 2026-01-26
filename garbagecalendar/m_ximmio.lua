@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_ximmio.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1100'
+M_ver = '20260126-0950'
 websitemodule = 'm_ximmio'
 -- API WebSite:  https://wasteapi.2go-mobile.com/api  &  https://wasteprod2api.ximmio.com
 --
@@ -74,23 +74,23 @@ function Perform_Update()
 		Print_logfile('### Error: Unable to retrieve Afvalstromen information...  stopping execution.')
 		return
 	end
-	local jdata = JSON:decode(Web_Data)
+	local JSON_Web_Data = JSON:decode(Web_Data)
 	-- get the Datalist tabel for the coming scheduled pickups
-	if type(jdata) ~= 'table' then
+	if type(JSON_Web_Data) ~= 'table' then
 		Print_logfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
-	jdata = jdata['dataList'] -- get the Datalist tabel for the coming scheduled pickups
-	if type(jdata) ~= 'table' then
+	JSON_Web_Data = JSON_Web_Data['dataList'] -- get the Datalist tabel for the coming scheduled pickups
+	if type(JSON_Web_Data) ~= 'table' then
 		Print_logfile('### Error: Empty Kalender found stopping execution.')
 		return
 	end
 	-- process the data
 	Print_logfile('- start looping through received data -----------------------------------------------------------')
-	processdata(jdata)
+	ProcessData(JSON_Web_Data)
 end
 
-function processdata(ophaaldata)
+function ProcessData(ophaaldata)
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
 		local record = ophaaldata[i]

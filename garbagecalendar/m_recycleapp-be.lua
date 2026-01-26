@@ -2,7 +2,7 @@
 -- garbagecalendar module script: m_recycleapp-be
 -- Remarks:
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20241231-1100'
+M_ver = '20260126-0950'
 websitemodule = 'm_recycleapp-be'
 -- Link to https://www.recycleapp.be
 --
@@ -76,10 +76,10 @@ function Perform_Update()
 		Print_logfile('### Error: Empty Kalender .  stopping execution.')
 		return
 	end
-	processdata(Web_Data)
+	ProcessData(Web_Data)
 end
 
-function processdata(ophaaldata)
+function ProcessData(ophaaldata)
 	ophaaldata = ophaaldata['items'] -- get the Datalist tabel for the coming scheduled pickups
 	Print_logfile('ophaaldata records:' .. (#ophaaldata or '??'))
 	for i = 1, #ophaaldata do
