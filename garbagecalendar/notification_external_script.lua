@@ -6,7 +6,7 @@
 -- Function to perform Domoticz API JSON call
 function perform_webquery(url)
 	-- Define Web Query
-	local sQuery = 'curl ' .. url
+	local sQuery = 'curl -s ' .. url
 	print('sQuery=' .. sQuery)
 	local handle = assert(io.popen(sQuery))
 	local Web_Data = handle:read('*all')
