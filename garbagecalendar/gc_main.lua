@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20260126-0950'
+	MainScriptVersion = '20260708-2200'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -185,11 +185,11 @@ function gc_main(commandArray, domoticz, batchrun)
 		function()
 			Print_logfile('-> Start processing garbagecalendarconfig.lua information.')
 			-- check if debugging is required
-			if testrun == nil and mydebug ~= nil then
-				_G.testrun = mydebug -- backwards compatibility
+			if testrun == nil and Mydebug ~= nil then
+				_G.testrun = Mydebug -- backwards compatibility
 			end
 			_G.testrun = testrun or false
-			_G.mydebug = mydebug or false
+			_G.Mydebug = Mydebug or false
 			_G.testdataload = testdataload or false
 			_G.testdataloadbatch = testdataloadbatch or false
 			--
@@ -243,7 +243,7 @@ function gc_main(commandArray, domoticz, batchrun)
 				Print_logfile('!> Force GarbageCalendar run each minute:', 1)
 			end
 			if testrun then
-				Print_logfile('!>   - process data in foreground because "testrun=true" or "mydebug=true" is set in garbagecalendarconfig.lua', 1)
+				Print_logfile('!>   - process data in foreground because "testrun=true" or "Mydebug=true" is set in garbagecalendarconfig.lua', 1)
 			end
 			if testdataload then
 				Print_logfile('!>   - webdata load in foreground because "testdataload=true" in garbagecalendarconfig.lua', 1)
@@ -523,7 +523,8 @@ function gc_main(commandArray, domoticz, batchrun)
 					Print_logfile('--->External Notification script started: ' .. Notificationscript)
 					os.execute(Notificationscript .. ' &')
 				end
-				if (EventNotificationscript or '') ~= '' then
+				EventNotificationscript = EventNotificationscript or ''
+				if EventNotificationscript ~= '' then
 					Print_logfile('--->Check Internal Notification script : ' .. GC_scriptpath .. '' .. EventNotificationscript)
 					if (not genfuncs.exists(GC_scriptpath .. '' .. EventNotificationscript)) then
 						Print_logfile('### Error: EventNotificationscript not found: ' .. GC_scriptpath .. '' .. EventNotificationscript)
@@ -666,12 +667,12 @@ function gc_main(commandArray, domoticz, batchrun)
 				-- check stripped version of the garbagetype when original is missing
 				if garbagetype_cfg[web_garbagetype] == nil then
 					-- Remove any none-a-z 0-9 character from the GarbageType and convert to lowercase for better matching
-					local tweb_garbagetype = web_garbagetype:gsub('[^%w]', '')
+					local tweb_garbagetype = web_garbagetype:gsub('[^%w]', ''):lower()
 					if garbagetype_cfg[tweb_garbagetype] ~= nil then
 						Print_logfile('--> "' .. web_garbagetype .. '" ->Found stripped GarbageType so use that version: ' .. tweb_garbagetype)
 						web_garbagetype = tweb_garbagetype
 					else
-						Print_logfile('--> "' .. web_garbagetype .. '" ->Did not find GarbageType ' .. tweb_garbagetype)
+						Print_logfile('--> "' .. web_garbagetype .. '" ->Did not find GarbageType:' .. tweb_garbagetype .. "|")
 					end
 				end
 				-- check if the garbagetype is missing in the config table and generate warning for log
@@ -737,6 +738,9 @@ function gc_main(commandArray, domoticz, batchrun)
 							stextformat = stextformat:gsub('ldesc', txtdev_ldesc)
 							stextformat = stextformat:gsub('tdesc', txtdev_tdesc)
 							txtdev_prevdesc = devtxt
+							if garbagetype_cfg[web_garbagetype].textcolor or "" ~= "" then
+								stextformat = "<font color='" .. garbagetype_cfg[web_garbagetype].textcolor .. "'>" .. stextformat .. "</font>" --
+							end
 							devtxt = devtxt .. stextformat .. '\n'
 							-- only add 1 when the next display record is a different date or seperate line wanted
 							if (i < #garbagedata) then
@@ -816,6 +820,8 @@ function gc_main(commandArray, domoticz, batchrun)
 			devtxt = tdevformat:gsub('#', devtxt, 1)
 			Print_logfile('-> added textdev formatting:' .. devtxt:gsub('\n', ' ; '))
 		end
+		-- replace \n for <br>
+		devtxt = devtxt:gsub('\n', '<br>')
 
 		-- close ICAL file when requested
 		if IcalEnable then
@@ -1027,7 +1033,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	-- Always update when testrun is enabled
 	if testrun then
 		UpdateDevRun = true
-		Print_logfile('#> Perform update because testrun=true (or mydebug=true).')
+		Print_logfile('#> Perform update because testrun=true (or Mydebug=true).')
 	end
 	-- Perform GarbageCalendar Date check and Send Notification/update Domoticz TXT device when required
 	if UpdateDevRun then
