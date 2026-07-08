@@ -38,6 +38,8 @@ websitemodule = 'm_mijnafvalwijzer'
 --websitemodule = "m_csv_file"
 --input_csv_file = "c:/data/garbage_input.csv"
 --input_csv_file = "/home/pi/garbage_input.csv"
+--input_csv_file = "/opt/domoticz/userdata/garbage_input.csv"  -- Docker
+
 -- =================================================================================================================================
 
 -- Switch on testrun in case of issues and initially and check the domoticz log for any issues or missing
@@ -101,6 +103,7 @@ NotificationEmailAdress = {'', ''} -- Specify multiple Email Addresses for the n
 Notificationsystem = '' -- Specify notification system eg "telegram/pushover/gcm/http/kodi/lms/nma/prowl/pushalot/pushbullet/pushsafer" leave empty to skip
 
 -- Specify external personal notification script/command (Shelled async)
+--Notificationscript = 'lua /opt/domoticz/userdata/scripts/lua/garbagecalendar/notification_external_script.lua "@GARBAGETYPE@" > /opt/domoticz/userdata/scripts/lua/garbagecalendar/data/GC_Notify.log 2>&1'
 --Notificationscript = 'lua /home/pi/domoticz/scripts/lua/garbagecalendar/notification_external_script.lua "@GARBAGETYPE@" > /tmp/GC_Notify.log 2> /tmp/GC_Notify.log'
 
 -- Specify personal notification event script
@@ -152,6 +155,8 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 -- daysbefore ==> X means that the notification is send X day(s) before the day of the planned garbage collection
 -- reminder   ==> Will send a second reminder after x hours. 0=no reminder (can be between 0 - 24 hours)
 -- text       ==> define the text for the notification and Text Device.
+-- textcolor  ==> (optional) define the textcolor for the notification and Text Device.
+-- icon       ==> (optional) define the icon for the notification and Text Device.
 -- active     ==> (optional)  default="on"
 --           active="on"   Both will show in Domoticz Text Device and Send notifications
 --           active="off"  Will show in Domoticz Text Device but not send notifications
@@ -162,10 +167,9 @@ IcalNotify = 12 -- Notification Time in hours before event. 0=no notification
 -- Without updating the Text device ICON:
 garbagetype_cfg = {
 	-- Add any missing records below this line -----------------------------------------------------
-	-- ['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = nil},
 	-- ['pmd'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'plastic bak', icon = 'garbagecalendar_yellow'},
-	-- ['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'groene bak', icon = nil},
-	-- ['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'blauwe bak', icon = nil},
+	-- ['gft'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'groene bak', textcolor="ForestGreen", icon = nil},
+	-- ['papier'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'blauwe bak', textcolor="Blue", icon = nil},
 	-- ['restafval'] = {hour = 19, min = 22, daysbefore = 1, reminder = 3, text = 'grijze bak', icon = nil},
 	-- Add any missing records above this line -----------------------------------------------------
 	--  "reloaddata" is used to start the background update process at this given time.
