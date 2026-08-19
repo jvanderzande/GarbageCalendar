@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20260708-2200'
+	MainScriptVersion = '20260819-1630'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -571,11 +571,8 @@ function gc_main(commandArray, domoticz, batchrun)
 		function ListAccess(name)
 			local sCMD = 'ls -l ' .. name
 			Print_logfile('   Run command:\n' .. sCMD .. ':')
-			local handle = assert(io.popen(sCMD))
-			local cmd_output = handle:read('*all')
-			-- remove ending CR LF chars
+			local cmd_output = Run_shell_program(sCMD)
 			cmd_output = cmd_output:gsub('[\r\n]+$', '')
-			handle:close()
 			Print_logfile(cmd_output, 0, '')
 		end
 

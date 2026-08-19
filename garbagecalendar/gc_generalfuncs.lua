@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20260708-2200'
+MainGenUtilsVersion = '20260819-1630'
 
 local genfuncs = {}
 
@@ -17,9 +17,7 @@ function genfuncs.domo_api_query(url, uploadfile)
 	sQuery = sQuery .. '"' .. url .. '"'
 
 	Print_logfile('-> domo_api_query:' .. (sQuery or 'NIL'))
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
+	local Web_Data, Web_Err = Run_shell_program(sQuery)
 	Print_logfile('Web_Data:' .. (Web_Data or 'NIL'))
 	local JSON_Web_Data = JSON:decode(Web_Data or '')
 	if (JSON_Web_Data == nil) then
@@ -313,18 +311,36 @@ function genfuncs.url_unescape(url)
 end
 
 --------------------------------------------------------------------------
+-- Run Shell Program replacement for io.popen
+function Run_shell_program(cmd)
+	-- Paden Windows-vriendelijk maken met backslashes en correcte aanhalingstekens
+	local stdoutfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'shell_stdout.txt'
+	local erroutfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'shell_errout.txt'
+	local newcmd = cmd .. '> "' .. stdoutfile .. '" 2>"' .. erroutfile .. '"'
+	Print_logfile('-> Shellcmd=' .. newcmd)
+
+	os.execute(newcmd)
+	-- Read Output generated
+	local function processoutfile(ifile)
+		local f = io.open(ifile, 'r')
+		local outtxt = ""
+		if f then
+			outtxt = f:read('*all')
+			f:close()
+			os.remove(ifile)
+		end
+		return outtxt
+	end
+	return processoutfile(stdoutfile), processoutfile(erroutfile)
+end
+
 -- Do the actual webquery, retrieving data from the website
 function genfuncs.perform_webquery(url)
 	-- Define Web Query
 	local sQuery = 'curl -L -k --silent -w "\\n#@#httprc:%{http_code}#@#\\n#@#endurl:%{url_effective}#@#" ' .. url
-	local errlogfile = (datafilepath or ((GC_scriptpath or '/') .. 'data/')) .. 'webquery_err.log'
-	-- Pipe STDERR to file when defined
-	sQuery = sQuery .. ' 2>' .. errlogfile
-	-- Run Query
-	Print_logfile('sQuery=' .. sQuery)
-	local handle = assert(io.popen(sQuery))
-	local Web_Data = handle:read('*all')
-	handle:close()
+	-- Print_logfile('sQuery=' .. sQuery)
+	local Web_Data, Web_Err = Run_shell_program(sQuery)
+
 	-- Get effective url and http response code from the output and strip it from the result output
 	--Print_logfile(Web_Data)
 	local httprc = Web_Data:match('#@#httprc:([^#]*)#@#') or '?'
@@ -348,20 +364,13 @@ function genfuncs.perform_webquery(url)
 		Print_logfile('### warning: Site redirected from : #' ..  url .. '#  to : #' ..  redirecturl .. '#' .. (url:find(redirecturl, 1, true) or '?'),1)
 	end
 	-- Check for Web request errors when seperate file is defined, else all output is in Web_Data
-	local Web_Error = ''
-	local ifile, ierr = io.open(errlogfile, 'r')
-	Web_Error = ierr or ''
-	if ifile then
-		Web_Error = ifile:read('*all')
-		ifile:close()
-	end
-	if Web_Error ~= '' then
+	if Web_Err ~= '' then
 		Print_logfile('---- web err ------------------------------------------------------------------------')
-		Print_logfile('Web_Err=' .. Web_Error)
+		Print_logfile('Web_Err=' .. Web_Err)
 	end
 	--os.remove(errlogfile)
 	Print_logfile('---- end web data ------------------------------------------------------------------------')
-	if (Web_Error:find('unsupported protocol')) then
+	if (Web_Err:find('unsupported protocol')) then
 		Print_logfile('### Error: unsupported protocol.')
 		Print_logfile('###  This website still uses tls 1.0 and Debian Buster (and up) has set the minssl to tls 1.2 so will fail.')
 		Print_logfile('###  To fix: Set /etc/ssl/openssl.cnf; goto section [system_default_sect]; Change-> MinProtocol = TLSv1.0 ;  and reboot')
