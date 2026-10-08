@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20260819-1630'
+	MainScriptVersion = '20261008-1250'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -187,9 +187,9 @@ function gc_main(commandArray, domoticz, batchrun)
 			-- check if debugging is required
 			if testrun == nil and Mydebug ~= nil then
 				_G.testrun = Mydebug -- backwards compatibility
+			else
+				_G.testrun = testrun or false
 			end
-			_G.testrun = testrun or false
-			_G.Mydebug = Mydebug or false
 			_G.testdataload = testdataload or false
 			_G.testdataloadbatch = testdataloadbatch or false
 			--
@@ -848,8 +848,8 @@ function gc_main(commandArray, domoticz, batchrun)
 		end
 
 		if RunbyDzVents then
-			if domoticz.devices(myGarbageDevice).idx == nil then
-				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: '" .. myGarbageDevice .. "'. Does it exist and is the name correct ", 1)
+			if domoticz.devices(myGarbageDevice) == nil or domoticz.devices(myGarbageDevice).idx == nil then
+				Print_logfile("### Error: Couldn't get the current data of Domoticz text device: '" .. myGarbageDevice .. "'. Please verify the device exists and the name is correctly spelled!!", 1)
 			else
 				-- update the domoticz device text & icon
 				domoticz.devices(myGarbageDevice).updateText(devtxt)
@@ -870,7 +870,7 @@ function gc_main(commandArray, domoticz, batchrun)
 			end
 		else
 			if otherdevices_idx == nil or otherdevices_idx[myGarbageDevice] == nil then
-				Print_logfile("### Error: Couldn't get the current data from Domoticz text device '" .. myGarbageDevice .. "'. Does it exist and is the name correct ", 1)
+				Print_logfile("### Error: Couldn't get the current data from Domoticz text device '" .. myGarbageDevice .. "'. Please verify the device exists and the name is correctly spelled!!", 1)
 			else
 				-- update the domoticz device text
 				commandArray['UpdateDevice'] = otherdevices_idx[myGarbageDevice] .. '|0|' .. devtxt

@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20260819-1630'
+MainGenUtilsVersion = '20261008-1250'
 
 local genfuncs = {}
 
