@@ -1,19 +1,20 @@
 -----------------------------------------------------------------------------------------------------------------
--- garbagecalendar module script: m_rmn.lua
+-- garbagecalendar module script: m_burgerportaal.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20261112-1410'
+M_ver = '20261112-1640'
 websitemodule = 'm_burgerportaal'
--- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
--- Current supported BPName's
+-- Link to WebSite: "https://21burgerportaal.mendixcloud.com/"
+-- Current supported BPName's, just add any added in the BPCodes table below when you require so.
 BPCodes = {
+	['almere'] = '452048812597416245',
+	['amsterdam'] = '138204213565341829',
 	['assen'] = '138204213565303512',
 	['bar'] = '138204213564933497',
+	['barendrecht'] = '138204213564933497',
+	['bat'] = '452048812597339353',
    ["breda"] = "452048812597352613",
-   ["goirle"] = "452048812597339353",
    ["groningen"] = "452048812597326549",
-	["nijkerk"] ="138204213565304094",
 	['rmn'] = '138204213564933597',
-	["tilburg"] = "452048812597339353",
 	["utrecht"] = "452048812597339479",
 }
 
