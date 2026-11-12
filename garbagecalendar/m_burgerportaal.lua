@@ -1,14 +1,20 @@
 -----------------------------------------------------------------------------------------------------------------
 -- garbagecalendar module script: m_rmn.lua
 ----------------------------------------------------------------------------------------------------------------
-M_ver = '20260126-0950'
+M_ver = '20261112-1410'
 websitemodule = 'm_burgerportaal'
 -- Link to WebSite: "https://21burgerportaal.mendixcloud.com/p/rmn/landing/"
 -- Current supported BPName's
 BPCodes = {
 	['assen'] = '138204213565303512',
 	['bar'] = '138204213564933497',
+   ["breda"] = "452048812597352613",
+   ["goirle"] = "452048812597339353",
+   ["groningen"] = "452048812597326549",
+	["nijkerk"] ="138204213565304094",
 	['rmn'] = '138204213564933597',
+	["tilburg"] = "452048812597339353",
+	["utrecht"] = "452048812597339479",
 }
 
 --
@@ -39,8 +45,16 @@ function Perform_Update()
 	local JSON_Web_Data = ''
 	local lBPName = BPName:lower()
 	if (not BPCodes[lBPName]) then
-		Print_logfile('### Error: BPName ' .. lBPName .. ' is not supported.')
-		return
+		-- first check if the provided BPName is the code
+		if BPName.len() == 18 and tonumber(BPName) then
+			BPCodes[lBPName] = lBPName
+			Print_logfile('### Using provided BPName ' .. lBPName .. ' as the code:' .. lBPName)
+		else
+			Print_logfile('### Error: BPName ' .. lBPName .. ' is not supported.')
+			return
+		end
+	else
+			Print_logfile('### The provided BPName ' .. lBPName .. ' has code:' .. lBPName)
 	end
 
 	-- read previous found refresh token
@@ -51,11 +65,6 @@ function Perform_Update()
 		ifile:close()
 	end
 
-	--[[
-		===============================================================================================
-		from: https://github.com/xirixiz/homeassistant-afvalwijzer/issues/232#issuecomment-1498616173
-		===============================================================================================
-	]]
 	-- ======================================================================
 	-- Check if we already have received an refreshToken ...else create one
 	if refreshToken == '' or refreshToken:len() < 200 then
@@ -121,11 +130,14 @@ function Perform_Update()
 
 	--[[
 		Step 2: We can use the IDToken to retrieve a address ID by using the postal code and housenumber
-			curl -H "authorization: _IDTOKEN_" "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/138204213565303512/address?zipcode=1234AB&housenumber=1"
+			curl -H "authorization: _IDTOKEN_" "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/v2/organisations/138204213565303512/address?zipcode=1234AB&housenumber=1"
 			[{"addressId":"_ADDRESSID_","zipcode":"1234AB",'Street':"Xtraat","city":"XCity","housenumber":1,"municipalityId":"XXX","latitude":XXXX,"longitude":XXXX}]
-
 	]]
-	Web_Data = genfuncs.perform_webquery(' -X GET -H "Content-Length:0" -H "authorization:' .. idToken .. '" "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/' .. BPCodes[lBPName] .. '/address?zipcode=' .. Zipcode:upper() .. '&housenumber=' .. thnr .. '"')
+	-- Add required headers to impersonate chrome
+	header= ' -H "Content-Length:0" -H "authorization:' .. idToken .. '"'
+	header=header .. ' -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"'
+	header=header .. ' -H "Sec-Ch-Ua: Google Chrome;v=131,Chromium;v=131,Not_A Brand;v=24"'
+	Web_Data = genfuncs.perform_webquery(' -X GET ' .. header .. ' "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/v2/organisations/' .. BPCodes[lBPName] .. '/address?zipcode=' .. Zipcode:upper() .. '&housenumber=' .. thnr .. '"')
 	JSON_Web_Data = JSON:decode(Web_Data)[1]
 	-- get idToken
 	if type(JSON_Web_Data) ~= 'table' or not JSON_Web_Data.addressId then
@@ -138,7 +150,7 @@ function Perform_Update()
 
 	--[[
 		Step 3: We can use the IDToken and ADDRESSID to retrieve the calendar
-			curl -H "authorization: _IDTOKEN_" https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/138204213565303512/address/_ADDRESSID_/calendar
+			curl -H "authorization: _IDTOKEN_" https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/v2/organisations/138204213565303512/address/_ADDRESSID_/calendar
 			[
 			  {
 				 "year": 2023,
@@ -162,8 +174,13 @@ function Perform_Update()
 			  },
 			............
 			]
-	]]
-	Web_Data = genfuncs.perform_webquery(' -H "authorization: ' .. idToken .. '" https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/organisations/' .. BPCodes[lBPName] .. '/address/' .. addressId .. '/calendar')
+
+		resp = requests.get(
+        f"{BASE_URL}/exposed/v2/organisations/{ORG_ID}/address/{address['addressId']}/calendar",
+        headers=headers,
+    )
+	 	]]
+	Web_Data = genfuncs.perform_webquery('-X GET ' .. header .. ' "https://europe-west3-burgerportaal-production.cloudfunctions.net/exposed/v2/organisations/' .. BPCodes[lBPName] .. '/address/' .. addressId .. '/calendar"')
 	-- get calendar information
 	JSON_Web_Data = JSON:decode(Web_Data)
 	-- get the ophaaldagen tabel for the coming scheduled pickups

@@ -1,7 +1,7 @@
 -- ######################################################
 -- functions library used by the garbagecalendar modules
 -- ######################################################
-MainGenUtilsVersion = '20261008-1250'
+MainGenUtilsVersion = '20261112-1410'
 
 local genfuncs = {}
 
@@ -59,8 +59,19 @@ end
 
 -- addlogmessage function sends messages to Domoticz log
 function genfuncs.addlogmessage(text, level)
+	-- "LEVEL" 1 = normal // default
+   --         2 = status
+   --         4 = error
 	text = text or 'nil'
 	level = tostring(level) or '1'
+	if level:lower() == 'normal' then level = '1'
+	elseif level:lower() == 'status' then level = '2'
+	elseif level:lower() == 'error' then level = '4'
+	elseif tonumber(level) > 4 then level = '1'
+	elseif tonumber(level) < 1 then level = '1'
+	elseif tonumber(level) ==  3 then level = '4'  -- use ERROR for level 3
+	elseif tonumber(level) > 4 then level = '1'
+	end
 	local url = DomoticzURL .. '/json.htm?type=command&param=addlogmessage&message=' .. genfuncs.url_encode(text) .. '&level=' .. level
 	genfuncs.domo_api_query(url)
 end
@@ -346,10 +357,11 @@ function genfuncs.perform_webquery(url)
 	local httprc = Web_Data:match('#@#httprc:([^#]*)#@#') or '?'
 	local redirecturl = (Web_Data:match('#@#endurl:([^#]*)#@#') or '?')
 	if Web_Data:find('(.*)\n#@#httprc:') then
+		Web_RC = Web_Data:match('.*\n(#@#httprc:.*)')
 		Web_Data = Web_Data:match('(.*)\n#@#httprc:')
 	end
 	-- Show Webdata retrieved
-	Print_logfile('--- url: ' .. redirecturl .. ' rc:' .. (httprc or '?') .. '  web data:  --------')
+	Print_logfile('---  rc:' .. (httprc or '?') .. ' url: ' .. redirecturl .. '  web data:  --------')
 	Print_logfile(Web_Data)
 	-- Check for 301 Moved Permanently
 	if (httprc == '301' or Web_Data:find('Moved Permanently')) then

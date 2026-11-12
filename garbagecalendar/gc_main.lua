@@ -2,7 +2,7 @@ function gc_main(commandArray, domoticz, batchrun)
 	----------------------------------------------------------------------------------------------------------------
 	-- Regular LUA GarbageCalendar huisvuil script: script_time_garbagewijzer.lua
 	----------------------------------------------------------------------------------------------------------------
-	MainScriptVersion = '20261008-1250'
+	MainScriptVersion = '20261112-1410'
 	-- curl in os required!!
 	-- create dummy text device from dummy hardware with the name defined for: myGarbageDevice
 	-- Update all your personal settings in garbagecalendarconfig.lua
@@ -48,6 +48,8 @@ function gc_main(commandArray, domoticz, batchrun)
 	genfuncs.DomoticzBuildDate = nil
 	genfuncs.DomoticzVersion = nil
 	genfuncs.DomoticzRevision = nil
+	genfuncs.DomoticzDevIDX = nil
+	genfuncs.DomoticzDevData = nil
 	DomoticzURL = DomoticzURL or 'http://127.0.0.1:8080'
 
 	---====================================================================================================
@@ -865,7 +867,7 @@ function gc_main(commandArray, domoticz, batchrun)
 						Print_logfile('>> FirstGTypeIcon "' .. (FirstGTypeIcon or '?') .. '" not found so settting textdevice to DefaultTextIcon:0')
 					end
 					-- update the domoticz device icon
-					genfuncs.setdeviceicon(domoticz.devices(myGarbageDevice).idx, myGarbageDevice, FirstGTypeIconIdx, domoticz.devices(myGarbageDevice).idx)
+					genfuncs.setdeviceicon(domoticz.devices(myGarbageDevice).idx, myGarbageDevice, FirstGTypeIconIdx)
 				end
 			end
 		else

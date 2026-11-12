@@ -2,7 +2,7 @@
 -- Event start script for  GarbageCalendar huisvuil script: script_time_garbagecalendar.lua
 -- Works both in DzVents and Regular LUA time scripts
 ----------------------------------------------------------------------------------------------------------------
-EventScriptVersion = '20261008-1250'
+EventScriptVersion = '20261112-1410'
 
 -- set variable to false=disable or true=enable the script
 local GC_enabled = true
